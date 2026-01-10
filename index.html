@@ -147,7 +147,7 @@
         
         <p style="margin-top:30px; color:#888; font-size:16px;">
             (Clavier : A/Z pour bouger, Espace pour sauter)<br>
-            (1 à 8 pour choisir niveau | + pour vies)
+            (1 à 9 pour choisir niveau | + pour vies)
         </p>
     </div>
 
@@ -207,18 +207,15 @@
         let accumulator = 0;
         const TIME_STEP = 1000 / 60; 
 
-        // --- TELEPORTATION ---
+        // --- TELEPORTATION & GAMEPLAY ---
         let portals = [];
         let teleportTimer = 0;
+        let projectiles = []; 
 
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            // CORRECTIF MOBILE : On ne réinitialise PAS le niveau si le jeu tourne
-            // Cela empêche le reset quand la barre d'adresse mobile bouge
-            if(!gameRunning) {
-               // On peut redessiner l'écran titre ou attendre
-            }
+            if(!gameRunning) { }
         }
         window.addEventListener('resize', resize);
         resize();
@@ -277,7 +274,7 @@
             player.vx = 0; player.vy = 0;
             player.climbing = false; player.jumpCount = 0; player.currentPlatform = null;
             hasKey = false; keyItem = null;
-            fireBars = []; clouds = []; portals = []; dots = [];
+            fireBars = []; clouds = []; portals = []; dots = []; projectiles = [];
             teleportTimer = 0;
             document.getElementById('key-display').style.display = 'none';
             document.getElementById('level-display').innerText = "NIVEAU " + level;
@@ -472,79 +469,113 @@
                 hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
 
             } else if (level === 7) {
-                // --- NIVEAU 7 ---
-                document.body.style.backgroundColor = "black";
-                let blockSize = 40;
-                let mazeY = h - unit*8;
+                // --- NIVEAU 7 : HUNCHBACK ---
+                document.body.style.backgroundColor = "#5d4037"; // Fond brique foncé
+                let wallY = h/2 + 50;
 
-                platforms.push({ x: 0, y: h - blockSize, w: w, h: blockSize, type: 'pac_wall' });
-                player.x = 50; player.y = h - blockSize*2; player.grounded = true;
+                // Le Mur (Castle Wall)
+                platforms.push({ x: -50, y: wallY, w: 200, h: h, type: 'castle_wall' });
+                player.x = 50; player.y = wallY - player.h; player.grounded = true;
 
-                platforms.push({ x: 0, y: mazeY, w: blockSize, h: h - mazeY, type: 'pac_wall' });
-                platforms.push({ x: w - blockSize, y: mazeY, w: blockSize, h: h - mazeY, type: 'pac_wall' });
-
-                platforms.push({ x: blockSize, y: h - blockSize*4, w: 300, h: 20, type: 'pac_wall' });
-                platforms.push({ x: w - 300 - blockSize, y: h - blockSize*4, w: 300, h: 20, type: 'pac_wall' });
-                
-                platforms.push({ x: 200, y: h - blockSize*7, w: w - 400, h: 20, type: 'pac_wall' });
-
-                ladders.push({ x: 100, y: h - blockSize*4, w: 40, h: blockSize*3 });
-                ladders.push({ x: w - 140, y: h - blockSize*4, w: 40, h: blockSize*3 });
-                ladders.push({ x: w/2 - 20, y: h - blockSize*7, w: 40, h: blockSize*3 });
-
-                for(let i=0; i<10; i++) {
-                    platforms.push({ x: 100 + i*80, y: h - blockSize*2.5, w: 10, h: 10, type: 'pac_dot' });
-                    platforms.push({ x: 100 + i*80, y: h - blockSize*5.5, w: 10, h: 10, type: 'pac_dot' });
-                }
-
-                keyItem = { x: 50, y: h - blockSize*8, w: 30, h: 30, type: 'cherry' };
-
-                enemies.push({ x: 300, y: h - blockSize*4 - 60, w: 50, h: 60, type: 'zombie', patrolStart: 200, patrolEnd: w-200, dir: 1, speed: 3 * difficultyMultiplier });
-                enemies.push({ x: 150, y: h - blockSize - 60, w: 50, h: 60, type: 'chest_monster', patrolStart: 50, patrolEnd: w/2, dir: 1, speed: 4 * difficultyMultiplier });
-
-                goal = { x: w - 100, y: h - blockSize - 80, w: 70, h: 80 };
-            } else if (level === 8) {
-                // --- NIVEAU 8 : LA MINE AUX POMMES ---
-                // Fond sombre
-                document.body.style.backgroundColor = "#2d1b0e"; // Marron très foncé
-
-                let blockSize = 50;
-                let rows = 8;
-                let cols = Math.floor(w / blockSize);
-
-                // Sol de départ
-                platforms.push({ x: 0, y: h - blockSize, w: w, h: blockSize, type: 'dirt_block' });
-                player.x = 50; player.y = h - blockSize*2; player.grounded = true;
-
-                // Création d'étages de "mine"
-                for(let r=1; r<rows; r++) {
-                    let y = h - (r+1)*blockSize * 1.5;
-                    // Plateformes en terre avec des trous
-                    let gapX = Math.random() * (w - 200) + 50;
-                    platforms.push({ x: 0, y: y, w: gapX, h: 20, type: 'dirt_block' });
-                    platforms.push({ x: gapX + 100, y: y, w: w - gapX - 100, h: 20, type: 'dirt_block' });
+                // Création des créneaux
+                let currentX = 150;
+                for(let i=0; i<15; i++) {
+                    let gap = Math.random() > 0.5 ? 100 : 0; // Trou aléatoire
+                    let width = 150 + Math.random() * 100;
                     
-                    // Echelle aléatoire
-                    ladders.push({ x: (r%2===0 ? 100 : w-150), y: y, w: 40, h: blockSize*1.5 });
-
-                    // Rochers (Pics)
-                    if (Math.random() > 0.3) {
-                        hazards.push({ x: Math.random() * (w-100) + 50, y: y - 30, w: 30, h: 30, type: 'rock' });
+                    if (gap > 0) {
+                        // Chevalier dans le trou (monte et descend)
+                        hazards.push({ 
+                            x: currentX + gap/2 - 20, y: wallY + 50, w: 40, h: 80, 
+                            type: 'knight', minY: wallY - 80, maxY: wallY + 100, speed: 2 * difficultyMultiplier
+                        });
                     }
-                    
-                    // Cerises (Points)
-                    platforms.push({ x: Math.random() * (w-100) + 50, y: y - 40, w: 20, h: 20, type: 'cherry' }); // Visuel seulement
+
+                    platforms.push({ x: currentX + gap, y: wallY, w: width, h: h, type: 'castle_wall' });
+                    currentX += gap + width;
                 }
+                
+                // La Corde (Plateforme mobile rapide)
+                let ropeGap = 400;
+                platforms.push({ 
+                    x: currentX + 50, y: wallY - 50, w: 60, h: 10, 
+                    type: 'moving', vx: 4 * difficultyMultiplier, minX: currentX + 50, maxX: currentX + ropeGap - 50 
+                });
+                
+                platforms.push({ x: currentX + ropeGap, y: wallY, w: 300, h: h, type: 'castle_wall' });
 
-                // Ennemis "Bad Guys"
-                enemies.push({ x: w/2, y: h - blockSize*2.5 - 60, w: 50, h: 60, type: 'zombie', patrolStart: 100, patrolEnd: w-100, dir: 1, speed: 2 * difficultyMultiplier });
-                enemies.push({ x: w/2, y: h - blockSize*5.5 - 60, w: 50, h: 60, type: 'chest_monster', patrolStart: 100, patrolEnd: w-100, dir: -1, speed: 3 * difficultyMultiplier });
+                // La Cloche (Fin)
+                goal = { x: currentX + ropeGap + 150, y: wallY - 100, w: 60, h: 80, type: 'bell' };
 
-                // Grosse Pomme (Clé) - Tout en haut
-                keyItem = { x: w/2, y: 100, w: 40, h: 40, type: 'apple' };
+                hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
 
-                // Sortie
-                goal = { x: w - 100, y: 50, w: 70, h: 80 };
+            } else if (level === 8) {
+                // --- NIVEAU 8 : SUPER MARIO BROS 2 ---
+                document.body.style.backgroundColor = "#9290FF"; // Bleu ciel SMB2
+
+                let groundY = h - unit;
+                
+                // Sol SMB2 (Herbe Rouge/Verte)
+                platforms.push({ x: -50, y: groundY, w: 300, h: unit, type: 'smb2_grass' });
+                player.x = 50; player.y = groundY - player.h; player.grounded = true;
+
+                // Vases (Tuyaux)
+                platforms.push({ x: 300, y: groundY - 60, w: 50, h: 60 + unit, type: 'jar' });
+                
+                // Plateformes flottantes (Bûches)
+                platforms.push({ x: 400, y: groundY - 120, w: 100, h: 20, type: 'smb2_log' });
+                platforms.push({ x: 550, y: groundY - 180, w: 100, h: 20, type: 'smb2_log' });
+                
+                // Ennemis Maskass
+                enemies.push({ x: 600, y: groundY - 180 - 60, w: 40, h: 40, type: 'shy_guy', patrolStart: 550, patrolEnd: 650, dir: 1, speed: 2 * difficultyMultiplier });
+
+                // Sol plus loin
+                platforms.push({ x: 700, y: groundY, w: 500, h: unit, type: 'smb2_grass' });
+                
+                // Clé (Navet) en haut
+                platforms.push({ x: 800, y: groundY - 250, w: 80, h: 20, type: 'smb2_log' });
+                keyItem = { x: 820, y: groundY - 300, w: 30, h: 30, type: 'turnip' };
+
+                // Tête de Faucon (Porte)
+                goal = { x: 1000, y: groundY - 100, w: 80, h: 100, type: 'hawkmouth' };
+
+                hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
+            } else if (level === 9) {
+                // --- NIVEAU 9 : SONIC STYLE (SPEED ZONE) ---
+                document.body.style.backgroundColor = "#3080e3"; // Ciel Sonic
+
+                // Sol damier
+                let blockSize = 40;
+                for(let i=0; i<50; i++) {
+                    if (i > 10 && i < 15) continue; // Trou
+                    platforms.push({ x: i*blockSize, y: h - blockSize*2, w: blockSize, h: blockSize*2, type: 'sonic_dirt' });
+                    platforms.push({ x: i*blockSize, y: h - blockSize*2, w: blockSize, h: 20, type: 'sonic_grass' });
+                }
+                player.x = 50; player.y = h - blockSize*2 - player.h; player.grounded = true;
+
+                // Speed Pads
+                platforms.push({ x: 200, y: h - blockSize*2 - 10, w: 40, h: 10, type: 'speed_pad' });
+                platforms.push({ x: 800, y: h - blockSize*2 - 10, w: 40, h: 10, type: 'speed_pad' });
+
+                // Ressorts (Springs)
+                platforms.push({ x: 600, y: h - blockSize*2 - 20, w: 30, h: 20, type: 'spring' });
+                
+                // Plateformes hautes
+                platforms.push({ x: 500, y: h - blockSize*5, w: 200, h: 20, type: 'sonic_grass' });
+                platforms.push({ x: 900, y: h - blockSize*7, w: 200, h: 20, type: 'sonic_grass' });
+
+                // Anneaux (Rings)
+                for(let i=0; i<10; i++) {
+                    platforms.push({ x: 300 + i*50, y: h - blockSize*4, w: 20, h: 20, type: 'ring' });
+                }
+                
+                // Ennemis Badniks (Crabmeat)
+                enemies.push({ x: 700, y: h - blockSize*2 - 40, w: 50, h: 40, type: 'badnik', patrolStart: 650, patrolEnd: 850, dir: 1, speed: 3 });
+
+                // Panneau de fin (Spinning Sign)
+                goal = { x: 1400, y: h - blockSize*2 - 100, w: 10, h: 100, type: 'sonic_goal' };
+
+                hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
             }
         }
 
@@ -555,6 +586,28 @@
             if (teleportTimer > 0) teleportTimer--;
             frameTick++; 
             let prevY = player.y;
+
+            // Spécial Niveau 7 : Projectiles (Flèches)
+            if (currentLevel === 7 && frameTick % 120 === 0) { // Toutes les 2 secondes
+                let arrowY = player.y + 10; // Hauteur du joueur
+                projectiles.push({ x: canvas.width + 100, y: arrowY, w: 40, h: 10, speed: -5 * difficultyMultiplier, type: 'arrow' });
+                if (Math.random() > 0.5) projectiles.push({ x: canvas.width + 300, y: arrowY - 60, w: 40, h: 10, speed: -6 * difficultyMultiplier, type: 'fireball' });
+            }
+
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                let p = projectiles[i];
+                p.x += p.speed;
+                if (p.x < -100) projectiles.splice(i, 1);
+            }
+
+            for (let h of hazards) {
+                if (h.type === 'knight') {
+                    if (!h.dir) h.dir = 1;
+                    h.y += h.dir * h.speed;
+                    if (h.y > h.maxY) h.dir = -1;
+                    if (h.y < h.minY) h.dir = 1;
+                }
+            }
 
             for(let e of enemies) {
                 if (e.patrolEnd) {
@@ -653,8 +706,8 @@
 
             if (!player.climbing || keys.up) { 
                 for (let p of platforms) {
-                    if (p.type === 'slide_visual' || p.type === 'pac_dot' || p.type === 'cherry') continue; 
-                    if (p.type === 'castle') continue; 
+                    if (p.type === 'slide_visual' || p.type === 'pac_dot' || p.type === 'cherry' || p.type === 'turnip' || p.type === 'ring') continue; 
+                    if (p.type === 'castle' || p.type === 'sonic_goal') continue; 
 
                     if (player.x + player.w > p.x + 5 && player.x < p.x + p.w - 5) {
                         let feetNow = player.y + player.h;
@@ -663,6 +716,16 @@
 
                         if (player.vy >= 0 && feetBefore <= p.y + tolerance && feetNow >= p.y) {
                             
+                            // Interaction Sonic (Spring / Speed Pad)
+                            if (p.type === 'spring') {
+                                player.vy = -20; // Super saut
+                                player.grounded = false;
+                                continue; // Pas d'atterrissage
+                            }
+                            if (p.type === 'speed_pad') {
+                                player.vx = (player.vx > 0 ? 15 : -15); // Turbo
+                            }
+
                             if (currentLevel === 2 && player.falling) {
                                 let fallDistance = p.y - player.fallStartY;
                                 if (fallDistance > 600) { 
@@ -684,9 +747,6 @@
             }
             if (!onAnyPlatform) player.currentPlatform = null;
             if(player.x < 0) { player.x = 0; player.vx = 0; }
-            
-            // CORRECTIF : Suppression du mur invisible à droite !
-            // La caméra suit, donc on n'a plus besoin de limiter le joueur à la largeur de l'écran.
             
             checkInteractions();
         }
@@ -723,9 +783,18 @@
                     }
                 }
             }
+            
+            // Projectiles (Niv 7)
+            if (invincibilityTimer === 0) {
+                for (let p of projectiles) {
+                    if (hit(player, p)) takeDamage("Touché par une flèche !");
+                }
+            }
 
             if (hit(player, goal)) {
-                if (currentLevel >= 6 || hasKey) { 
+                if (currentLevel === 8 && !hasKey) return; 
+
+                if (hasKey || (currentLevel !== 7 && currentLevel !== 8)) { 
                     levelWin();
                 } else {
                     if (player.x < goal.x) player.x -= 10;
@@ -753,8 +822,9 @@
             else if (currentLevel === 4) ctx.fillStyle = "#5c94fc";
             else if (currentLevel === 5) ctx.fillStyle = "#87CEEB";
             else if (currentLevel === 6) ctx.fillStyle = "#222"; 
-            else if (currentLevel === 7) ctx.fillStyle = "black";
-            else if (currentLevel === 8) ctx.fillStyle = "#2d1b0e";
+            else if (currentLevel === 7) ctx.fillStyle = "#000033";
+            else if (currentLevel === 8) ctx.fillStyle = "#9290FF"; 
+            else if (currentLevel === 9) ctx.fillStyle = "#3080e3"; 
             else ctx.fillStyle = "#fffdf0";
             
             ctx.fillRect(0,0,canvas.width, canvas.height);
@@ -766,8 +836,7 @@
             }
 
             let camX = Math.min(0, (canvas.width * 0.3) - player.x);
-            // Lock camera for level 7/8 if fitting screen
-            if (currentLevel === 7 || currentLevel === 8) camX = 0; 
+            // Lock camera for level 7 if fitting screen (not really possible here as it's long)
             ctx.save(); ctx.translate(camX, 0);
 
             // Nuages (Niveau 4)
@@ -790,6 +859,16 @@
                 ctx.globalAlpha = 0.3 + (Math.sin(frameTick * 0.1) * 0.1);
                 ctx.fill();
                 ctx.globalAlpha = 1.0;
+            }
+
+            // Projectiles (Niveau 7)
+            for (let p of projectiles) {
+                if (p.type === 'arrow') {
+                    ctx.fillStyle = "white"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x-10, p.y+p.h/2); ctx.lineTo(p.x, p.y+p.h); ctx.fill();
+                } else if (p.type === 'fireball') {
+                    ctx.fillStyle = "orange"; ctx.beginPath(); ctx.arc(p.x+p.w/2, p.y+p.h/2, 15, 0, Math.PI*2); ctx.fill();
+                }
             }
 
             // Barres de feu
@@ -894,6 +973,51 @@
                     ctx.strokeStyle = "green"; ctx.lineWidth = 1;
                     ctx.beginPath(); ctx.moveTo(p.x+5, p.y+10); ctx.quadraticCurveTo(p.x+10, p.y, p.x+15, p.y+15); ctx.stroke();
                 }
+                // SMB2 BLOCKS
+                else if (p.type === 'smb2_grass') {
+                    ctx.fillStyle = "#d82800"; ctx.fillRect(p.x, p.y, p.w, p.h); // Rouge terre
+                    ctx.fillStyle = "#00c000"; ctx.fillRect(p.x, p.y, p.w, 15); // Herbe verte
+                    ctx.strokeStyle = "black"; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'smb2_log') {
+                    ctx.fillStyle = "#d8a080"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "#5a3000"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'jar') {
+                    // Vase rouge
+                    ctx.fillStyle = "#d82800"; 
+                    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x+p.w, p.y); ctx.lineTo(p.x+p.w-5, p.y+p.h); ctx.lineTo(p.x+5, p.y+p.h); ctx.fill();
+                    ctx.strokeStyle = "black"; ctx.stroke();
+                    // Bande blanche
+                    ctx.fillStyle = "white"; ctx.fillRect(p.x+5, p.y+10, p.w-10, 10);
+                }
+                // HUNCHBACK WALL
+                else if (p.type === 'castle_wall') {
+                    ctx.fillStyle = "#ff5722"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.fillStyle = "#bf360c"; ctx.fillRect(p.x, p.y, 20, p.h); ctx.fillRect(p.x+p.w-20, p.y, 20, p.h); // Bords
+                    ctx.strokeStyle = "black"; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                // SONIC
+                else if (p.type === 'sonic_dirt') {
+                    ctx.fillStyle = "#8d6e63"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    // Damier
+                    ctx.fillStyle = "#5d4037"; ctx.fillRect(p.x, p.y+p.h/2, p.w/2, p.h/2); ctx.fillRect(p.x+p.w/2, p.y, p.w/2, p.h/2);
+                }
+                else if (p.type === 'sonic_grass') {
+                    ctx.fillStyle = "#32CD32"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "#006400"; ctx.lineWidth=2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'spring') {
+                    ctx.fillStyle = "red"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.fillStyle = "yellow"; ctx.fillRect(p.x+5, p.y-5, p.w-10, 5); // Ressort
+                }
+                else if (p.type === 'speed_pad') {
+                    ctx.fillStyle = "#333"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.fillStyle = "yellow"; ctx.beginPath(); ctx.moveTo(p.x+5, p.y+p.h/2); ctx.lineTo(p.x+p.w/2, p.y+p.h/2); ctx.lineTo(p.x+p.w/2, p.y); ctx.lineTo(p.x+p.w-5, p.y+p.h/2); ctx.lineTo(p.x+p.w/2, p.y+p.h); ctx.lineTo(p.x+p.w/2, p.y+p.h/2); ctx.fill();
+                }
+                else if (p.type === 'ring') {
+                    ctx.lineWidth=3; ctx.strokeStyle="gold"; ctx.beginPath(); ctx.arc(p.x+p.w/2, p.y+p.h/2, 8, 0, Math.PI*2); ctx.stroke();
+                }
                 else {
                     ctx.fillStyle = currentLevel === 3 ? "#5d4037" : "#2c3e50"; 
                     ctx.fillRect(p.x, p.y, p.w, p.h);
@@ -924,6 +1048,11 @@
                     ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(keyItem.x+15, keyItem.y+15, 5, 0, Math.PI*2); ctx.fill();
                     ctx.strokeStyle = "green"; ctx.lineWidth = 3;
                     ctx.beginPath(); ctx.moveTo(keyItem.x+keyItem.w/2, keyItem.y+5); ctx.lineTo(keyItem.x+keyItem.w/2 + 5, keyItem.y-5); ctx.stroke();
+                } else if (keyItem.type === 'turnip') {
+                    // Navet blanc avec feuilles vertes
+                    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(keyItem.x+15, keyItem.y+20, 12, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = "green"; ctx.beginPath(); 
+                    ctx.moveTo(keyItem.x+15, keyItem.y+8); ctx.lineTo(keyItem.x+5, keyItem.y-5); ctx.lineTo(keyItem.x+25, keyItem.y-5); ctx.fill();
                 } else {
                     ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(keyItem.x+15, keyItem.y+10, 10, 0, Math.PI*2); ctx.fill();
                     ctx.fillRect(keyItem.x+12, keyItem.y+10, 6, 25); ctx.fillRect(keyItem.x+12, keyItem.y+25, 12, 5); ctx.fillRect(keyItem.x+12, keyItem.y+32, 10, 5);
@@ -944,6 +1073,12 @@
                 } else if (h.type === 'rock') {
                     ctx.fillStyle = "#7f8c8d"; ctx.beginPath(); ctx.arc(h.x+h.w/2, h.y+h.h/2, h.w/2, 0, Math.PI*2); ctx.fill();
                     ctx.strokeStyle = "black"; ctx.lineWidth = 1; ctx.stroke();
+                } else if (h.type === 'knight') {
+                    // Chevalier (tête et lance)
+                    ctx.fillStyle = "silver"; ctx.fillRect(h.x, h.y, h.w, 30); // Tête
+                    ctx.fillRect(h.x+10, h.y+30, 20, 50); // Corps
+                    ctx.fillStyle = "black"; ctx.fillRect(h.x+10, h.y+5, 20, 5); // Yeux
+                    ctx.strokeStyle = "black"; ctx.beginPath(); ctx.moveTo(h.x+h.w/2, h.y); ctx.lineTo(h.x+h.w/2, h.y-40); ctx.stroke(); // Lance
                 }
             }
 
@@ -977,6 +1112,22 @@
                         ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx-10, ty-65); ctx.moveTo(tx, ty-50); ctx.lineTo(tx, ty-70);
                         ctx.moveTo(tx+10, ty-50); ctx.lineTo(tx+10, ty-65); ctx.stroke();
                     }
+                } else if(e.type === 'shy_guy') {
+                    // MASKASS (Rouge avec masque blanc)
+                    ctx.fillStyle = "#e74c3c"; ctx.fillRect(e.x, e.y, e.w, e.h); // Rouge
+                    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(e.x+e.w/2, e.y+15, 12, 0, Math.PI*2); ctx.fill(); // Masque
+                    ctx.fillStyle = "black"; // Yeux & Bouche
+                    ctx.beginPath(); ctx.arc(e.x+e.w/2 - 5, e.y+12, 2, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(e.x+e.w/2 + 5, e.y+12, 2, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(e.x+e.w/2, e.y+20, 3, 0, Math.PI*2); ctx.fill(); // Bouche O
+                    // Pieds
+                    if (Math.floor(frameTick/10)%2 === 0) { ctx.fillStyle = "blue"; ctx.fillRect(e.x, e.y+e.h-5, 10, 5); } 
+                    else { ctx.fillStyle = "blue"; ctx.fillRect(e.x+e.w-10, e.y+e.h-5, 10, 5); }
+                } else if (e.type === 'badnik') {
+                    // Badnik (Crabe rouge simple)
+                    ctx.fillStyle = "#c0392b"; ctx.fillRect(e.x, e.y+10, e.w, 30);
+                    ctx.fillStyle = "grey"; ctx.beginPath(); ctx.arc(e.x+10, e.y+10, 5, 0, Math.PI*2); ctx.fill(); // Oeil
+                    ctx.beginPath(); ctx.arc(e.x+e.w-10, e.y+10, 5, 0, Math.PI*2); ctx.fill(); // Oeil
                 }
             }
 
@@ -991,15 +1142,43 @@
             } else if (goal.type === 'nether_portal') {
                 ctx.fillStyle = "#6a0dad"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h); 
                 ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h); 
+            } else if (goal.type === 'bell') {
+                // Cloche
+                ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(goal.x+goal.w/2, goal.y+goal.h/2, 30, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "brown"; ctx.fillRect(goal.x+goal.w/2-5, goal.y, 10, 20); // Attache
+            } else if (goal.type === 'hawkmouth') {
+                // Tête de Faucon
+                ctx.fillStyle = "#d82800"; ctx.beginPath(); 
+                ctx.moveTo(goal.x, goal.y); 
+                ctx.lineTo(goal.x+goal.w, goal.y); 
+                ctx.lineTo(goal.x+goal.w, goal.y+goal.h); 
+                ctx.lineTo(goal.x, goal.y+goal.h); 
+                ctx.fill();
+                // Bec/Bouche (Noir si ouvert, sinon fermé)
+                ctx.fillStyle = "black"; 
+                if (hasKey) ctx.fillRect(goal.x+10, goal.y+40, 60, 60); // Ouvert
+                else ctx.fillRect(goal.x+10, goal.y+60, 60, 2); // Fermé
+                // Yeux
+                ctx.fillStyle = "white";
+                ctx.beginPath(); ctx.arc(goal.x+20, goal.y+20, 8, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(goal.x+60, goal.y+20, 8, 0, Math.PI*2); ctx.fill();
+            } else if (goal.type === 'sonic_goal') {
+                // Panneau Sonic
+                ctx.fillStyle = "#333"; ctx.fillRect(goal.x+2, goal.y+40, 6, 60); // Poteau
+                ctx.fillStyle = "blue"; ctx.fillRect(goal.x-20, goal.y, 50, 40); // Panneau
+                ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(goal.x+5, goal.y+20, 15, 0, Math.PI*2); ctx.fill(); // Visage (rond blanc)
             } else {
+                // CORRECTIF NIVEAU 8 : PORTE INVISIBLE SANS CLÉ
+                if (currentLevel === 8 && !hasKey) return;
+
                 ctx.fillStyle = "#f1c40f"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.fillStyle = "black"; 
-                let doorText = currentLevel === 8 ? "FIN" : "NIV " + (currentLevel + 1);
+                let doorText = currentLevel === 9 ? "FIN" : "NIV " + (currentLevel + 1);
                 ctx.fillText(doorText, goal.x + 10, goal.y - 10);
                 ctx.beginPath(); ctx.arc(goal.x+goal.w-10, goal.y+goal.h/2, 4, 0, Math.PI*2); ctx.fill();
                 
-                if (!hasKey && currentLevel !== 3 && currentLevel !== 4 && currentLevel !== 5) {
+                if (!hasKey && currentLevel !== 3 && currentLevel !== 4 && currentLevel !== 5 && currentLevel !== 9) {
                     ctx.fillStyle = "red"; ctx.fillRect(goal.x + 20, goal.y + 30, 30, 30);
                     ctx.fillStyle = "white"; ctx.font = "30px sans-serif"; ctx.fillText("🔒", goal.x + 20, goal.y + 55);
                     if (Math.abs(player.x - goal.x) < 100) {
@@ -1021,7 +1200,7 @@
         }
 
         function nextLevelAction() {
-            if (currentLevel < 8) {
+            if (currentLevel < 9) {
                 currentLevel++;
                 document.getElementById('message-box').style.display = 'none';
                 lastTime = 0; accumulator = 0;
@@ -1042,7 +1221,7 @@
             if(['arrowup', 'w', ' '].includes(k)) keys.up = state;
             if(['arrowdown', 's'].includes(k)) keys.down = state;
             
-            if (state && ['1','2','3','4','5','6','7','8'].includes(e.key)) {
+            if (state && ['1','2','3','4','5','6','7','8','9'].includes(e.key)) {
                 currentLevel = parseInt(e.key);
                 startGame('easy'); 
             }
@@ -1106,7 +1285,7 @@
 
             document.getElementById('start-screen').style.display = 'none';
             lives = 3; updateHud(); 
-            if(![1,2,3,4,5,6,7,8].includes(currentLevel)) currentLevel = 1;
+            if(![1,2,3,4,5,6,7,8,9].includes(currentLevel)) currentLevel = 1;
             
             lastTime = 0; accumulator = 0;
             gameRunning = true; initLevel(currentLevel); 
@@ -1127,7 +1306,7 @@
         function levelWin() {
             gameRunning = false;
             levelComplete = true;
-            if (currentLevel < 8) {
+            if (currentLevel < 9) {
                 document.getElementById('msg-title').innerText = "NIVEAU " + currentLevel + " RÉUSSI !";
                 document.getElementById('msg-title').style.color = "green";
                 document.getElementById('msg-text').innerText = "Prêt pour la suite ?";
