@@ -1,0 +1,454 @@
+/* ============================================================
+   L'AVENTURE DE LÉO - STYLES
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #fffdf0;
+    overflow: hidden;
+    font-family: 'Patrick Hand', 'Comic Sans MS', cursive, sans-serif;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+canvas {
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+}
+
+/* ===== UI LAYER ===== */
+#ui-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+/* ===== HUD ===== */
+#hud {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+}
+
+#level-display {
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #333, -1px -1px 0 #333;
+    font-weight: bold;
+}
+
+#hearts {
+    font-size: 28px;
+    text-shadow: 2px 2px 0 #333;
+}
+
+#key-display {
+    font-size: 24px;
+    color: gold;
+    text-shadow: 2px 2px 0 #000;
+    display: none;
+    animation: pulse 0.5s infinite alternate;
+}
+
+#coins-display {
+    font-size: 24px;
+    color: gold;
+    text-shadow: 2px 2px 0 #000;
+}
+
+#jump-indicator {
+    position: absolute;
+    bottom: 200px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+}
+
+.jump-dot {
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid white;
+    transition: background 0.2s;
+}
+
+.jump-dot.available {
+    background: #2ecc71;
+    box-shadow: 0 0 10px #2ecc71;
+}
+
+/* ===== PROGRESS BAR ===== */
+#progress-bar {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.progress-dot {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid rgba(255,255,255,0.5);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.progress-dot.completed {
+    background: #2ecc71;
+    border-color: #27ae60;
+}
+
+.progress-dot.current {
+    background: #f39c12;
+    border-color: #e67e22;
+    animation: pulse 0.5s infinite alternate;
+}
+
+/* ===== TUTORIAL ===== */
+#tutorial {
+    position: absolute;
+    top: 50%;
+    left: 100px;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.95);
+    padding: 20px;
+    border-radius: 15px;
+    border: 3px solid #333;
+    max-width: 250px;
+    display: none;
+    pointer-events: auto;
+    z-index: 25;
+}
+
+#tutorial h3 {
+    margin: 0 0 10px 0;
+    color: #e67e22;
+}
+
+#tutorial p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+#tutorial button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* ===== TIMER ===== */
+#timer-display {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    color: white;
+    text-shadow: 2px 2px 0 #333;
+    display: none;
+}
+
+/* ===== SCREENS ===== */
+.screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    pointer-events: auto;
+    text-align: center;
+}
+
+#start-screen {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#pause-screen {
+    background: rgba(0,0,0,0.8);
+    display: none;
+}
+
+#transition-screen {
+    background: black;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.game-title {
+    font-size: 60px;
+    color: white;
+    text-shadow: 4px 4px 0 #333, 6px 6px 0 rgba(0,0,0,0.3);
+    margin: 0;
+    animation: bounce 1s infinite;
+}
+
+.subtitle {
+    font-size: 24px;
+    color: rgba(255,255,255,0.9);
+    margin: 10px 0 30px 0;
+}
+
+/* ===== BUTTONS ===== */
+.difficulty-container {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.big-btn {
+    color: white;
+    border: 4px solid #333;
+    padding: 15px 30px;
+    font-size: 24px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 20px;
+    box-shadow: 5px 5px 0px #333;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.big-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0px #333;
+}
+
+.big-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 3px 3px 0px #333;
+}
+
+.btn-easy { background: #27ae60; }
+.btn-medium { background: #f39c12; }
+.btn-hard { background: #c0392b; }
+.btn-continue { background: #3498db; }
+.btn-pause { background: #9b59b6; }
+
+/* ===== OPTIONS ===== */
+.options {
+    margin-top: 30px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.option-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 18px;
+}
+
+.toggle-switch {
+    width: 50px;
+    height: 26px;
+    background: #555;
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toggle-switch.active {
+    background: #2ecc71;
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s;
+}
+
+.toggle-switch.active::after {
+    left: 26px;
+}
+
+/* ===== MOBILE CONTROLS - HIDDEN ON DESKTOP ===== */
+#controls {
+    pointer-events: auto;
+    display: none; /* Hidden by default */
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 20px;
+    padding-bottom: 40px;
+    width: 100%;
+}
+
+#btn-pause-mobile {
+    display: none; /* Hidden by default */
+}
+
+/* Show controls only on touch devices / small screens */
+@media (max-width: 1024px) and (pointer: coarse) {
+    #controls {
+        display: flex;
+    }
+    #btn-pause-mobile {
+        display: flex;
+        position: absolute;
+        top: 15px;
+        right: 80px;
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        pointer-events: auto;
+    }
+}
+
+.d-pad {
+    display: flex;
+    gap: 15px;
+}
+
+.d-pad-right {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.btn {
+    background: rgba(255, 255, 255, 0.6);
+    border: 3px solid rgba(51, 51, 51, 0.6);
+    border-radius: 50%;
+    width: 110px;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    color: #333;
+    font-weight: bold;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s, background 0.1s;
+    touch-action: none;
+}
+
+.btn:active {
+    background: rgba(255, 255, 255, 0.9);
+    transform: scale(0.95);
+}
+
+#btn-jump {
+    width: 130px;
+    height: 130px;
+    background: rgba(46, 204, 113, 0.6);
+    font-size: 40px;
+    border-color: rgba(39, 174, 96, 0.8);
+}
+
+#btn-climb {
+    width: 80px;
+    height: 80px;
+    background: rgba(155, 89, 182, 0.6);
+    font-size: 30px;
+    border-color: rgba(142, 68, 173, 0.8);
+}
+
+/* ===== MESSAGE BOX ===== */
+#message-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 40px;
+    border: 6px solid #333;
+    border-radius: 25px;
+    text-align: center;
+    display: none;
+    pointer-events: auto;
+    box-shadow: 15px 15px 0px rgba(0,0,0,0.1);
+    z-index: 30;
+    min-width: 320px;
+}
+
+.space-hint {
+    font-size: 16px;
+    color: #888;
+    margin-top: 15px;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.1s linear 3;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .game-title { font-size: 40px; }
+    .big-btn { padding: 12px 20px; font-size: 20px; }
+    .btn { width: 90px; height: 90px; font-size: 40px; }
+    #btn-jump { width: 110px; height: 110px; }
+}
+
+/* ===== SAVED GAME INDICATOR ===== */
+#saved-game {
+    margin-top: 20px;
+    padding: 15px 25px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 15px;
+    color: white;
+}
+
+#saved-game p {
+    margin: 5px 0;
+}
