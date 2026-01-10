@@ -145,7 +145,7 @@
         
         <p style="margin-top:30px; color:#888; font-size:16px;">
             (Clavier : A/Z pour bouger, Espace pour sauter)<br>
-            (1 à 6 pour choisir niveau | + pour vies)
+            (1 à 7 pour choisir niveau | + pour vies)
         </p>
     </div>
 
@@ -244,6 +244,7 @@
         let goal = {};
         let fireBars = []; 
         let clouds = [];
+        let dots = []; // Pour Pacman
 
         function createSlide(startX, startY, width, height, steps) {
             let stepW = width / steps;
@@ -267,7 +268,7 @@
             player.vx = 0; player.vy = 0;
             player.climbing = false; player.jumpCount = 0; player.currentPlatform = null;
             hasKey = false; keyItem = null;
-            fireBars = []; clouds = []; portals = [];
+            fireBars = []; clouds = []; portals = []; dots = [];
             teleportTimer = 0;
             document.getElementById('key-display').style.display = 'none';
             document.getElementById('level-display').innerText = "NIVEAU " + level;
@@ -438,40 +439,73 @@
 
             } else if (level === 6) {
                 // --- NIVEAU 6 : LE LABO DE TELEPORTATION ---
-                document.body.style.backgroundColor = "#222"; // Fond sombre
+                document.body.style.backgroundColor = "#222"; 
                 let metalColor = "#7f8c8d";
 
-                // Sol de départ (Bas Gauche)
                 platforms.push({ x: -50, y: h - unit*2, w: 300, h: unit, type: 'metal' });
                 player.x = 50; player.y = h - unit*2 - player.h; player.grounded = true;
                 
-                // Portail Bleu (Vers Haut Droite)
+                // Portails
                 portals.push({ x: 200, y: h - unit*2 - 80, w: 50, h: 80, color: '#00FFFF', destX: w - 200, destY: unit * 3 - player.h - 10 });
-
-                // Plateforme Haut Droite (Zone Zombie)
                 platforms.push({ x: w - 300, y: unit * 3, w: 300, h: 20, type: 'metal' });
                 enemies.push({ x: w - 200, y: unit * 3 - 60, w: 50, h: 60, type: 'zombie', patrolStart: w - 280, patrolEnd: w - 50, dir: -1, speed: 2.5 * difficultyMultiplier });
                 
-                // Portail Orange (Vers Milieu Gauche)
                 portals.push({ x: w - 100, y: unit * 3 - 80, w: 50, h: 80, color: '#FF9900', destX: 100, destY: unit * 5 - player.h - 10 });
-
-                // Plateforme Milieu Gauche (Zone Clé + Pic)
                 platforms.push({ x: 50, y: unit * 5, w: 300, h: 20, type: 'metal' });
                 hazards.push({ x: 180, y: unit * 5 - 25, w: 25, h: 25, type: 'spike' });
-                keyItem = { x: 50, y: unit * 5 - 50, w: 40, h: 40 }; // Clé au bord gauche
+                keyItem = { x: 50, y: unit * 5 - 50, w: 40, h: 40 }; 
                 
-                // Portail Violet (Vers Sortie)
                 portals.push({ x: 300, y: unit * 5 - 80, w: 50, h: 80, color: '#CC00FF', destX: w - 150, destY: h - unit*2 - player.h - 10 });
-
-                // Zone de Sortie (Bas Droite)
                 platforms.push({ x: w - 300, y: h - unit*2, w: 300, h: unit, type: 'metal' });
                 enemies.push({ x: w - 250, y: h - unit*2 - 60, w: 60, h: 60, type: 'chest_monster', patrolStart: w - 280, patrolEnd: w - 100, dir: 1, speed: 2 });
                 goal = { x: w - 80, y: h - unit*2 - 80, w: 70, h: 80 };
 
-                // Plateformes mobiles pour aider si on tombe
                 platforms.push({ x: w/2 - 100, y: h - unit, w: 200, h: 20, type: 'moving', vx: 2, minX: 200, maxX: w-200 });
-
                 hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
+
+            } else if (level === 7) {
+                // --- NIVEAU 7 : LABYRINTHE PAC-MAN ---
+                document.body.style.backgroundColor = "black";
+                let blockSize = 40;
+                let mazeY = h - unit*8;
+
+                // Sol de départ
+                platforms.push({ x: 0, y: h - blockSize, w: w, h: blockSize, type: 'pac_wall' });
+                player.x = 50; player.y = h - blockSize*2; player.grounded = true;
+
+                // Construction du labyrinthe avec des blocs 'pac_wall'
+                // Mur Gauche / Droite
+                platforms.push({ x: 0, y: mazeY, w: blockSize, h: h - mazeY, type: 'pac_wall' });
+                platforms.push({ x: w - blockSize, y: mazeY, w: blockSize, h: h - mazeY, type: 'pac_wall' });
+
+                // Etages
+                platforms.push({ x: blockSize, y: h - blockSize*4, w: 300, h: 20, type: 'pac_wall' });
+                platforms.push({ x: w - 300 - blockSize, y: h - blockSize*4, w: 300, h: 20, type: 'pac_wall' });
+                
+                platforms.push({ x: 200, y: h - blockSize*7, w: w - 400, h: 20, type: 'pac_wall' });
+
+                // Echelles
+                ladders.push({ x: 100, y: h - blockSize*4, w: 40, h: blockSize*3 });
+                ladders.push({ x: w - 140, y: h - blockSize*4, w: 40, h: blockSize*3 });
+                ladders.push({ x: w/2 - 20, y: h - blockSize*7, w: 40, h: blockSize*3 });
+
+                // Pac-Dots (Déco)
+                for(let i=0; i<10; i++) {
+                    platforms.push({ x: 100 + i*80, y: h - blockSize*2.5, w: 10, h: 10, type: 'pac_dot' });
+                    platforms.push({ x: 100 + i*80, y: h - blockSize*5.5, w: 10, h: 10, type: 'pac_dot' });
+                }
+
+                // Clé (Cerise)
+                keyItem = { x: 50, y: h - blockSize*8, w: 30, h: 30, type: 'cherry' };
+
+                // Fantômes (Zombies)
+                enemies.push({ x: 300, y: h - blockSize*4 - 60, w: 50, h: 60, type: 'zombie', patrolStart: 200, patrolEnd: w-200, dir: 1, speed: 3 * difficultyMultiplier });
+                enemies.push({ x: 150, y: h - blockSize - 60, w: 50, h: 60, type: 'chest_monster', patrolStart: 50, patrolEnd: w/2, dir: 1, speed: 4 * difficultyMultiplier });
+
+                // Sortie
+                goal = { x: w - 100, y: h - blockSize - 80, w: 70, h: 80 };
+                
+                // Pas de trous, c'est fermé
             }
         }
 
@@ -521,15 +555,11 @@
             // Portals
             if (teleportTimer === 0) {
                 for(let p of portals) {
-                    // Collision simple avec le portail
                     if (player.x < p.x + p.w && player.x + player.w > p.x &&
                         player.y < p.y + p.h && player.y + player.h > p.y) {
-                        
-                        player.x = p.destX;
-                        player.y = p.destY;
+                        player.x = p.destX; player.y = p.destY;
                         player.vx = 0; player.vy = 0;
-                        teleportTimer = 60; // 1 seconde de recharge pour pas re-téléporter direct
-                        break;
+                        teleportTimer = 60; break;
                     }
                 }
             }
@@ -584,7 +614,7 @@
 
             if (!player.climbing || keys.up) { 
                 for (let p of platforms) {
-                    if (p.type === 'slide_visual') continue; 
+                    if (p.type === 'slide_visual' || p.type === 'pac_dot') continue; 
                     if (p.type === 'castle') continue; 
 
                     if (player.x + player.w > p.x + 5 && player.x < p.x + p.w - 5) {
@@ -615,20 +645,16 @@
             }
             if (!onAnyPlatform) player.currentPlatform = null;
             if(player.x < 0) { player.x = 0; player.vx = 0; }
+            if(player.x > canvas.width - player.w) { player.x = canvas.width - player.w; player.vx = 0; } // Wall collide right logic basic
             
             checkInteractions();
         }
 
         function takeDamage(reason) {
             if (invincibilityTimer > 0) return;
-            
-            lives--; 
-            updateHud();
+            lives--; updateHud();
             if (lives <= 0) gameOver("Oh non ! " + (reason || "Tu n'as plus de vies."));
-            else { 
-                player.vy = -10; player.vx = -player.vx * 1.5; 
-                invincibilityTimer = 60; 
-            }
+            else { player.vy = -10; player.vx = -player.vx * 1.5; invincibilityTimer = 60; }
         }
 
         function updateHud() {
@@ -658,7 +684,7 @@
             }
 
             if (hit(player, goal)) {
-                if (currentLevel === 6 || hasKey) { // Niveau 6 nécessite la clé aussi
+                if (currentLevel >= 6 || hasKey) { 
                     levelWin();
                 } else {
                     if (player.x < goal.x) player.x -= 10;
@@ -685,7 +711,8 @@
             if (currentLevel === 3) ctx.fillStyle = "#2c3e50"; 
             else if (currentLevel === 4) ctx.fillStyle = "#5c94fc";
             else if (currentLevel === 5) ctx.fillStyle = "#87CEEB";
-            else if (currentLevel === 6) ctx.fillStyle = "#222"; // Labo sombre
+            else if (currentLevel === 6) ctx.fillStyle = "#222"; 
+            else if (currentLevel === 7) ctx.fillStyle = "black";
             else ctx.fillStyle = "#fffdf0";
             
             ctx.fillRect(0,0,canvas.width, canvas.height);
@@ -697,6 +724,8 @@
             }
 
             let camX = Math.min(0, (canvas.width * 0.3) - player.x);
+            // Lock camera for level 7 if fitting screen
+            if (currentLevel === 7) camX = 0; // Simple view
             ctx.save(); ctx.translate(camX, 0);
 
             // Nuages (Niveau 4)
@@ -731,7 +760,8 @@
             }
 
             for(let l of ladders) {
-                ctx.strokeStyle = "#795548"; ctx.lineWidth = 4; ctx.beginPath();
+                ctx.strokeStyle = currentLevel === 7 ? "blue" : "#795548"; 
+                ctx.lineWidth = 4; ctx.beginPath();
                 ctx.moveTo(l.x, l.y); ctx.lineTo(l.x, l.y+l.h);
                 ctx.moveTo(l.x+l.w, l.y); ctx.lineTo(l.x+l.w, l.y+l.h);
                 for(let i=0; i<l.h; i+=30) { ctx.moveTo(l.x, l.y+i); ctx.lineTo(l.x+l.w, l.y+i); } ctx.stroke();
@@ -805,10 +835,14 @@
                 else if (p.type === 'metal') { // POur le niveau 6
                     ctx.fillStyle = "#7f8c8d"; ctx.fillRect(p.x, p.y, p.w, p.h);
                     ctx.strokeStyle = "#95a5a6"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
-                    // Rivets
-                    ctx.fillStyle = "#333";
-                    ctx.beginPath(); ctx.arc(p.x+5, p.y+5, 2, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(p.x+p.w-5, p.y+5, 2, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = "#333"; ctx.beginPath(); ctx.arc(p.x+5, p.y+5, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(p.x+p.w-5, p.y+5, 2, 0, Math.PI*2); ctx.fill();
+                }
+                else if (p.type === 'pac_wall') {
+                    ctx.fillStyle = "black"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "blue"; ctx.lineWidth = 3; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'pac_dot') {
+                    ctx.fillStyle = "#ffb897"; ctx.fillRect(p.x+2, p.y+2, 6, 6);
                 }
                 else {
                     ctx.fillStyle = currentLevel === 3 ? "#5d4037" : "#2c3e50"; 
@@ -828,6 +862,12 @@
                     ctx.lineTo(keyItem.x + keyItem.w/2, keyItem.y + keyItem.h);
                     ctx.lineTo(keyItem.x, keyItem.y + keyItem.h/2);
                     ctx.fill();
+                } else if (keyItem.type === 'cherry') {
+                    ctx.fillStyle = "red"; 
+                    ctx.beginPath(); ctx.arc(keyItem.x+10, keyItem.y+20, 8, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(keyItem.x+25, keyItem.y+25, 8, 0, Math.PI*2); ctx.fill();
+                    ctx.strokeStyle = "green"; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(keyItem.x+10, keyItem.y+20); ctx.quadraticCurveTo(keyItem.x+15, keyItem.y, keyItem.x+25, keyItem.y+25); ctx.stroke();
                 } else {
                     ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(keyItem.x+15, keyItem.y+10, 10, 0, Math.PI*2); ctx.fill();
                     ctx.fillRect(keyItem.x+12, keyItem.y+10, 6, 25); ctx.fillRect(keyItem.x+12, keyItem.y+25, 12, 5); ctx.fillRect(keyItem.x+12, keyItem.y+32, 10, 5);
@@ -890,13 +930,13 @@
                 ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(goal.x+2, goal.y, 5, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = "red"; ctx.beginPath(); ctx.moveTo(goal.x+5, goal.y+10); ctx.lineTo(goal.x+30, goal.y+25); ctx.lineTo(goal.x+5, goal.y+40); ctx.fill();
             } else if (goal.type === 'nether_portal') {
-                ctx.fillStyle = "#6a0dad"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h); // Violet
-                ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h); // Obsidienne
+                ctx.fillStyle = "#6a0dad"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h); 
+                ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h); 
             } else {
                 ctx.fillStyle = "#f1c40f"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.fillStyle = "black"; 
-                let doorText = currentLevel === 6 ? "FIN" : "NIV " + (currentLevel + 1);
+                let doorText = currentLevel === 7 ? "FIN" : "NIV " + (currentLevel + 1);
                 ctx.fillText(doorText, goal.x + 10, goal.y - 10);
                 ctx.beginPath(); ctx.arc(goal.x+goal.w-10, goal.y+goal.h/2, 4, 0, Math.PI*2); ctx.fill();
                 
@@ -922,7 +962,7 @@
         }
 
         function nextLevelAction() {
-            if (currentLevel < 6) {
+            if (currentLevel < 7) {
                 currentLevel++;
                 document.getElementById('message-box').style.display = 'none';
                 lastTime = 0; accumulator = 0;
@@ -943,7 +983,7 @@
             if(['arrowup', 'w', ' '].includes(k)) keys.up = state;
             if(['arrowdown', 's'].includes(k)) keys.down = state;
             
-            if (state && ['1','2','3','4','5','6'].includes(e.key)) {
+            if (state && ['1','2','3','4','5','6','7'].includes(e.key)) {
                 currentLevel = parseInt(e.key);
                 startGame('easy'); 
             }
@@ -1004,7 +1044,7 @@
 
             document.getElementById('start-screen').style.display = 'none';
             lives = 3; updateHud(); 
-            if(![1,2,3,4,5,6].includes(currentLevel)) currentLevel = 1;
+            if(![1,2,3,4,5,6,7].includes(currentLevel)) currentLevel = 1;
             
             lastTime = 0; accumulator = 0;
             gameRunning = true; initLevel(currentLevel); 
@@ -1025,7 +1065,7 @@
         function levelWin() {
             gameRunning = false;
             levelComplete = true;
-            if (currentLevel < 6) {
+            if (currentLevel < 7) {
                 document.getElementById('msg-title').innerText = "NIVEAU " + currentLevel + " RÉUSSI !";
                 document.getElementById('msg-title').style.color = "green";
                 document.getElementById('msg-text').innerText = "Prêt pour la suite ?";
