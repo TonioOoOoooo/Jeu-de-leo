@@ -489,8 +489,21 @@ function updateFireBars() {
 function updateProjectiles() {
     for (let i = currentLevelData.projectiles.length - 1; i >= 0; i--) {
         const p = currentLevelData.projectiles[i];
-        p.x += p.speed;
-        if (p.x < -100 || p.x > canvas.width + 100) {
+        
+        // Mouvement - supporte speed OU vx/vy
+        if (p.vx !== undefined) {
+            p.x += p.vx;
+            p.y += p.vy;
+            // Gravité pour les bombes
+            if (p.type === 'boss_bomb') {
+                p.vy += 0.15;
+            }
+        } else {
+            p.x += p.speed;
+        }
+        
+        // Supprimer si hors écran
+        if (p.x < -100 || p.x > canvas.width + 3000 || p.y > canvas.height + 100 || p.y < -100) {
             currentLevelData.projectiles.splice(i, 1);
         }
     }
@@ -503,40 +516,138 @@ function updateBoss() {
     boss.attackTimer++;
     if (boss.invincible > 0) boss.invincible--;
     
-    // Patterns d'attaque
-    if (boss.attackTimer % 120 === 0) {
-        // Tir de projectile
-        const projSpeed = boss.phase === 1 ? -6 : -8;
-        currentLevelData.projectiles.push({
-            x: boss.x,
-            y: boss.y + boss.h / 2,
-            w: 30, h: 30,
-            speed: projSpeed * state.difficulty,
-            type: 'boss_fire'
-        });
+    // Flottement
+    boss.floatY += boss.floatDir * 0.5;
+    if (boss.floatY > 20) boss.floatDir = -1;
+    if (boss.floatY < -20) boss.floatDir = 1;
+    
+    // Calcul de la phase basée sur HP
+    if (boss.hp <= 2) boss.phase = 3;
+    else if (boss.hp <= 5) boss.phase = 2;
+    else boss.phase = 1;
+    
+    const arenaStart = 2350;
+    const arenaWidth = 700;
+    const arenaCenter = arenaStart + arenaWidth / 2;
+    
+    // === PHASE 1 : Tirs simples + déplacement horizontal ===
+    if (boss.phase === 1) {
+        // Mouvement horizontal
+        boss.x += boss.dir * 2;
+        if (boss.x > arenaStart + arenaWidth - 150) boss.dir = -1;
+        if (boss.x < arenaStart + 50) boss.dir = 1;
         
-        if (boss.phase >= 2 && boss.attackTimer % 240 === 0) {
-            // Attaque supplémentaire
+        // Tir toutes les 90 frames
+        if (boss.attackTimer % 90 === 0) {
             currentLevelData.projectiles.push({
-                x: boss.x,
-                y: boss.y + 30,
-                w: 20, h: 20,
-                speed: -7 * state.difficulty,
-                type: 'boss_fire'
+                x: boss.x + boss.w / 2 - 15,
+                y: boss.y + boss.h,
+                w: 30, h: 30,
+                vx: 0, vy: 5,
+                type: 'boss_bomb'
             });
-            currentLevelData.projectiles.push({
-                x: boss.x,
-                y: boss.y + boss.h - 30,
-                w: 20, h: 20,
-                speed: -7 * state.difficulty,
-                type: 'boss_fire'
-            });
+            AudioSystem.play('boss_hit');
         }
     }
     
-    // Mouvement du boss
-    if (boss.phase >= 2) {
-        boss.x += Math.sin(state.frameTick * 0.02) * 2;
+    // === PHASE 2 : Dash horizontal + tirs multiples ===
+    else if (boss.phase === 2) {
+        if (boss.chargeTimer > 0) {
+            // En train de charger/dasher
+            boss.chargeTimer--;
+            if (boss.chargeTimer > 30) {
+                // Préparation (tremblement)
+                boss.x += (Math.random() - 0.5) * 4;
+            } else {
+                // DASH !
+                boss.x += boss.dashSpeed;
+                if (boss.x > arenaStart + arenaWidth - 120) {
+                    boss.x = arenaStart + arenaWidth - 120;
+                    boss.dashSpeed = 0;
+                    boss.chargeTimer = 0;
+                }
+                if (boss.x < arenaStart + 20) {
+                    boss.x = arenaStart + 20;
+                    boss.dashSpeed = 0;
+                    boss.chargeTimer = 0;
+                }
+            }
+        } else {
+            // Mouvement normal
+            boss.x += boss.dir * 1.5;
+            if (boss.x > arenaStart + arenaWidth - 150) boss.dir = -1;
+            if (boss.x < arenaStart + 50) boss.dir = 1;
+            
+            // Déclencher un dash toutes les 180 frames
+            if (boss.attackTimer % 180 === 0) {
+                boss.chargeTimer = 60;
+                boss.dashSpeed = player.x > boss.x ? 12 : -12;
+            }
+            
+            // Tir en éventail toutes les 100 frames
+            if (boss.attackTimer % 100 === 0) {
+                for (let angle = -30; angle <= 30; angle += 30) {
+                    const rad = (angle + 90) * Math.PI / 180;
+                    currentLevelData.projectiles.push({
+                        x: boss.x + boss.w / 2,
+                        y: boss.y + boss.h,
+                        w: 20, h: 20,
+                        vx: Math.cos(rad) * 4,
+                        vy: Math.sin(rad) * 4,
+                        type: 'boss_fire'
+                    });
+                }
+            }
+        }
+    }
+    
+    // === PHASE 3 : RAGE MODE ! ===
+    else if (boss.phase === 3) {
+        // Mouvement rapide et erratique
+        boss.x += boss.dir * 4;
+        if (boss.x > arenaStart + arenaWidth - 130) boss.dir = -1;
+        if (boss.x < arenaStart + 30) boss.dir = 1;
+        
+        // Changement de direction aléatoire
+        if (Math.random() < 0.02) boss.dir *= -1;
+        
+        // Spawn de badniks toutes les 200 frames
+        if (boss.attackTimer % 200 === 0 && currentLevelData.enemies.length < 4) {
+            currentLevelData.enemies.push({
+                x: boss.x, y: boss.y + boss.h,
+                w: 45, h: 40, type: 'badnik',
+                patrolStart: arenaStart + 50, patrolEnd: arenaStart + arenaWidth - 100,
+                dir: Math.random() > 0.5 ? 1 : -1, speed: 3 * state.difficulty
+            });
+            ParticleSystem.emit(boss.x + boss.w/2, boss.y + boss.h, 'boss', 10);
+        }
+        
+        // Tirs rapides
+        if (boss.attackTimer % 50 === 0) {
+            // Tir vers le joueur
+            const dx = player.x - boss.x;
+            const dy = player.y - boss.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            currentLevelData.projectiles.push({
+                x: boss.x + boss.w / 2,
+                y: boss.y + boss.h / 2,
+                w: 25, h: 25,
+                vx: (dx / dist) * 6,
+                vy: (dy / dist) * 6,
+                type: 'boss_fire'
+            });
+        }
+        
+        // Bombes en plus
+        if (boss.attackTimer % 120 === 0) {
+            currentLevelData.projectiles.push({
+                x: boss.x + boss.w / 2 - 20,
+                y: boss.y + boss.h,
+                w: 40, h: 40,
+                vx: 0, vy: 3,
+                type: 'boss_bomb'
+            });
+        }
     }
 }
 
@@ -594,28 +705,39 @@ function checkCollisions() {
     // Boss
     if (currentLevelData.boss && currentLevelData.boss.hp > 0) {
         const boss = currentLevelData.boss;
+        const bossY = boss.y + (boss.floatY || 0);
+        const bossHitbox = { x: boss.x, y: bossY, w: boss.w, h: boss.h };
         
         // Joueur saute sur le boss
         if (player.vy > 0 && boss.invincible === 0 &&
             player.x + player.w > boss.x && player.x < boss.x + boss.w &&
-            player.y + player.h > boss.y && player.y + player.h < boss.y + 40) {
+            player.y + player.h > bossY && player.y + player.h < bossY + 50) {
             
             boss.hp--;
-            boss.invincible = 60;
-            player.vy = -12;
-            state.screenShake = 10;
+            boss.invincible = 90;
+            player.vy = -14;
+            state.screenShake = 15;
             AudioSystem.play('boss_hit');
-            ParticleSystem.emit(boss.x + boss.w/2, boss.y, 'boss', 15);
-            
-            if (boss.hp <= boss.maxHp / 2) boss.phase = 2;
+            ParticleSystem.emit(boss.x + boss.w/2, bossY, 'boss', 20);
             
             if (boss.hp <= 0) {
-                levelWin();
+                // Boss vaincu !
+                state.screenShake = 30;
+                // Explosion de particules
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        ParticleSystem.emit(boss.x + Math.random() * boss.w, bossY + Math.random() * boss.h, 'boss', 15);
+                        AudioSystem.play('boss_hit');
+                    }, i * 150);
+                }
+                setTimeout(() => {
+                    levelWin();
+                }, 800);
                 return;
             }
         }
-        // Boss touche le joueur
-        else if (checkCollision(player, boss) && state.invincibilityTimer === 0) {
+        // Boss touche le joueur (corps)
+        else if (checkCollision(player, bossHitbox) && state.invincibilityTimer === 0) {
             takeDamage("Le boss t'a touché !");
         }
     }

@@ -33,9 +33,19 @@ function draw() {
     ctx.save();
     ctx.translate(camX, 0);
     
+    // Étoiles (niveau 9)
+    if (currentLevelData.stars && currentLevelData.stars.length > 0) {
+        drawStars();
+    }
+    
     // Nuages
     if (currentLevelData.clouds && currentLevelData.clouds.length > 0) {
         drawClouds();
+    }
+    
+    // Décorations (loops, etc.)
+    if (currentLevelData.decorations && currentLevelData.decorations.length > 0) {
+        drawDecorations();
     }
     
     // Portails
@@ -99,6 +109,43 @@ function drawNotebookGrid() {
     ctx.moveTo(40, 0);
     ctx.lineTo(40, canvas.height);
     ctx.stroke();
+}
+
+function drawStars() {
+    for (const star of currentLevelData.stars) {
+        const twinkle = Math.sin(state.frameTick * 0.05 + star.twinkle) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + twinkle * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size * (0.8 + twinkle * 0.4), 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawDecorations() {
+    for (const d of currentLevelData.decorations) {
+        if (d.type === 'loop') {
+            // Loop style Sonic - cercle avec damier
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 15;
+            ctx.beginPath();
+            ctx.arc(d.x + d.size/2, d.y + d.size/2, d.size/2, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Damier intérieur
+            ctx.strokeStyle = '#1a5276';
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.arc(d.x + d.size/2, d.y + d.size/2, d.size/2, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Reflets
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(d.x + d.size/2, d.y + d.size/2, d.size/2 - 10, Math.PI * 1.2, Math.PI * 1.8);
+            ctx.stroke();
+        }
+    }
 }
 
 function drawClouds() {
@@ -375,6 +422,109 @@ function drawPlatforms() {
                     ctx.fillRect(p.x + i, p.y + 5, 20, 10);
                 }
                 break;
+            
+            // === SONIC STYLE ===
+            case 'sonic_ground':
+                // Damier bleu style Green Hill Zone
+                ctx.fillStyle = '#1a5276';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Damier
+                for (let i = 0; i < p.w; i += 40) {
+                    for (let j = 0; j < p.h; j += 40) {
+                        if ((Math.floor(i/40) + Math.floor(j/40)) % 2 === 0) {
+                            ctx.fillStyle = '#2874a6';
+                            ctx.fillRect(p.x + i, p.y + j, 40, 40);
+                        }
+                    }
+                }
+                // Bord supérieur doré
+                ctx.fillStyle = '#f4d03f';
+                ctx.fillRect(p.x, p.y, p.w, 8);
+                break;
+                
+            case 'sonic_platform':
+                ctx.fillStyle = '#2874a6';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#f4d03f';
+                ctx.fillRect(p.x, p.y, p.w, 5);
+                ctx.strokeStyle = '#1a5276';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                break;
+                
+            case 'spring':
+                // Base rouge
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(p.x, p.y + p.h/2, p.w, p.h/2);
+                // Ressort jaune
+                ctx.fillStyle = '#f1c40f';
+                const springY = p.y + Math.sin(state.frameTick * 0.2) * 3;
+                ctx.beginPath();
+                ctx.ellipse(p.x + p.w/2, springY + 10, p.w/2 - 5, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#d4ac0d';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                // Flèche
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.moveTo(p.x + p.w/2, springY);
+                ctx.lineTo(p.x + p.w/2 - 8, springY + 10);
+                ctx.lineTo(p.x + p.w/2 + 8, springY + 10);
+                ctx.fill();
+                break;
+                
+            case 'speed_pad':
+                // Flèches de boost
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#f1c40f';
+                const arrowOffset = (state.frameTick * 2) % 30;
+                for (let i = 0; i < 3; i++) {
+                    const ax = p.x + 10 + i * 25 + arrowOffset;
+                    if (ax < p.x + p.w - 10) {
+                        ctx.beginPath();
+                        ctx.moveTo(ax, p.y + p.h/2);
+                        ctx.lineTo(ax - 8, p.y + 3);
+                        ctx.lineTo(ax - 8, p.y + p.h - 3);
+                        ctx.fill();
+                    }
+                }
+                break;
+                
+            case 'boss_arena':
+                // Sol d'arène épique
+                ctx.fillStyle = '#1a0a2e';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Motif violet
+                for (let i = 0; i < p.w; i += 50) {
+                    ctx.fillStyle = (Math.floor(i/50) % 2 === 0) ? '#2d1b4e' : '#1a0a2e';
+                    ctx.fillRect(p.x + i, p.y, 50, p.h);
+                }
+                // Ligne dorée
+                ctx.fillStyle = '#f4d03f';
+                ctx.fillRect(p.x, p.y, p.w, 5);
+                // Coins lumineux
+                ctx.fillStyle = '#9b59b6';
+                ctx.beginPath();
+                ctx.arc(p.x + 30, p.y + 5, 15, 0, Math.PI * 2);
+                ctx.arc(p.x + p.w - 30, p.y + 5, 15, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+                
+            case 'boss_platform':
+                ctx.fillStyle = '#8e44ad';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#f4d03f';
+                ctx.fillRect(p.x, p.y, p.w, 4);
+                ctx.strokeStyle = '#6c3483';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                break;
+                
+            case 'invisible_wall':
+                // Ne rien dessiner
+                break;
                 
             default:
                 ctx.fillStyle = state.level === 3 ? "#5d4037" : "#2c3e50";
@@ -396,20 +546,47 @@ function drawCoins() {
     for (const c of currentLevelData.coins) {
         const wobble = Math.sin(state.frameTick * 0.1 + c.x) * 2;
         
-        ctx.fillStyle = "gold";
-        ctx.beginPath();
-        ctx.ellipse(c.x + c.w / 2, c.y + c.h / 2 + wobble, c.w / 2, c.h / 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.strokeStyle = "#b8860b";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Brillance
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.beginPath();
-        ctx.arc(c.x + c.w / 3, c.y + c.h / 3 + wobble, 3, 0, Math.PI * 2);
-        ctx.fill();
+        if (c.type === 'ring') {
+            // Ring style Sonic !
+            const rotation = state.frameTick * 0.1;
+            const scaleX = Math.cos(rotation) * 0.8 + 0.2;
+            
+            ctx.save();
+            ctx.translate(c.x + c.w/2, c.y + c.h/2 + wobble);
+            ctx.scale(scaleX, 1);
+            
+            // Anneau doré
+            ctx.strokeStyle = '#f4d03f';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(0, 0, c.w/2, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Reflet
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, c.w/2 - 2, -0.5, 0.5);
+            ctx.stroke();
+            
+            ctx.restore();
+        } else {
+            // Pièce normale
+            ctx.fillStyle = "gold";
+            ctx.beginPath();
+            ctx.ellipse(c.x + c.w / 2, c.y + c.h / 2 + wobble, c.w / 2, c.h / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = "#b8860b";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Brillance
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.beginPath();
+            ctx.arc(c.x + c.w / 3, c.y + c.h / 3 + wobble, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
@@ -619,6 +796,49 @@ function drawEnemies() {
                     ctx.fillRect(e.x + e.w - 10, e.y + e.h - 5, 10, 5);
                 }
                 break;
+                
+            case 'badnik':
+                // Robot style Sonic - Motobug
+                const bobble = Math.sin(state.frameTick * 0.2) * 2;
+                
+                // Corps métallique
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.ellipse(e.x + e.w/2, e.y + e.h/2 + bobble, e.w/2, e.h/2 - 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Yeux méchants
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.ellipse(e.x + 12, e.y + 12 + bobble, 8, 10, 0, 0, Math.PI * 2);
+                ctx.ellipse(e.x + e.w - 12, e.y + 12 + bobble, 8, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(e.x + 14, e.y + 14 + bobble, 4, 0, Math.PI * 2);
+                ctx.arc(e.x + e.w - 10, e.y + 14 + bobble, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Antenne
+                ctx.strokeStyle = '#7f8c8d';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(e.x + e.w/2, e.y + bobble);
+                ctx.lineTo(e.x + e.w/2, e.y - 10 + bobble);
+                ctx.stroke();
+                ctx.fillStyle = '#f1c40f';
+                ctx.beginPath();
+                ctx.arc(e.x + e.w/2, e.y - 12 + bobble, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Roues
+                ctx.fillStyle = '#2c3e50';
+                ctx.beginPath();
+                ctx.arc(e.x + 10, e.y + e.h, 8, 0, Math.PI * 2);
+                ctx.arc(e.x + e.w - 10, e.y + e.h, 8, 0, Math.PI * 2);
+                ctx.fill();
+                break;
         }
     }
 }
@@ -628,68 +848,141 @@ function drawBoss() {
     if (!boss || boss.hp <= 0) return;
     
     const flash = boss.invincible > 0 && boss.invincible % 10 < 5;
+    const bossY = boss.y + (boss.floatY || 0);
     
     ctx.save();
     
-    // Corps principal
-    ctx.fillStyle = flash ? "#fff" : "#9b59b6";
-    ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-    
-    // Contour
-    ctx.strokeStyle = "#6c3483";
-    ctx.lineWidth = 5;
-    ctx.strokeRect(boss.x, boss.y, boss.w, boss.h);
-    
-    // Couronne
-    ctx.fillStyle = "gold";
+    // Ombre au sol
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.moveTo(boss.x + 20, boss.y);
-    ctx.lineTo(boss.x + 40, boss.y - 30);
-    ctx.lineTo(boss.x + 60, boss.y);
-    ctx.lineTo(boss.x + 80, boss.y - 40);
-    ctx.lineTo(boss.x + 100, boss.y);
-    ctx.lineTo(boss.x + 120, boss.y - 30);
-    ctx.lineTo(boss.x + 130, boss.y);
+    ctx.ellipse(boss.x + boss.w/2, canvas.height - 80, boss.w/2 + 10, 15, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Yeux
-    ctx.fillStyle = boss.phase === 2 ? "#e74c3c" : "white";
-    ctx.beginPath();
-    ctx.arc(boss.x + 45, boss.y + 60, 20, 0, Math.PI * 2);
-    ctx.arc(boss.x + 105, boss.y + 60, 20, 0, Math.PI * 2);
-    ctx.fill();
+    // === MACHINE VOLANTE DU BOSS ===
     
-    ctx.fillStyle = "#333";
+    // Partie inférieure (moteur)
+    ctx.fillStyle = flash ? '#fff' : '#7f8c8d';
     ctx.beginPath();
-    ctx.arc(boss.x + 45, boss.y + 60, 8, 0, Math.PI * 2);
-    ctx.arc(boss.x + 105, boss.y + 60, 8, 0, Math.PI * 2);
+    ctx.ellipse(boss.x + boss.w/2, bossY + boss.h - 20, boss.w/2, 25, 0, 0, Math.PI * 2);
     ctx.fill();
-    
-    // Bouche méchante
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(boss.x + 40, boss.y + 120);
-    ctx.lineTo(boss.x + 55, boss.y + 100);
-    ctx.lineTo(boss.x + 75, boss.y + 120);
-    ctx.lineTo(boss.x + 95, boss.y + 100);
-    ctx.lineTo(boss.x + 110, boss.y + 120);
+    ctx.strokeStyle = '#5d6d7e';
+    ctx.lineWidth = 3;
     ctx.stroke();
     
-    // Barre de vie
-    const hpBarWidth = 100;
-    const hpBarHeight = 12;
+    // Flammes du réacteur
+    const flameHeight = 20 + Math.random() * 15;
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.moveTo(boss.x + boss.w/2 - 15, bossY + boss.h);
+    ctx.lineTo(boss.x + boss.w/2, bossY + boss.h + flameHeight);
+    ctx.lineTo(boss.x + boss.w/2 + 15, bossY + boss.h);
+    ctx.fill();
+    ctx.fillStyle = '#f39c12';
+    ctx.beginPath();
+    ctx.moveTo(boss.x + boss.w/2 - 8, bossY + boss.h);
+    ctx.lineTo(boss.x + boss.w/2, bossY + boss.h + flameHeight * 0.6);
+    ctx.lineTo(boss.x + boss.w/2 + 8, bossY + boss.h);
+    ctx.fill();
+    
+    // Cockpit (dôme)
+    ctx.fillStyle = flash ? '#fff' : '#3498db';
+    ctx.beginPath();
+    ctx.arc(boss.x + boss.w/2, bossY + 40, 45, Math.PI, 0);
+    ctx.fill();
+    ctx.strokeStyle = '#2980b9';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    
+    // Reflet du dôme
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(boss.x + boss.w/2, bossY + 40, 40, Math.PI * 1.2, Math.PI * 1.7);
+    ctx.stroke();
+    
+    // === LE MÉCHANT DANS LE COCKPIT ===
+    
+    // Tête
+    ctx.fillStyle = '#f5d0a9';
+    ctx.beginPath();
+    ctx.arc(boss.x + boss.w/2, bossY + 35, 20, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Moustache épique
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath();
+    ctx.ellipse(boss.x + boss.w/2, bossY + 45, 25, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Lunettes
+    ctx.fillStyle = '#2c3e50';
+    ctx.beginPath();
+    ctx.ellipse(boss.x + boss.w/2 - 10, bossY + 30, 8, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(boss.x + boss.w/2 + 10, bossY + 30, 8, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.arc(boss.x + boss.w/2 - 10, bossY + 30, 3, 0, Math.PI * 2);
+    ctx.arc(boss.x + boss.w/2 + 10, bossY + 30, 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Nez
+    ctx.fillStyle = '#e8b89a';
+    ctx.beginPath();
+    ctx.arc(boss.x + boss.w/2, bossY + 38, 6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Sourcils méchants
+    ctx.strokeStyle = '#5d4037';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(boss.x + boss.w/2 - 18, bossY + 22);
+    ctx.lineTo(boss.x + boss.w/2 - 5, bossY + 26);
+    ctx.moveTo(boss.x + boss.w/2 + 18, bossY + 22);
+    ctx.lineTo(boss.x + boss.w/2 + 5, bossY + 26);
+    ctx.stroke();
+    
+    // === INDICATEURS DE PHASE ===
+    
+    // Aura de rage en phase 3
+    if (boss.phase === 3) {
+        ctx.strokeStyle = `rgba(231, 76, 60, ${0.3 + Math.sin(state.frameTick * 0.2) * 0.3})`;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(boss.x + boss.w/2, bossY + boss.h/2, boss.w/2 + 20, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
+    // Indicateur de charge (phase 2)
+    if (boss.chargeTimer > 30) {
+        ctx.fillStyle = '#e74c3c';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('!!!', boss.x + boss.w/2 - 15, bossY - 20);
+    }
+    
+    // === BARRE DE VIE ===
+    const hpBarWidth = 120;
+    const hpBarHeight = 14;
     const hpX = boss.x + (boss.w - hpBarWidth) / 2;
-    const hpY = boss.y - 50;
+    const hpY = bossY - 60;
     
+    // Fond
     ctx.fillStyle = "#333";
-    ctx.fillRect(hpX - 2, hpY - 2, hpBarWidth + 4, hpBarHeight + 4);
+    ctx.fillRect(hpX - 3, hpY - 3, hpBarWidth + 6, hpBarHeight + 6);
     
+    // Barre rouge (vide)
     ctx.fillStyle = "#c0392b";
     ctx.fillRect(hpX, hpY, hpBarWidth, hpBarHeight);
     
-    ctx.fillStyle = "#27ae60";
+    // Barre verte (pleine)
+    const hpColor = boss.phase === 3 ? '#e74c3c' : boss.phase === 2 ? '#f39c12' : '#27ae60';
+    ctx.fillStyle = hpColor;
     ctx.fillRect(hpX, hpY, (boss.hp / boss.maxHp) * hpBarWidth, hpBarHeight);
+    
+    // Texte phase
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(`PHASE ${boss.phase}`, hpX, hpY - 8);
     
     ctx.restore();
 }
@@ -719,6 +1012,7 @@ function drawProjectiles() {
                 break;
                 
             case 'boss_fire':
+                // Boule d'énergie violette
                 ctx.fillStyle = "#9b59b6";
                 ctx.beginPath();
                 ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
@@ -727,6 +1021,41 @@ function drawProjectiles() {
                 ctx.beginPath();
                 ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 4, 0, Math.PI * 2);
                 ctx.fill();
+                // Traînée
+                ctx.strokeStyle = 'rgba(155, 89, 182, 0.5)';
+                ctx.lineWidth = p.w / 2;
+                ctx.beginPath();
+                ctx.moveTo(p.x + p.w/2, p.y + p.h/2);
+                ctx.lineTo(p.x + p.w/2 - (p.vx || 0) * 3, p.y + p.h/2 - (p.vy || 0) * 3);
+                ctx.stroke();
+                break;
+                
+            case 'boss_bomb':
+                // Bombe qui tombe
+                ctx.fillStyle = "#2c3e50";
+                ctx.beginPath();
+                ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2);
+                ctx.fill();
+                // Mèche
+                ctx.strokeStyle = "#f39c12";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(p.x + p.w / 2, p.y);
+                ctx.lineTo(p.x + p.w / 2 + 5, p.y - 10);
+                ctx.stroke();
+                // Étincelle
+                if (state.frameTick % 10 < 5) {
+                    ctx.fillStyle = "#e74c3c";
+                    ctx.beginPath();
+                    ctx.arc(p.x + p.w / 2 + 5, p.y - 12, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Tête de mort
+                ctx.fillStyle = "#fff";
+                ctx.beginPath();
+                ctx.arc(p.x + p.w/2 - 5, p.y + p.h/2 - 3, 4, 0, Math.PI * 2);
+                ctx.arc(p.x + p.w/2 + 5, p.y + p.h/2 - 3, 4, 0, Math.PI * 2);
+                ctx.fill();
                 break;
         }
     }
@@ -734,6 +1063,9 @@ function drawProjectiles() {
 
 function drawGoal() {
     if (!currentLevelData.goal) return;
+    
+    // Pas de goal au niveau boss
+    if (LEVELS[state.level] && LEVELS[state.level].isBoss) return;
     
     const g = currentLevelData.goal;
     const levelDef = LEVELS[state.level];
