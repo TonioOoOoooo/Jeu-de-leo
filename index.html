@@ -6,7 +6,7 @@
     <title>L'Aventure de Léo - Final</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap'); /* Police Pixel pour le niveau 5 */
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
         body {
             margin: 0;
@@ -145,7 +145,7 @@
         
         <p style="margin-top:30px; color:#888; font-size:16px;">
             (Clavier : A/Z pour bouger, Espace pour sauter)<br>
-            (1, 2, 3, 4, 5 pour choisir niveau | + pour vies)
+            (1 à 6 pour choisir niveau | + pour vies)
         </p>
     </div>
 
@@ -205,6 +205,10 @@
         let accumulator = 0;
         const TIME_STEP = 1000 / 60; 
 
+        // --- TELEPORTATION ---
+        let portals = [];
+        let teleportTimer = 0;
+
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -263,7 +267,8 @@
             player.vx = 0; player.vy = 0;
             player.climbing = false; player.jumpCount = 0; player.currentPlatform = null;
             hasKey = false; keyItem = null;
-            fireBars = []; clouds = [];
+            fireBars = []; clouds = []; portals = [];
+            teleportTimer = 0;
             document.getElementById('key-display').style.display = 'none';
             document.getElementById('level-display').innerText = "NIVEAU " + level;
             
@@ -403,51 +408,70 @@
 
                 hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
             } else if (level === 5) {
-                // --- NIVEAU 5 : STYLE MINECRAFT ---
+                // --- NIVEAU 5 ---
                 document.body.style.backgroundColor = "#87CEEB"; // Ciel Minecraft
-
-                // Construction en "chunks" (blocs)
                 let blockSize = 40;
                 
-                // Sol de départ (Herbe)
                 for(let i=0; i<15; i++) {
                     platforms.push({ x: i*blockSize, y: h - blockSize*2, w: blockSize, h: blockSize, type: 'grass_block' });
-                    // Terre dessous
                     platforms.push({ x: i*blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
                 }
                 player.x = 50; player.y = h - blockSize*3; player.grounded = true;
 
-                // Arbre
                 let treeX = 300;
-                // Tronc
                 platforms.push({ x: treeX, y: h - blockSize*5, w: blockSize, h: blockSize*3, type: 'wood' });
-                // Feuilles
                 platforms.push({ x: treeX - blockSize, y: h - blockSize*7, w: blockSize*3, h: blockSize*2, type: 'leaves' });
                 platforms.push({ x: treeX, y: h - blockSize*8, w: blockSize, h: blockSize, type: 'leaves' });
 
-                // Trou vers la mine (Pierre)
                 let caveX = 650;
-                // Plateformes flottantes (Pierre)
                 platforms.push({ x: caveX, y: h - blockSize*4, w: blockSize*2, h: blockSize, type: 'stone' });
                 platforms.push({ x: caveX + 150, y: h - blockSize*2, w: blockSize*2, h: blockSize, type: 'stone' });
 
-                // Lave en bas
                 hazards.push({ x: caveX, y: h - 20, w: 400, h: 20, type: 'lava_floor' });
 
-                // Ile du Nether (Flottante)
                 let netherX = caveX + 400;
                 platforms.push({ x: netherX, y: h - blockSize*5, w: blockSize*4, h: blockSize, type: 'netherrack' });
-                
-                // Portail du Nether (Fin)
                 goal = { x: netherX + blockSize, y: h - blockSize*5 - 80, w: 60, h: 80, type: 'nether_portal' };
-
-                // Diamant (Clé) - Sur l'arbre
                 keyItem = { x: treeX, y: h - blockSize*9, w: 30, h: 30, type: 'diamond' };
-
-                // Ennemis (Creeper = Zombie vert mais on changera le dessin si possible, ici Zombie classique)
                 enemies.push({ x: netherX + 50, y: h - blockSize*5 - 60, w: 50, h: 60, type: 'zombie', patrolStart: netherX, patrolEnd: netherX + 150, dir: 1, speed: 2 * difficultyMultiplier });
-
                 hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
+
+            } else if (level === 6) {
+                // --- NIVEAU 6 : LE LABO DE TELEPORTATION ---
+                document.body.style.backgroundColor = "#222"; // Fond sombre
+                let metalColor = "#7f8c8d";
+
+                // Sol de départ (Bas Gauche)
+                platforms.push({ x: -50, y: h - unit*2, w: 300, h: unit, type: 'metal' });
+                player.x = 50; player.y = h - unit*2 - player.h; player.grounded = true;
+                
+                // Portail Bleu (Vers Haut Droite)
+                portals.push({ x: 200, y: h - unit*2 - 80, w: 50, h: 80, color: '#00FFFF', destX: w - 200, destY: unit * 3 - player.h - 10 });
+
+                // Plateforme Haut Droite (Zone Zombie)
+                platforms.push({ x: w - 300, y: unit * 3, w: 300, h: 20, type: 'metal' });
+                enemies.push({ x: w - 200, y: unit * 3 - 60, w: 50, h: 60, type: 'zombie', patrolStart: w - 280, patrolEnd: w - 50, dir: -1, speed: 2.5 * difficultyMultiplier });
+                
+                // Portail Orange (Vers Milieu Gauche)
+                portals.push({ x: w - 100, y: unit * 3 - 80, w: 50, h: 80, color: '#FF9900', destX: 100, destY: unit * 5 - player.h - 10 });
+
+                // Plateforme Milieu Gauche (Zone Clé + Pic)
+                platforms.push({ x: 50, y: unit * 5, w: 300, h: 20, type: 'metal' });
+                hazards.push({ x: 180, y: unit * 5 - 25, w: 25, h: 25, type: 'spike' });
+                keyItem = { x: 50, y: unit * 5 - 50, w: 40, h: 40 }; // Clé au bord gauche
+                
+                // Portail Violet (Vers Sortie)
+                portals.push({ x: 300, y: unit * 5 - 80, w: 50, h: 80, color: '#CC00FF', destX: w - 150, destY: h - unit*2 - player.h - 10 });
+
+                // Zone de Sortie (Bas Droite)
+                platforms.push({ x: w - 300, y: h - unit*2, w: 300, h: unit, type: 'metal' });
+                enemies.push({ x: w - 250, y: h - unit*2 - 60, w: 60, h: 60, type: 'chest_monster', patrolStart: w - 280, patrolEnd: w - 100, dir: 1, speed: 2 });
+                goal = { x: w - 80, y: h - unit*2 - 80, w: 70, h: 80 };
+
+                // Plateformes mobiles pour aider si on tombe
+                platforms.push({ x: w/2 - 100, y: h - unit, w: 200, h: 20, type: 'moving', vx: 2, minX: 200, maxX: w-200 });
+
+                hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
             }
         }
 
@@ -455,6 +479,7 @@
         function update() {
             if (!gameRunning) return;
             if (invincibilityTimer > 0) invincibilityTimer--;
+            if (teleportTimer > 0) teleportTimer--;
             frameTick++; 
             let prevY = player.y;
 
@@ -492,6 +517,22 @@
             }
 
             for(let fb of fireBars) fb.angle += fb.speed;
+
+            // Portals
+            if (teleportTimer === 0) {
+                for(let p of portals) {
+                    // Collision simple avec le portail
+                    if (player.x < p.x + p.w && player.x + player.w > p.x &&
+                        player.y < p.y + p.h && player.y + player.h > p.y) {
+                        
+                        player.x = p.destX;
+                        player.y = p.destY;
+                        player.vx = 0; player.vy = 0;
+                        teleportTimer = 60; // 1 seconde de recharge pour pas re-téléporter direct
+                        break;
+                    }
+                }
+            }
 
             let touchingLadder = false;
             let currentLadder = null;
@@ -555,7 +596,7 @@
                             
                             if (currentLevel === 2 && player.falling) {
                                 let fallDistance = p.y - player.fallStartY;
-                                if (fallDistance > 600) { // Tolérance encore augmentée (+5 lignes = 150px)
+                                if (fallDistance > 600) { 
                                     takeDamage("Chute de trop haut !");
                                 }
                             }
@@ -617,7 +658,7 @@
             }
 
             if (hit(player, goal)) {
-                if (currentLevel === 5 || hasKey) {
+                if (currentLevel === 6 || hasKey) { // Niveau 6 nécessite la clé aussi
                     levelWin();
                 } else {
                     if (player.x < goal.x) player.x -= 10;
@@ -644,6 +685,7 @@
             if (currentLevel === 3) ctx.fillStyle = "#2c3e50"; 
             else if (currentLevel === 4) ctx.fillStyle = "#5c94fc";
             else if (currentLevel === 5) ctx.fillStyle = "#87CEEB";
+            else if (currentLevel === 6) ctx.fillStyle = "#222"; // Labo sombre
             else ctx.fillStyle = "#fffdf0";
             
             ctx.fillRect(0,0,canvas.width, canvas.height);
@@ -663,6 +705,20 @@
                 for(let c of clouds) {
                     ctx.beginPath(); ctx.arc(c.x, c.y, c.w/2, 0, Math.PI*2); ctx.arc(c.x+c.w/2, c.y-10, c.w/2, 0, Math.PI*2); ctx.arc(c.x+c.w, c.y, c.w/2, 0, Math.PI*2); ctx.fill();
                 }
+            }
+
+            // Portals (Niveau 6)
+            for (let p of portals) {
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.ellipse(p.x + p.w/2, p.y + p.h/2, p.w/2, p.h/2, 0, 0, Math.PI*2);
+                ctx.stroke();
+                // Effet de lueur
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = 0.3 + (Math.sin(frameTick * 0.1) * 0.1);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
             }
 
             // Barres de feu
@@ -721,7 +777,6 @@
                     ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(p.x+p.w/2, p.y+p.h, 20, Math.PI, 0); ctx.fill(); 
                     ctx.fillRect(p.x, p.y-20, 20, 20); ctx.fillRect(p.x+p.w-20, p.y-20, 20, 20); 
                 }
-                // BLOCS MINECRAFT
                 else if (p.type === 'grass_block') {
                     ctx.fillStyle = "#8B4513"; ctx.fillRect(p.x, p.y, p.w, p.h);
                     ctx.fillStyle = "#32CD32"; ctx.fillRect(p.x, p.y, p.w, 15);
@@ -746,6 +801,14 @@
                 else if (p.type === 'netherrack') {
                     ctx.fillStyle = "#800000"; ctx.fillRect(p.x, p.y, p.w, p.h);
                     ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'metal') { // POur le niveau 6
+                    ctx.fillStyle = "#7f8c8d"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "#95a5a6"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                    // Rivets
+                    ctx.fillStyle = "#333";
+                    ctx.beginPath(); ctx.arc(p.x+5, p.y+5, 2, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(p.x+p.w-5, p.y+5, 2, 0, Math.PI*2); ctx.fill();
                 }
                 else {
                     ctx.fillStyle = currentLevel === 3 ? "#5d4037" : "#2c3e50"; 
@@ -787,25 +850,34 @@
 
             for(let e of enemies) {
                 if(e.type === 'zombie') {
-                    ctx.fillStyle = "#2ecc71"; ctx.fillRect(e.x, e.y, e.w, e.h);
-                    ctx.fillRect(e.x-5, e.y-20, e.w+10, 30);
-                    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 8, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 6, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 2, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 2, 0, Math.PI*2); ctx.fill();
-                    if (Math.floor(frameTick/10)%2 === 0) { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+5, e.y+e.h, 10, 10); } 
-                    else { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+e.w-15, e.y+e.h, 10, 10); }
-                    ctx.fillStyle="black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x, e.y-30);
+                    if (zombieLoaded) {
+                        drawSprite(zombieImg, e.x, e.y, e.w, e.h, e.dir, 4, 3, 1, 10);
+                        ctx.fillStyle = "black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x - 10, e.y - 15);
+                    } else {
+                        ctx.fillStyle = "#2ecc71"; ctx.fillRect(e.x, e.y, e.w, e.h);
+                        ctx.fillRect(e.x-5, e.y-20, e.w+10, 30);
+                        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 8, 0, Math.PI*2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 6, 0, Math.PI*2); ctx.fill();
+                        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 2, 0, Math.PI*2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 2, 0, Math.PI*2); ctx.fill();
+                        if (Math.floor(frameTick/10)%2 === 0) { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+5, e.y+e.h, 10, 10); } 
+                        else { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+e.w-15, e.y+e.h, 10, 10); }
+                        ctx.fillStyle="black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x, e.y-30);
+                    }
                 } else if(e.type === 'chest_monster') {
-                    ctx.fillStyle = "#8d6e63"; ctx.fillRect(e.x, e.y, e.w, e.h);
-                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(e.x, e.y, e.w, e.h);
-                    ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(e.x, e.y+20);
-                    for(let i=0; i<e.w; i+=10) { ctx.lineTo(e.x+i+5, e.y+30); ctx.lineTo(e.x+i+10, e.y+20); } ctx.fill();
-                    ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 3; ctx.beginPath();
-                    let tx = e.x + e.w + 10, ty = e.y + e.h;
-                    ctx.moveTo(tx, ty); ctx.lineTo(tx, ty-50); ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx+10, ty-50);
-                    ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx-10, ty-65); ctx.moveTo(tx, ty-50); ctx.lineTo(tx, ty-70);
-                    ctx.moveTo(tx+10, ty-50); ctx.lineTo(tx+10, ty-65); ctx.stroke();
+                    if (tridentLoaded) {
+                         drawSprite(tridentImg, e.x, e.y, e.w, e.h, e.dir, 4, 2, 0, 10);
+                    } else {
+                        ctx.fillStyle = "#8d6e63"; ctx.fillRect(e.x, e.y, e.w, e.h);
+                        ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(e.x, e.y, e.w, e.h);
+                        ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(e.x, e.y+20);
+                        for(let i=0; i<e.w; i+=10) { ctx.lineTo(e.x+i+5, e.y+30); ctx.lineTo(e.x+i+10, e.y+20); } ctx.fill();
+                        ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 3; ctx.beginPath();
+                        let tx = e.x + e.w + 10, ty = e.y + e.h;
+                        ctx.moveTo(tx, ty); ctx.lineTo(tx, ty-50); ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx+10, ty-50);
+                        ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx-10, ty-65); ctx.moveTo(tx, ty-50); ctx.lineTo(tx, ty-70);
+                        ctx.moveTo(tx+10, ty-50); ctx.lineTo(tx+10, ty-65); ctx.stroke();
+                    }
                 }
             }
 
@@ -824,7 +896,7 @@
                 ctx.fillStyle = "#f1c40f"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.fillStyle = "black"; 
-                let doorText = currentLevel === 5 ? "FIN" : "NIV " + (currentLevel + 1);
+                let doorText = currentLevel === 6 ? "FIN" : "NIV " + (currentLevel + 1);
                 ctx.fillText(doorText, goal.x + 10, goal.y - 10);
                 ctx.beginPath(); ctx.arc(goal.x+goal.w-10, goal.y+goal.h/2, 4, 0, Math.PI*2); ctx.fill();
                 
@@ -850,7 +922,7 @@
         }
 
         function nextLevelAction() {
-            if (currentLevel < 5) {
+            if (currentLevel < 6) {
                 currentLevel++;
                 document.getElementById('message-box').style.display = 'none';
                 lastTime = 0; accumulator = 0;
@@ -871,7 +943,7 @@
             if(['arrowup', 'w', ' '].includes(k)) keys.up = state;
             if(['arrowdown', 's'].includes(k)) keys.down = state;
             
-            if (state && ['1','2','3','4','5'].includes(e.key)) {
+            if (state && ['1','2','3','4','5','6'].includes(e.key)) {
                 currentLevel = parseInt(e.key);
                 startGame('easy'); 
             }
@@ -932,7 +1004,7 @@
 
             document.getElementById('start-screen').style.display = 'none';
             lives = 3; updateHud(); 
-            if(![1,2,3,4,5].includes(currentLevel)) currentLevel = 1;
+            if(![1,2,3,4,5,6].includes(currentLevel)) currentLevel = 1;
             
             lastTime = 0; accumulator = 0;
             gameRunning = true; initLevel(currentLevel); 
@@ -953,7 +1025,7 @@
         function levelWin() {
             gameRunning = false;
             levelComplete = true;
-            if (currentLevel < 5) {
+            if (currentLevel < 6) {
                 document.getElementById('msg-title').innerText = "NIVEAU " + currentLevel + " RÉUSSI !";
                 document.getElementById('msg-title').style.color = "green";
                 document.getElementById('msg-text').innerText = "Prêt pour la suite ?";
