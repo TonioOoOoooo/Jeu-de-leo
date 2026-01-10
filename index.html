@@ -6,6 +6,7 @@
     <title>L'Aventure de Léo - Final</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap'); /* Police Pixel pour le niveau 5 */
 
         body {
             margin: 0;
@@ -144,7 +145,7 @@
         
         <p style="margin-top:30px; color:#888; font-size:16px;">
             (Clavier : A/Z pour bouger, Espace pour sauter)<br>
-            (1, 2, 3, 4 pour choisir niveau | + pour vies)
+            (1, 2, 3, 4, 5 pour choisir niveau | + pour vies)
         </p>
     </div>
 
@@ -401,6 +402,52 @@
                 platforms.push({ x: stairsX + 400, y: groundY - 100, w: 100, h: 100, type: 'castle' });
 
                 hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
+            } else if (level === 5) {
+                // --- NIVEAU 5 : STYLE MINECRAFT ---
+                document.body.style.backgroundColor = "#87CEEB"; // Ciel Minecraft
+
+                // Construction en "chunks" (blocs)
+                let blockSize = 40;
+                
+                // Sol de départ (Herbe)
+                for(let i=0; i<15; i++) {
+                    platforms.push({ x: i*blockSize, y: h - blockSize*2, w: blockSize, h: blockSize, type: 'grass_block' });
+                    // Terre dessous
+                    platforms.push({ x: i*blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
+                }
+                player.x = 50; player.y = h - blockSize*3; player.grounded = true;
+
+                // Arbre
+                let treeX = 300;
+                // Tronc
+                platforms.push({ x: treeX, y: h - blockSize*5, w: blockSize, h: blockSize*3, type: 'wood' });
+                // Feuilles
+                platforms.push({ x: treeX - blockSize, y: h - blockSize*7, w: blockSize*3, h: blockSize*2, type: 'leaves' });
+                platforms.push({ x: treeX, y: h - blockSize*8, w: blockSize, h: blockSize, type: 'leaves' });
+
+                // Trou vers la mine (Pierre)
+                let caveX = 650;
+                // Plateformes flottantes (Pierre)
+                platforms.push({ x: caveX, y: h - blockSize*4, w: blockSize*2, h: blockSize, type: 'stone' });
+                platforms.push({ x: caveX + 150, y: h - blockSize*2, w: blockSize*2, h: blockSize, type: 'stone' });
+
+                // Lave en bas
+                hazards.push({ x: caveX, y: h - 20, w: 400, h: 20, type: 'lava_floor' });
+
+                // Ile du Nether (Flottante)
+                let netherX = caveX + 400;
+                platforms.push({ x: netherX, y: h - blockSize*5, w: blockSize*4, h: blockSize, type: 'netherrack' });
+                
+                // Portail du Nether (Fin)
+                goal = { x: netherX + blockSize, y: h - blockSize*5 - 80, w: 60, h: 80, type: 'nether_portal' };
+
+                // Diamant (Clé) - Sur l'arbre
+                keyItem = { x: treeX, y: h - blockSize*9, w: 30, h: 30, type: 'diamond' };
+
+                // Ennemis (Creeper = Zombie vert mais on changera le dessin si possible, ici Zombie classique)
+                enemies.push({ x: netherX + 50, y: h - blockSize*5 - 60, w: 50, h: 60, type: 'zombie', patrolStart: netherX, patrolEnd: netherX + 150, dir: 1, speed: 2 * difficultyMultiplier });
+
+                hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
             }
         }
 
@@ -508,7 +555,7 @@
                             
                             if (currentLevel === 2 && player.falling) {
                                 let fallDistance = p.y - player.fallStartY;
-                                if (fallDistance > 450) { 
+                                if (fallDistance > 600) { // Tolérance encore augmentée (+5 lignes = 150px)
                                     takeDamage("Chute de trop haut !");
                                 }
                             }
@@ -570,7 +617,7 @@
             }
 
             if (hit(player, goal)) {
-                if (currentLevel === 3 || currentLevel === 4 || hasKey) {
+                if (currentLevel === 5 || hasKey) {
                     levelWin();
                 } else {
                     if (player.x < goal.x) player.x -= 10;
@@ -596,6 +643,7 @@
             // Fond
             if (currentLevel === 3) ctx.fillStyle = "#2c3e50"; 
             else if (currentLevel === 4) ctx.fillStyle = "#5c94fc";
+            else if (currentLevel === 5) ctx.fillStyle = "#87CEEB";
             else ctx.fillStyle = "#fffdf0";
             
             ctx.fillRect(0,0,canvas.width, canvas.height);
@@ -610,7 +658,7 @@
             ctx.save(); ctx.translate(camX, 0);
 
             // Nuages (Niveau 4)
-            if (currentLevel === 4) {
+            if (currentLevel === 4 || currentLevel === 5) {
                 ctx.fillStyle = "rgba(255,255,255,0.8)";
                 for(let c of clouds) {
                     ctx.beginPath(); ctx.arc(c.x, c.y, c.w/2, 0, Math.PI*2); ctx.arc(c.x+c.w/2, c.y-10, c.w/2, 0, Math.PI*2); ctx.arc(c.x+c.w, c.y, c.w/2, 0, Math.PI*2); ctx.fill();
@@ -673,6 +721,32 @@
                     ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(p.x+p.w/2, p.y+p.h, 20, Math.PI, 0); ctx.fill(); 
                     ctx.fillRect(p.x, p.y-20, 20, 20); ctx.fillRect(p.x+p.w-20, p.y-20, 20, 20); 
                 }
+                // BLOCS MINECRAFT
+                else if (p.type === 'grass_block') {
+                    ctx.fillStyle = "#8B4513"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.fillStyle = "#32CD32"; ctx.fillRect(p.x, p.y, p.w, 15);
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'dirt_block') {
+                    ctx.fillStyle = "#8B4513"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'stone') {
+                    ctx.fillStyle = "#757575"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'wood') {
+                    ctx.fillStyle = "#5D4037"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'leaves') {
+                    ctx.fillStyle = "#228B22"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+                else if (p.type === 'netherrack') {
+                    ctx.fillStyle = "#800000"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
                 else {
                     ctx.fillStyle = currentLevel === 3 ? "#5d4037" : "#2c3e50"; 
                     ctx.fillRect(p.x, p.y, p.w, p.h);
@@ -683,9 +757,19 @@
             }
 
             if (!hasKey && keyItem) {
-                ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(keyItem.x+15, keyItem.y+10, 10, 0, Math.PI*2); ctx.fill();
-                ctx.fillRect(keyItem.x+12, keyItem.y+10, 6, 25); ctx.fillRect(keyItem.x+12, keyItem.y+25, 12, 5); ctx.fillRect(keyItem.x+12, keyItem.y+32, 10, 5);
-                if (Math.floor(Date.now() / 200) % 2 === 0) { ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(keyItem.x+10, keyItem.y+5, 3, 0, Math.PI*2); ctx.fill(); }
+                if (keyItem.type === 'diamond') {
+                    ctx.fillStyle = "#00BFFF";
+                    ctx.beginPath();
+                    ctx.moveTo(keyItem.x + keyItem.w/2, keyItem.y);
+                    ctx.lineTo(keyItem.x + keyItem.w, keyItem.y + keyItem.h/2);
+                    ctx.lineTo(keyItem.x + keyItem.w/2, keyItem.y + keyItem.h);
+                    ctx.lineTo(keyItem.x, keyItem.y + keyItem.h/2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(keyItem.x+15, keyItem.y+10, 10, 0, Math.PI*2); ctx.fill();
+                    ctx.fillRect(keyItem.x+12, keyItem.y+10, 6, 25); ctx.fillRect(keyItem.x+12, keyItem.y+25, 12, 5); ctx.fillRect(keyItem.x+12, keyItem.y+32, 10, 5);
+                    if (Math.floor(Date.now() / 200) % 2 === 0) { ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(keyItem.x+10, keyItem.y+5, 3, 0, Math.PI*2); ctx.fill(); }
+                }
             }
 
             for(let h of hazards) {
@@ -703,34 +787,25 @@
 
             for(let e of enemies) {
                 if(e.type === 'zombie') {
-                    if (zombieLoaded) {
-                        drawSprite(zombieImg, e.x, e.y, e.w, e.h, e.dir, 4, 3, 1, 10);
-                        ctx.fillStyle = "black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x - 10, e.y - 15);
-                    } else {
-                        ctx.fillStyle = "#2ecc71"; ctx.fillRect(e.x, e.y, e.w, e.h);
-                        ctx.fillRect(e.x-5, e.y-20, e.w+10, 30);
-                        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 8, 0, Math.PI*2); ctx.fill();
-                        ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 6, 0, Math.PI*2); ctx.fill();
-                        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 2, 0, Math.PI*2); ctx.fill();
-                        ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 2, 0, Math.PI*2); ctx.fill();
-                        if (Math.floor(frameTick/10)%2 === 0) { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+5, e.y+e.h, 10, 10); } 
-                        else { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+e.w-15, e.y+e.h, 10, 10); }
-                        ctx.fillStyle="black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x, e.y-30);
-                    }
+                    ctx.fillStyle = "#2ecc71"; ctx.fillRect(e.x, e.y, e.w, e.h);
+                    ctx.fillRect(e.x-5, e.y-20, e.w+10, 30);
+                    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 8, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 6, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 2, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 2, 0, Math.PI*2); ctx.fill();
+                    if (Math.floor(frameTick/10)%2 === 0) { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+5, e.y+e.h, 10, 10); } 
+                    else { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+e.w-15, e.y+e.h, 10, 10); }
+                    ctx.fillStyle="black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x, e.y-30);
                 } else if(e.type === 'chest_monster') {
-                    if (tridentLoaded) {
-                         drawSprite(tridentImg, e.x, e.y, e.w, e.h, e.dir, 4, 2, 0, 10);
-                    } else {
-                        ctx.fillStyle = "#8d6e63"; ctx.fillRect(e.x, e.y, e.w, e.h);
-                        ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(e.x, e.y, e.w, e.h);
-                        ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(e.x, e.y+20);
-                        for(let i=0; i<e.w; i+=10) { ctx.lineTo(e.x+i+5, e.y+30); ctx.lineTo(e.x+i+10, e.y+20); } ctx.fill();
-                        ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 3; ctx.beginPath();
-                        let tx = e.x + e.w + 10, ty = e.y + e.h;
-                        ctx.moveTo(tx, ty); ctx.lineTo(tx, ty-50); ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx+10, ty-50);
-                        ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx-10, ty-65); ctx.moveTo(tx, ty-50); ctx.lineTo(tx, ty-70);
-                        ctx.moveTo(tx+10, ty-50); ctx.lineTo(tx+10, ty-65); ctx.stroke();
-                    }
+                    ctx.fillStyle = "#8d6e63"; ctx.fillRect(e.x, e.y, e.w, e.h);
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(e.x, e.y, e.w, e.h);
+                    ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(e.x, e.y+20);
+                    for(let i=0; i<e.w; i+=10) { ctx.lineTo(e.x+i+5, e.y+30); ctx.lineTo(e.x+i+10, e.y+20); } ctx.fill();
+                    ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 3; ctx.beginPath();
+                    let tx = e.x + e.w + 10, ty = e.y + e.h;
+                    ctx.moveTo(tx, ty); ctx.lineTo(tx, ty-50); ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx+10, ty-50);
+                    ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx-10, ty-65); ctx.moveTo(tx, ty-50); ctx.lineTo(tx, ty-70);
+                    ctx.moveTo(tx+10, ty-50); ctx.lineTo(tx+10, ty-65); ctx.stroke();
                 }
             }
 
@@ -742,15 +817,18 @@
                 ctx.fillStyle = "green"; ctx.fillRect(goal.x, goal.y, 5, 120);
                 ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(goal.x+2, goal.y, 5, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = "red"; ctx.beginPath(); ctx.moveTo(goal.x+5, goal.y+10); ctx.lineTo(goal.x+30, goal.y+25); ctx.lineTo(goal.x+5, goal.y+40); ctx.fill();
+            } else if (goal.type === 'nether_portal') {
+                ctx.fillStyle = "#6a0dad"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h); // Violet
+                ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h); // Obsidienne
             } else {
                 ctx.fillStyle = "#f1c40f"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.fillStyle = "black"; 
-                let doorText = currentLevel === 3 ? "FIN" : "NIV " + (currentLevel + 1);
+                let doorText = currentLevel === 5 ? "FIN" : "NIV " + (currentLevel + 1);
                 ctx.fillText(doorText, goal.x + 10, goal.y - 10);
                 ctx.beginPath(); ctx.arc(goal.x+goal.w-10, goal.y+goal.h/2, 4, 0, Math.PI*2); ctx.fill();
                 
-                if (!hasKey && currentLevel !== 3 && currentLevel !== 4) {
+                if (!hasKey && currentLevel !== 3 && currentLevel !== 4 && currentLevel !== 5) {
                     ctx.fillStyle = "red"; ctx.fillRect(goal.x + 20, goal.y + 30, 30, 30);
                     ctx.fillStyle = "white"; ctx.font = "30px sans-serif"; ctx.fillText("🔒", goal.x + 20, goal.y + 55);
                     if (Math.abs(player.x - goal.x) < 100) {
@@ -772,7 +850,7 @@
         }
 
         function nextLevelAction() {
-            if (currentLevel < 4) {
+            if (currentLevel < 5) {
                 currentLevel++;
                 document.getElementById('message-box').style.display = 'none';
                 lastTime = 0; accumulator = 0;
@@ -788,20 +866,12 @@
         function handleKey(e, state) {
             const k = e.key.toLowerCase();
             
-            // --- MODIFICATION COMMANDES AZERTY ---
-            // A = Gauche (Q sur QWERTY, mais A sur AZERTY pour main gauche)
-            // Z = Droite (W sur QWERTY, mais Z sur AZERTY)
             if(['arrowleft', 'q', 'a'].includes(k)) keys.left = state;
             if(['arrowright', 'd', 'z'].includes(k)) keys.right = state;
-            
-            // ESPACE = Saut, ou Z (Haut classique) ou W (Haut Qwerty) ou Fleche Haut
-            // Note: Z est utilisé pour DROITE ici selon ta demande, donc on le retire du saut pour éviter le conflit
             if(['arrowup', 'w', ' '].includes(k)) keys.up = state;
-            
-            // S = Descendre
             if(['arrowdown', 's'].includes(k)) keys.down = state;
             
-            if (state && ['1','2','3','4'].includes(e.key)) {
+            if (state && ['1','2','3','4','5'].includes(e.key)) {
                 currentLevel = parseInt(e.key);
                 startGame('easy'); 
             }
@@ -810,7 +880,7 @@
                 updateHud();
             }
 
-            if(state && keys.up) { // Utilise l'état global 'keys.up' qui est déjà setté
+            if(state && keys.up) { 
                 if (player.grounded || player.climbing) {
                     player.vy = -player.jumpForce; player.grounded = false; player.climbing = false; player.jumpCount = 1; 
                 } else if (player.jumpCount < 2) {
@@ -843,18 +913,6 @@
         });
 
         // --- GAME LOOP ---
-        function drawSprite(img, x, y, w, h, dir, cols, rows, rowToPlay, speed) {
-            let frameIndex = Math.floor(frameTick / speed) % cols;
-            let frameWidth = img.width / cols;
-            let frameHeight = img.height / rows;
-            let sx = frameIndex * frameWidth;
-            let sy = rowToPlay * frameHeight;
-            ctx.save(); ctx.translate(x + w/2, y + h/2);
-            if (dir === -1) ctx.scale(-1, 1); 
-            ctx.drawImage(img, sx, sy, frameWidth, frameHeight, -w/2, -h/2, w, h);
-            ctx.restore();
-        }
-
         function loop(timestamp) { 
             if(!gameRunning) return;
             if (!lastTime) lastTime = timestamp;
@@ -874,7 +932,7 @@
 
             document.getElementById('start-screen').style.display = 'none';
             lives = 3; updateHud(); 
-            if(![1,2,3,4].includes(currentLevel)) currentLevel = 1;
+            if(![1,2,3,4,5].includes(currentLevel)) currentLevel = 1;
             
             lastTime = 0; accumulator = 0;
             gameRunning = true; initLevel(currentLevel); 
@@ -895,7 +953,7 @@
         function levelWin() {
             gameRunning = false;
             levelComplete = true;
-            if (currentLevel < 4) {
+            if (currentLevel < 5) {
                 document.getElementById('msg-title').innerText = "NIVEAU " + currentLevel + " RÉUSSI !";
                 document.getElementById('msg-title').style.color = "green";
                 document.getElementById('msg-text').innerText = "Prêt pour la suite ?";
