@@ -142,7 +142,10 @@
             <button class="big-btn btn-hard" onclick="startGame('hard')">DUR 😈</button>
         </div>
         
-        <p style="margin-top:30px; color:#888; font-size:16px;">(1, 2, 3 pour choisir niveau | + pour vies)</p>
+        <p style="margin-top:30px; color:#888; font-size:16px;">
+            (Clavier : A/Z pour bouger, Espace pour sauter)<br>
+            (1, 2, 3, 4 pour choisir niveau | + pour vies)
+        </p>
     </div>
 
     <div id="ui-layer">
@@ -176,6 +179,13 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // --- IMAGES ---
+        const zombieImg = new Image(); zombieImg.src = 'zombie.png'; 
+        let zombieLoaded = false; zombieImg.onload = () => { zombieLoaded = true; };
+
+        const tridentImg = new Image(); tridentImg.src = 'trident.png';
+        let tridentLoaded = false; tridentImg.onload = () => { tridentLoaded = true; };
 
         // --- ETAT DU JEU ---
         let gameRunning = false;
@@ -227,7 +237,8 @@
         let enemies = [];
         let ladders = []; 
         let goal = {};
-        let fireBars = []; // NOUVEAU : Barres de feu
+        let fireBars = []; 
+        let clouds = [];
 
         function createSlide(startX, startY, width, height, steps) {
             let stepW = width / steps;
@@ -251,11 +262,14 @@
             player.vx = 0; player.vy = 0;
             player.climbing = false; player.jumpCount = 0; player.currentPlatform = null;
             hasKey = false; keyItem = null;
-            fireBars = []; // Reset des barres de feu
+            fireBars = []; clouds = [];
             document.getElementById('key-display').style.display = 'none';
             document.getElementById('level-display').innerText = "NIVEAU " + level;
             
             platforms = []; hazards = []; enemies = []; ladders = [];
+
+            // Reset couleurs par défaut
+            document.body.style.backgroundColor = "#fffdf0";
 
             if (level === 1) {
                 // --- NIVEAU 1 ---
@@ -325,50 +339,69 @@
                 hazards.push({ x: -1000, y: h + 50, w: w * 30, h: 100, type: 'void' });
 
             } else if (level === 3) {
-                // --- NIVEAU 3 : LE CHÂTEAU DE LAVE ---
-                // Fond sombre
+                // --- NIVEAU 3 ---
                 document.body.style.backgroundColor = "#2c3e50"; 
-                
-                // Départ
                 platforms.push({ x: -50, y: unit * 6, w: 200, h: unit });
                 player.x = 50; player.y = unit * 6 - player.h; player.grounded = true;
 
-                // Îlots au dessus de la lave
                 let isle1 = 250;
                 platforms.push({ x: isle1, y: unit * 6, w: 100, h: unit });
-                
-                // Barre de feu 1 (tourne autour du bloc)
                 fireBars.push({ cx: isle1 + 50, cy: unit * 6 + 10, length: 120, angle: 0, speed: 0.05 * difficultyMultiplier });
 
                 let isle2 = 450;
                 platforms.push({ x: isle2, y: unit * 5, w: 100, h: unit });
-                // Barre de feu 2 (plus rapide)
                 fireBars.push({ cx: isle2 + 50, cy: unit * 5 + 10, length: 130, angle: Math.PI, speed: -0.06 * difficultyMultiplier });
 
                 let isle3 = 650;
                 platforms.push({ x: isle3, y: unit * 4, w: 100, h: unit });
                 
-                // Pont Final
                 let bridgeX = 850;
                 platforms.push({ x: bridgeX, y: unit * 4, w: 400, h: unit });
-                
-                // Boss Final (Un gros monstre coffre)
-                enemies.push({ 
-                    x: bridgeX + 200, y: unit * 4 - 80, w: 80, h: 80, 
-                    type: 'chest_monster', patrolStart: bridgeX, patrolEnd: bridgeX + 300, dir: 1, speed: 3 * difficultyMultiplier 
-                });
+                enemies.push({ x: bridgeX + 200, y: unit * 4 - 80, w: 80, h: 80, type: 'chest_monster', patrolStart: bridgeX, patrolEnd: bridgeX + 300, dir: 1, speed: 3 * difficultyMultiplier });
 
-                // Hache Finale (remplace la porte)
                 goal = { x: bridgeX + 350, y: unit * 4 - 60, w: 40, h: 60, type: 'axe' };
-
-                // La LAVE ! (Tout le sol en bas)
                 hazards.push({ x: -1000, y: h - 50, w: w * 30, h: 100, type: 'lava_floor' });
-            } else {
-                // Reset couleur fond pour les autres niveaux
-                document.body.style.backgroundColor = "#fffdf0";
+
+            } else if (level === 4) {
+                // --- NIVEAU 4 ---
+                document.body.style.backgroundColor = "#5c94fc";
+                
+                for(let i=0; i<10; i++) {
+                    clouds.push({ x: Math.random() * w * 4, y: Math.random() * (h/2), w: 60 + Math.random()*40 });
+                }
+
+                let groundY = h - unit;
+                platforms.push({ x: -50, y: groundY, w: 400, h: unit, type: 'brick_floor' });
+                player.x = 50; player.y = groundY - player.h; player.grounded = true;
+
+                let pipe1X = 450;
+                platforms.push({ x: pipe1X, y: groundY - 60, w: 60, h: 60 + unit, type: 'pipe' });
+                platforms.push({ x: pipe1X + 150, y: groundY, w: 300, h: unit, type: 'brick_floor' });
+                
+                enemies.push({ x: pipe1X + 200, y: groundY - 60, w: 50, h: 60, type: 'zombie', patrolStart: pipe1X + 150, patrolEnd: pipe1X + 400, dir: -1, speed: 2 * difficultyMultiplier });
+
+                let pipe2X = pipe1X + 350;
+                platforms.push({ x: pipe2X, y: groundY - 90, w: 60, h: 90 + unit, type: 'pipe' });
+
+                let bricksX = pipe2X + 200;
+                let bricksY = groundY - 150;
+                platforms.push({ x: bricksX, y: bricksY, w: 180, h: 40, type: 'brick_block' });
+                platforms.push({ x: bricksX + 250, y: bricksY - 50, w: 40, h: 40, type: 'gold_block' });
+                keyItem = { x: bricksX + 255, y: bricksY - 100, w: 30, h: 30 };
+
+                let endGroundX = bricksX + 400;
+                platforms.push({ x: endGroundX, y: groundY, w: 600, h: unit, type: 'brick_floor' });
+
+                let stairsX = endGroundX + 100;
+                for(let i=0; i<5; i++) {
+                    platforms.push({ x: stairsX + (i*40), y: groundY - (i*40) - 40, w: 40, h: 40, type: 'brick_block' });
+                }
+
+                goal = { x: stairsX + 350, y: groundY - 120, w: 10, h: 120, type: 'flag' };
+                platforms.push({ x: stairsX + 400, y: groundY - 100, w: 100, h: 100, type: 'castle' });
+
+                hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
             }
-            // Reset couleur si niveau != 3
-            if(level !== 3) document.body.style.backgroundColor = "#fffdf0";
         }
 
         // --- UPDATE ---
@@ -377,11 +410,6 @@
             if (invincibilityTimer > 0) invincibilityTimer--;
             frameTick++; 
             let prevY = player.y;
-
-            // Barres de feu
-            for(let fb of fireBars) {
-                fb.angle += fb.speed;
-            }
 
             for(let e of enemies) {
                 if (e.patrolEnd) {
@@ -416,6 +444,8 @@
                 }
             }
 
+            for(let fb of fireBars) fb.angle += fb.speed;
+
             let touchingLadder = false;
             let currentLadder = null;
             for(let l of ladders) {
@@ -444,7 +474,7 @@
                 if (keys.left) player.vx -= 1;
                 
                 player.vx *= friction;
-                let maxSpeed = player.baseSpeed * Math.min(difficultyMultiplier, 1.2); // Cap speed increase
+                let maxSpeed = player.baseSpeed * Math.min(difficultyMultiplier, 1.2); 
                 if(player.vx > maxSpeed) player.vx = maxSpeed;
                 if(player.vx < -maxSpeed) player.vx = -maxSpeed;
                 
@@ -467,6 +497,7 @@
             if (!player.climbing || keys.up) { 
                 for (let p of platforms) {
                     if (p.type === 'slide_visual') continue; 
+                    if (p.type === 'castle') continue; 
 
                     if (player.x + player.w > p.x + 5 && player.x < p.x + p.w - 5) {
                         let feetNow = player.y + player.h;
@@ -477,7 +508,7 @@
                             
                             if (currentLevel === 2 && player.falling) {
                                 let fallDistance = p.y - player.fallStartY;
-                                if (fallDistance > 300) {
+                                if (fallDistance > 450) { 
                                     takeDamage("Chute de trop haut !");
                                 }
                             }
@@ -502,6 +533,7 @@
 
         function takeDamage(reason) {
             if (invincibilityTimer > 0) return;
+            
             lives--; 
             updateHud();
             if (lives <= 0) gameOver("Oh non ! " + (reason || "Tu n'as plus de vies."));
@@ -522,29 +554,23 @@
                        a.y < b.y + b.h && a.y + a.h > b.y;
             };
 
-            // Barres de feu (Ligne vs Rectangle simplifié)
             if (invincibilityTimer === 0) {
                 for(let fb of fireBars) {
-                    // Calcul du bout de la barre
                     let endX = fb.cx + Math.cos(fb.angle) * fb.length;
                     let endY = fb.cy + Math.sin(fb.angle) * fb.length;
-                    
-                    // Vérif simple : est-ce que le joueur est proche du centre OU du bout ?
-                    // Pour faire propre, on vérifie quelques points le long de la barre
                     for(let i=0; i<=5; i++) {
                         let px = fb.cx + (endX - fb.cx) * (i/5);
                         let py = fb.cy + (endY - fb.cy) * (i/5);
                         if (px > player.x && px < player.x + player.w &&
                             py > player.y && py < player.y + player.h) {
-                            takeDamage("Brûlé !");
-                            break;
+                            takeDamage("Brûlé !"); break;
                         }
                     }
                 }
             }
 
             if (hit(player, goal)) {
-                if (currentLevel === 3 || hasKey) {
+                if (currentLevel === 3 || currentLevel === 4 || hasKey) {
                     levelWin();
                 } else {
                     if (player.x < goal.x) player.x -= 10;
@@ -557,7 +583,7 @@
                 for(let h of hazards) if (hit(player, h)) {
                     if(h.type === 'void' || h.type === 'lava_floor') { 
                         lives--; updateHud();
-                        if (lives <= 0) gameOver("Tombé dans la lave !");
+                        if (lives <= 0) gameOver("Tombé !");
                         else { player.x=50; player.y=0; player.vy=0; invincibilityTimer=60; }
                     } else takeDamage("Aïe !");
                 }
@@ -568,12 +594,13 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             // Fond
-            if (currentLevel === 3) ctx.fillStyle = "#2c3e50"; // Château sombre
+            if (currentLevel === 3) ctx.fillStyle = "#2c3e50"; 
+            else if (currentLevel === 4) ctx.fillStyle = "#5c94fc";
             else ctx.fillStyle = "#fffdf0";
             
             ctx.fillRect(0,0,canvas.width, canvas.height);
             
-            if (currentLevel !== 3) {
+            if (currentLevel < 3) {
                 ctx.strokeStyle = "rgba(100, 180, 255, 0.3)"; ctx.lineWidth = 1; ctx.beginPath();
                 for(let y=0; y<canvas.height; y+=30) { ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); } ctx.stroke();
                 ctx.strokeStyle = "rgba(255, 100, 100, 0.4)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(40, 0); ctx.lineTo(40, canvas.height); ctx.stroke();
@@ -582,15 +609,20 @@
             let camX = Math.min(0, (canvas.width * 0.3) - player.x);
             ctx.save(); ctx.translate(camX, 0);
 
+            // Nuages (Niveau 4)
+            if (currentLevel === 4) {
+                ctx.fillStyle = "rgba(255,255,255,0.8)";
+                for(let c of clouds) {
+                    ctx.beginPath(); ctx.arc(c.x, c.y, c.w/2, 0, Math.PI*2); ctx.arc(c.x+c.w/2, c.y-10, c.w/2, 0, Math.PI*2); ctx.arc(c.x+c.w, c.y, c.w/2, 0, Math.PI*2); ctx.fill();
+                }
+            }
+
             // Barres de feu
             for(let fb of fireBars) {
-                ctx.strokeStyle = "orange";
-                ctx.lineWidth = 5;
-                ctx.beginPath();
+                ctx.strokeStyle = "orange"; ctx.lineWidth = 5; ctx.beginPath();
                 ctx.moveTo(fb.cx, fb.cy);
                 ctx.lineTo(fb.cx + Math.cos(fb.angle) * fb.length, fb.cy + Math.sin(fb.angle) * fb.length);
                 ctx.stroke();
-                // Point central
                 ctx.fillStyle = "grey"; ctx.beginPath(); ctx.arc(fb.cx, fb.cy, 10, 0, Math.PI*2); ctx.fill();
             }
 
@@ -603,18 +635,45 @@
 
             for(let p of platforms) {
                 if (p.isStep) continue; 
+                
                 if(p.type === 'slide_visual') {
                     ctx.fillStyle = "rgba(241, 196, 15, 0.8)"; ctx.beginPath();
                     ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.w, p.y + p.h); ctx.lineTo(p.x, p.y + p.h); ctx.fill();
                     ctx.strokeStyle = "orange"; ctx.lineWidth = 5; ctx.beginPath();
                     ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.w, p.y + p.h); ctx.stroke();
-                } else if (p.type === 'moving') {
+                } 
+                else if (p.type === 'moving') {
                     ctx.fillStyle = "#3498db"; ctx.fillRect(p.x, p.y, p.w, p.h);
                     ctx.strokeStyle = "#2980b9"; ctx.lineWidth = 3; ctx.strokeRect(p.x, p.y, p.w, p.h);
-                    ctx.fillStyle = "white"; 
-                    ctx.fillRect(p.x+5, p.y+5, 5, 5); ctx.fillRect(p.x+p.w-10, p.y+5, 5, 5);
-                } else {
-                    // Couleur plateformes selon niveau
+                    ctx.fillStyle = "white"; ctx.fillRect(p.x+5, p.y+5, 5, 5); ctx.fillRect(p.x+p.w-10, p.y+5, 5, 5);
+                } 
+                else if (p.type === 'pipe') {
+                    ctx.fillStyle = "#27ae60"; ctx.fillRect(p.x, p.y, p.w, p.h); 
+                    ctx.strokeStyle = "#1e8449"; ctx.lineWidth = 4; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                    ctx.fillRect(p.x-5, p.y, p.w+10, 30); 
+                    ctx.strokeRect(p.x-5, p.y, p.w+10, 30);
+                }
+                else if (p.type === 'brick_block') {
+                    ctx.fillStyle = "#d35400"; ctx.fillRect(p.x, p.y, p.w, p.h); 
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                    ctx.beginPath(); ctx.moveTo(p.x, p.y+p.h/2); ctx.lineTo(p.x+p.w, p.y+p.h/2); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(p.x+p.w/2, p.y); ctx.lineTo(p.x+p.w/2, p.y+p.h/2); ctx.stroke();
+                }
+                else if (p.type === 'brick_floor') {
+                    ctx.fillStyle = "#c45d16"; ctx.fillRect(p.x, p.y, p.w, p.h); 
+                    ctx.fillStyle = "#27ae60"; ctx.fillRect(p.x, p.y, p.w, 10); 
+                }
+                else if (p.type === 'gold_block') {
+                    ctx.fillStyle = "gold"; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "black"; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                    ctx.fillStyle = "black"; ctx.font = "20px monospace"; ctx.fillText("?", p.x+12, p.y+28);
+                }
+                else if (p.type === 'castle') {
+                    ctx.fillStyle = "#eee"; ctx.fillRect(p.x, p.y, p.w, p.h); 
+                    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(p.x+p.w/2, p.y+p.h, 20, Math.PI, 0); ctx.fill(); 
+                    ctx.fillRect(p.x, p.y-20, 20, 20); ctx.fillRect(p.x+p.w-20, p.y-20, 20, 20); 
+                }
+                else {
                     ctx.fillStyle = currentLevel === 3 ? "#5d4037" : "#2c3e50"; 
                     ctx.fillRect(p.x, p.y, p.w, p.h);
                     ctx.strokeStyle = currentLevel === 3 ? "#8d6e63" : "#27ae60"; 
@@ -634,51 +693,56 @@
                     ctx.fillStyle = "#c0392b"; ctx.beginPath(); ctx.moveTo(h.x, h.y+h.h); ctx.lineTo(h.x+h.w/2, h.y); ctx.lineTo(h.x+h.w, h.y+h.h); ctx.fill();
                 } else if (h.type === 'lava_floor') {
                     ctx.fillStyle = "#e74c3c"; ctx.fillRect(h.x, h.y, h.w, h.h);
-                    // Bulles de lave
                     if(Math.random() < 0.1) {
                         ctx.fillStyle = "#f1c40f";
-                        let bx = h.x + Math.random() * 800; // Juste visible
-                        if(bx > camX && bx < camX + canvas.width)
-                            ctx.fillRect(bx, h.y + Math.random()*20, 5, 5);
+                        let bx = h.x + Math.random() * 800; 
+                        if(bx > camX && bx < camX + canvas.width) ctx.fillRect(bx, h.y + Math.random()*20, 5, 5);
                     }
                 }
             }
 
             for(let e of enemies) {
                 if(e.type === 'zombie') {
-                    ctx.fillStyle = "#2ecc71"; ctx.fillRect(e.x, e.y, e.w, e.h);
-                    ctx.fillRect(e.x-5, e.y-20, e.w+10, 30);
-                    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 8, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 6, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 2, 0, Math.PI*2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 2, 0, Math.PI*2); ctx.fill();
-                    // Jambes animées
-                    if (Math.floor(frameTick/10)%2 === 0) {
-                        ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+5, e.y+e.h, 10, 10);
+                    if (zombieLoaded) {
+                        drawSprite(zombieImg, e.x, e.y, e.w, e.h, e.dir, 4, 3, 1, 10);
+                        ctx.fillStyle = "black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x - 10, e.y - 15);
                     } else {
-                        ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+e.w-15, e.y+e.h, 10, 10);
+                        ctx.fillStyle = "#2ecc71"; ctx.fillRect(e.x, e.y, e.w, e.h);
+                        ctx.fillRect(e.x-5, e.y-20, e.w+10, 30);
+                        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 8, 0, Math.PI*2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 6, 0, Math.PI*2); ctx.fill();
+                        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(e.x+12, e.y-5, 2, 0, Math.PI*2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(e.x+32, e.y-5, 2, 0, Math.PI*2); ctx.fill();
+                        if (Math.floor(frameTick/10)%2 === 0) { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+5, e.y+e.h, 10, 10); } 
+                        else { ctx.fillStyle = "#27ae60"; ctx.fillRect(e.x+e.w-15, e.y+e.h, 10, 10); }
+                        ctx.fillStyle="black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x, e.y-30);
                     }
-                    ctx.fillStyle="black"; ctx.font = "bold 20px 'Patrick Hand'"; ctx.fillText("RE RE RE !", e.x, e.y-30);
                 } else if(e.type === 'chest_monster') {
-                    ctx.fillStyle = "#8d6e63"; ctx.fillRect(e.x, e.y, e.w, e.h);
-                    ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(e.x, e.y, e.w, e.h);
-                    ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(e.x, e.y+20);
-                    for(let i=0; i<e.w; i+=10) { ctx.lineTo(e.x+i+5, e.y+30); ctx.lineTo(e.x+i+10, e.y+20); } ctx.fill();
-                    ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 3; ctx.beginPath();
-                    let tx = e.x + e.w + 10, ty = e.y + e.h;
-                    ctx.moveTo(tx, ty); ctx.lineTo(tx, ty-50); ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx+10, ty-50);
-                    ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx-10, ty-65); ctx.moveTo(tx, ty-50); ctx.lineTo(tx, ty-70);
-                    ctx.moveTo(tx+10, ty-50); ctx.lineTo(tx+10, ty-65); ctx.stroke();
+                    if (tridentLoaded) {
+                         drawSprite(tridentImg, e.x, e.y, e.w, e.h, e.dir, 4, 2, 0, 10);
+                    } else {
+                        ctx.fillStyle = "#8d6e63"; ctx.fillRect(e.x, e.y, e.w, e.h);
+                        ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.strokeRect(e.x, e.y, e.w, e.h);
+                        ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(e.x, e.y+20);
+                        for(let i=0; i<e.w; i+=10) { ctx.lineTo(e.x+i+5, e.y+30); ctx.lineTo(e.x+i+10, e.y+20); } ctx.fill();
+                        ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 3; ctx.beginPath();
+                        let tx = e.x + e.w + 10, ty = e.y + e.h;
+                        ctx.moveTo(tx, ty); ctx.lineTo(tx, ty-50); ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx+10, ty-50);
+                        ctx.moveTo(tx-10, ty-50); ctx.lineTo(tx-10, ty-65); ctx.moveTo(tx, ty-50); ctx.lineTo(tx, ty-70);
+                        ctx.moveTo(tx+10, ty-50); ctx.lineTo(tx+10, ty-65); ctx.stroke();
+                    }
                 }
             }
 
             if (goal.type === 'axe') {
-                // Hache dorée
                 ctx.fillStyle = "gold"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.strokeStyle = "black"; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.fillStyle = "black"; ctx.fillText("FIN", goal.x, goal.y - 10);
+            } else if (goal.type === 'flag') {
+                ctx.fillStyle = "green"; ctx.fillRect(goal.x, goal.y, 5, 120);
+                ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(goal.x+2, goal.y, 5, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "red"; ctx.beginPath(); ctx.moveTo(goal.x+5, goal.y+10); ctx.lineTo(goal.x+30, goal.y+25); ctx.lineTo(goal.x+5, goal.y+40); ctx.fill();
             } else {
-                // Porte normale
                 ctx.fillStyle = "#f1c40f"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.strokeRect(goal.x, goal.y, goal.w, goal.h);
                 ctx.fillStyle = "black"; 
@@ -686,7 +750,7 @@
                 ctx.fillText(doorText, goal.x + 10, goal.y - 10);
                 ctx.beginPath(); ctx.arc(goal.x+goal.w-10, goal.y+goal.h/2, 4, 0, Math.PI*2); ctx.fill();
                 
-                if (!hasKey && currentLevel !== 3) {
+                if (!hasKey && currentLevel !== 3 && currentLevel !== 4) {
                     ctx.fillStyle = "red"; ctx.fillRect(goal.x + 20, goal.y + 30, 30, 30);
                     ctx.fillStyle = "white"; ctx.font = "30px sans-serif"; ctx.fillText("🔒", goal.x + 20, goal.y + 55);
                     if (Math.abs(player.x - goal.x) < 100) {
@@ -708,7 +772,7 @@
         }
 
         function nextLevelAction() {
-            if (currentLevel < 3) {
+            if (currentLevel < 4) {
                 currentLevel++;
                 document.getElementById('message-box').style.display = 'none';
                 lastTime = 0; accumulator = 0;
@@ -722,12 +786,22 @@
         }
 
         function handleKey(e, state) {
-            if(['ArrowRight','d'].includes(e.key)) keys.right = state;
-            if(['ArrowLeft','a'].includes(e.key)) keys.left = state;
-            if(['ArrowUp','w',' '].includes(e.key)) keys.up = state;
-            if(['ArrowDown','s'].includes(e.key)) keys.down = state;
+            const k = e.key.toLowerCase();
             
-            if (state && ['1','2','3'].includes(e.key)) {
+            // --- MODIFICATION COMMANDES AZERTY ---
+            // A = Gauche (Q sur QWERTY, mais A sur AZERTY pour main gauche)
+            // Z = Droite (W sur QWERTY, mais Z sur AZERTY)
+            if(['arrowleft', 'q', 'a'].includes(k)) keys.left = state;
+            if(['arrowright', 'd', 'z'].includes(k)) keys.right = state;
+            
+            // ESPACE = Saut, ou Z (Haut classique) ou W (Haut Qwerty) ou Fleche Haut
+            // Note: Z est utilisé pour DROITE ici selon ta demande, donc on le retire du saut pour éviter le conflit
+            if(['arrowup', 'w', ' '].includes(k)) keys.up = state;
+            
+            // S = Descendre
+            if(['arrowdown', 's'].includes(k)) keys.down = state;
+            
+            if (state && ['1','2','3','4'].includes(e.key)) {
                 currentLevel = parseInt(e.key);
                 startGame('easy'); 
             }
@@ -736,7 +810,7 @@
                 updateHud();
             }
 
-            if(state && (e.key === 'ArrowUp' || e.key === ' ')) {
+            if(state && keys.up) { // Utilise l'état global 'keys.up' qui est déjà setté
                 if (player.grounded || player.climbing) {
                     player.vy = -player.jumpForce; player.grounded = false; player.climbing = false; player.jumpCount = 1; 
                 } else if (player.jumpCount < 2) {
@@ -769,6 +843,18 @@
         });
 
         // --- GAME LOOP ---
+        function drawSprite(img, x, y, w, h, dir, cols, rows, rowToPlay, speed) {
+            let frameIndex = Math.floor(frameTick / speed) % cols;
+            let frameWidth = img.width / cols;
+            let frameHeight = img.height / rows;
+            let sx = frameIndex * frameWidth;
+            let sy = rowToPlay * frameHeight;
+            ctx.save(); ctx.translate(x + w/2, y + h/2);
+            if (dir === -1) ctx.scale(-1, 1); 
+            ctx.drawImage(img, sx, sy, frameWidth, frameHeight, -w/2, -h/2, w, h);
+            ctx.restore();
+        }
+
         function loop(timestamp) { 
             if(!gameRunning) return;
             if (!lastTime) lastTime = timestamp;
@@ -788,8 +874,7 @@
 
             document.getElementById('start-screen').style.display = 'none';
             lives = 3; updateHud(); 
-            // Si on n'a pas utilisé le cheat code, on commence au niveau 1
-            if(![1,2,3].includes(currentLevel)) currentLevel = 1;
+            if(![1,2,3,4].includes(currentLevel)) currentLevel = 1;
             
             lastTime = 0; accumulator = 0;
             gameRunning = true; initLevel(currentLevel); 
@@ -810,7 +895,7 @@
         function levelWin() {
             gameRunning = false;
             levelComplete = true;
-            if (currentLevel < 3) {
+            if (currentLevel < 4) {
                 document.getElementById('msg-title').innerText = "NIVEAU " + currentLevel + " RÉUSSI !";
                 document.getElementById('msg-title').style.color = "green";
                 document.getElementById('msg-text').innerText = "Prêt pour la suite ?";
