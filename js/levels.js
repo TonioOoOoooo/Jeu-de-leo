@@ -47,7 +47,10 @@ const LEVELS = {
             level.keyItem = { x: ladderX - 400, y: floorY - 50, w: 40, h: 40 };
             level.goal = { x: ladderX + 300, y: floorY - 80, w: 70, h: 80 };
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
-            
+
+            // Power-up bouclier pour apprendre
+            level.powerups.push({ x: zombiePlatX + 350, y: zombiePlatY - 70, w: 35, h: 35, type: 'shield' });
+
             return level;
         }
     },
@@ -81,7 +84,10 @@ const LEVELS = {
             level.platforms.push({ x: midLandX - 200, y: exitY, w: w + 200, h: unit });
             level.goal = { x: topX + 300, y: exitY - 80, w: 70, h: 80 };
             level.hazards.push({ x: -1000, y: h + 50, w: w * 30, h: 100, type: 'void' });
-            
+
+            // Power-up super saut sur la plateforme mobile
+            level.powerups.push({ x: liftX + 25, y: midLandY - 60, w: 35, h: 35, type: 'super_jump' });
+
             return level;
         }
     },
@@ -118,7 +124,10 @@ const LEVELS = {
             
             level.goal = { x: bridgeX + 350, y: unit * 4 - 60, w: 40, h: 60, type: 'axe' };
             level.hazards.push({ x: -1000, y: h - 50, w: w * 30, h: 100, type: 'lava_floor' });
-            
+
+            // Power-up étoile pour traverser les obstacles
+            level.powerups.push({ x: isle2 + 40, y: unit * 5 - 70, w: 35, h: 35, type: 'star' });
+
             return level;
         }
     },
@@ -160,7 +169,10 @@ const LEVELS = {
             level.goal = { x: stairsX + 350, y: groundY - 120, w: 10, h: 120, type: 'flag' };
             level.platforms.push({ x: stairsX + 400, y: groundY - 100, w: 100, h: 100, type: 'castle' });
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
-            
+
+            // Power-up aimant à pièces sur le bloc doré
+            level.powerups.push({ x: bricksX + 255, y: bricksY - 140, w: 35, h: 35, type: 'magnet' });
+
             return level;
         }
     },
@@ -200,7 +212,10 @@ const LEVELS = {
             level.goal = { x: netherX + blockSize, y: h - blockSize * 5 - 80, w: 60, h: 80, type: 'nether_portal' };
             level.enemies.push({ x: netherX + 50, y: h - blockSize * 5 - 60, w: 50, h: 60, type: 'zombie', patrolStart: netherX, patrolEnd: netherX + 150, dir: 1, speed: 2 * state.difficulty });
             level.hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
-            
+
+            // Power-up bouclier dans l'arbre
+            level.powerups.push({ x: treeX, y: h - blockSize * 6, w: 35, h: 35, type: 'shield' });
+
             return level;
         }
     },
@@ -233,7 +248,10 @@ const LEVELS = {
             level.goal = { x: w - 80, y: h - unit * 2 - 80, w: 70, h: 80 };
             level.platforms.push({ x: w / 2 - 100, y: h - unit, w: 200, h: 20, type: 'moving', vx: 2, minX: 200, maxX: w - 200 });
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
-            
+
+            // Power-up super saut près du premier portail
+            level.powerups.push({ x: 220, y: h - unit * 2 - 130, w: 35, h: 35, type: 'super_jump' });
+
             return level;
         }
     },
@@ -268,7 +286,10 @@ const LEVELS = {
             level.platforms.push({ x: currentX + ropeGap, y: wallY, w: 300, h: h, type: 'castle_wall' });
             level.goal = { x: currentX + ropeGap + 150, y: wallY - 100, w: 60, h: 80, type: 'bell' };
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
-            
+
+            // Power-up étoile d'invincibilité pour traverser les dangers
+            level.powerups.push({ x: currentX / 2, y: wallY - 90, w: 35, h: 35, type: 'star' });
+
             return level;
         }
     },
@@ -299,7 +320,11 @@ const LEVELS = {
             
             level.goal = { x: 1000, y: groundY - 100, w: 80, h: 100, type: 'hawkmouth' };
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
-            
+
+            // Power-up aimant et bouclier
+            level.powerups.push({ x: 570, y: groundY - 230, w: 35, h: 35, type: 'magnet' });
+            level.powerups.push({ x: 900, y: groundY - 70, w: 35, h: 35, type: 'shield' });
+
             return level;
         }
     },
@@ -437,12 +462,30 @@ const LEVELS = {
             
             // Vide
             level.hazards.push({ x: -1000, y: h + 100, w: 5000, h: 100, type: 'void' });
-            
+
+            // Power-ups stratégiques dans l'arène du boss
+            level.powerups.push({ x: 1200, y: groundY - 80, w: 35, h: 35, type: 'star' }); // Avant le boss
+            level.powerups.push({ x: arenaStart + 140, y: groundY - 180, w: 35, h: 35, type: 'shield' }); // Sur plateforme
+            level.powerups.push({ x: arenaStart + arenaWidth - 240, y: groundY - 180, w: 35, h: 35, type: 'super_jump' }); // Sur l'autre plateforme
+
             return level;
         }
     }
 };
 
 function createEmptyLevel() {
-    return { platforms: [], hazards: [], enemies: [], ladders: [], coins: [], fireBars: [], portals: [], projectiles: [], clouds: [], stars: [], decorations: [] };
+    return {
+        platforms: [],
+        hazards: [],
+        enemies: [],
+        ladders: [],
+        coins: [],
+        fireBars: [],
+        portals: [],
+        projectiles: [],
+        clouds: [],
+        stars: [],
+        decorations: [],
+        powerups: []  // Nouveaux power-ups !
+    };
 }

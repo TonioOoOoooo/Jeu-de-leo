@@ -14,6 +14,10 @@ function updateCoinsDisplay() {
     document.getElementById('coins-display').textContent = `🪙 ${state.coins}`;
 }
 
+function updateStarsDisplay() {
+    document.getElementById('stars-display').textContent = `⭐ ${state.totalStars}`;
+}
+
 function updateTimerDisplay() {
     const seconds = Math.floor(state.levelTime / 1000);
     const mins = Math.floor(seconds / 60);
@@ -26,25 +30,78 @@ function updateTimerDisplay() {
 function levelWin() {
     state.current = GameState.TRANSITIONING;
     AudioSystem.play('victory');
+
+    // Calculer les étoiles gagnées !
+    const stars = calculateStars();
+    state.levelStars[state.level] = Math.max(state.levelStars[state.level] || 0, stars);
+    state.totalStars = Object.values(state.levelStars).reduce((a, b) => a + b, 0);
+
+    // Mettre à jour l'affichage des étoiles
+    updateStarsDisplay();
+
+    // Vérifier les badges
+    checkBadges();
+
     saveGame();
-    
+
     const isFinalLevel = state.level >= CONFIG.TOTAL_LEVELS;
-    
-    document.getElementById('msg-title').textContent = 
+
+    // Messages encourageants selon les étoiles !
+    const starMessages = [
+        "Continue comme ça !",
+        "Très bien ! 🌟",
+        "Super ! 🌟🌟",
+        "PARFAIT ! 🌟🌟🌟"
+    ];
+
+    document.getElementById('msg-title').textContent =
         isFinalLevel ? "🏆 VICTOIRE TOTALE !" : `NIVEAU ${state.level} RÉUSSI !`;
     document.getElementById('msg-title').style.color = isFinalLevel ? "gold" : "#27ae60";
-    
-    document.getElementById('msg-text').textContent = 
-        isFinalLevel ? "Tu as vaincu le boss et terminé le jeu !" : "Prêt pour la suite ?";
-    
-    document.getElementById('msg-coins').textContent = 
-        `Pièces : ${state.coins} | Total : ${state.totalCoins}`;
-    
-    document.getElementById('msg-btn').textContent = 
+
+    document.getElementById('msg-text').textContent =
+        isFinalLevel ? "Tu as vaincu le boss et terminé le jeu !" : starMessages[stars];
+
+    const starsDisplay = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    document.getElementById('msg-coins').textContent =
+        `${starsDisplay}\nPièces : ${state.coins}/${state.maxCoinsInLevel} | Total : ${state.totalCoins}`;
+
+    document.getElementById('msg-btn').textContent =
         isFinalLevel ? "🎉 Rejouer" : "Continuer ▶";
-    
+
     document.getElementById('msg-hint').textContent = "(ESPACE pour continuer)";
     document.getElementById('message-box').style.display = "block";
+
+    // CONFETTIS ! 🎉
+    createConfetti(stars);
+
+    // Sons de célébration !
+    if (stars >= 3) {
+        AudioSystem.play('cheer');
+    }
+}
+
+function calculateStars() {
+    let stars = 1; // Au moins 1 étoile pour avoir terminé
+
+    const levelIndex = state.level - 1;
+    const timeInSeconds = state.levelTime / 1000;
+
+    // Étoile bonus pour le temps
+    if (CONFIG.STARS.TIME_GOLD[levelIndex] && timeInSeconds <= CONFIG.STARS.TIME_GOLD[levelIndex]) {
+        stars = 3;
+    } else if (CONFIG.STARS.TIME_SILVER[levelIndex] && timeInSeconds <= CONFIG.STARS.TIME_SILVER[levelIndex]) {
+        stars = 2;
+    }
+
+    // Étoile bonus si on a collecté beaucoup de pièces
+    if (state.maxCoinsInLevel > 0) {
+        const coinPercent = state.coins / state.maxCoinsInLevel;
+        if (coinPercent >= CONFIG.STARS.MIN_COINS_PERCENT && stars < 3) {
+            stars = Math.min(3, stars + 1);
+        }
+    }
+
+    return stars;
 }
 
 function gameOver(reason) {
@@ -150,6 +207,114 @@ function toggleTimer() {
     state.timerEnabled = !state.timerEnabled;
     document.getElementById('timer-toggle').classList.toggle('active', state.timerEnabled);
     document.getElementById('timer-display').style.display = state.timerEnabled ? 'block' : 'none';
+}
+
+// ===== SYSTÈME DE BADGES =====
+function checkBadges() {
+    const newBadges = [];
+
+    // Badge : Premier niveau
+    if (state.level === 1 && !state.badges['first_level']) {
+        state.badges['first_level'] = true;
+        newBadges.push({ title: '🎮 Premier pas', desc: 'Niveau 1 terminé !' });
+    }
+
+    // Badge : 3 étoiles
+    if (state.levelStars[state.level] === 3 && !state.badges['perfect_level']) {
+        state.badges['perfect_level'] = true;
+        newBadges.push({ title: '⭐ Perfection', desc: '3 étoiles sur un niveau !' });
+    }
+
+    // Badge : 50 pièces
+    if (state.totalCoins >= 50 && !state.badges['coin_collector']) {
+        state.badges['coin_collector'] = true;
+        newBadges.push({ title: '🪙 Collectionneur', desc: '50 pièces collectées !' });
+    }
+
+    // Badge : Niveau 5 atteint
+    if (state.level >= 5 && !state.badges['halfway']) {
+        state.badges['halfway'] = true;
+        newBadges.push({ title: '🏃 À mi-chemin', desc: 'Niveau 5 atteint !' });
+    }
+
+    // Badge : Boss vaincu
+    if (state.level === 9 && !state.badges['boss_defeated']) {
+        state.badges['boss_defeated'] = true;
+        newBadges.push({ title: '⚔️ Vainqueur', desc: 'Boss vaincu !' });
+    }
+
+    // Badge : Toutes les étoiles
+    if (state.totalStars >= 27 && !state.badges['all_stars']) {
+        state.badges['all_stars'] = true;
+        newBadges.push({ title: '🌟 Maître du jeu', desc: 'Toutes les étoiles !' });
+    }
+
+    // Afficher les nouveaux badges
+    if (newBadges.length > 0) {
+        setTimeout(() => {
+            for (const badge of newBadges) {
+                showBadgeNotification(badge);
+            }
+        }, 1500);
+    }
+}
+
+function showBadgeNotification(badge) {
+    // Créer une notification temporaire
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        border: 3px solid gold;
+        font-family: 'Patrick Hand', cursive;
+        z-index: 100;
+        animation: slideIn 0.5s;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    `;
+    notif.innerHTML = `
+        <div style="font-size: 24px; font-weight: bold;">${badge.title}</div>
+        <div style="font-size: 16px; margin-top: 5px;">${badge.desc}</div>
+    `;
+
+    document.body.appendChild(notif);
+
+    AudioSystem.play('victory');
+
+    setTimeout(() => {
+        notif.style.animation = 'slideOut 0.5s';
+        setTimeout(() => notif.remove(), 500);
+    }, 3000);
+}
+
+function createConfetti(stars) {
+    // Plus d'étoiles = plus de confettis !
+    const confettiCount = [30, 50, 100][stars - 1] || 30;
+
+    // Créer des confettis en plusieurs vagues
+    for (let wave = 0; wave < 3; wave++) {
+        setTimeout(() => {
+            for (let i = 0; i < confettiCount / 3; i++) {
+                const x = Math.random() * canvas.width;
+                const y = -50;
+                ParticleSystem.emit(x, y, 'confetti', 1);
+            }
+        }, wave * 300);
+    }
+
+    // Confettis depuis les côtés pour 3 étoiles !
+    if (stars === 3) {
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                ParticleSystem.emit(0, canvas.height * 0.3, 'confetti', 20);
+                ParticleSystem.emit(canvas.width, canvas.height * 0.3, 'confetti', 20);
+            }, i * 200);
+        }
+    }
 }
 
 // ===== EXPORTS GLOBAUX =====

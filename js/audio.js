@@ -115,6 +115,28 @@ const AudioSystem = {
                 osc.start(now);
                 osc.stop(now + 0.4);
                 break;
+
+            case 'powerup':
+                osc.type = 'sine';
+                [523, 659, 784, 1047, 1319].forEach((freq, i) => {
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                });
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+                break;
+
+            case 'cheer':
+                osc.type = 'sine';
+                [392, 523, 659, 784].forEach((freq, i) => {
+                    osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                });
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+                break;
         }
     }
 };

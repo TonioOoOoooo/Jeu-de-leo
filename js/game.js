@@ -160,20 +160,22 @@ function handleKey(e, pressed) {
 
 function doJump() {
     AudioSystem.resume();
-    
+
+    const jumpForce = player.getJumpForce();
+
     if (player.grounded || player.climbing) {
-        player.vy = -player.jumpForce;
+        player.vy = -jumpForce;
         player.grounded = false;
         player.climbing = false;
         player.jumpCount = 1;
         AudioSystem.play('jump');
         ParticleSystem.emit(player.x + player.w / 2, player.y + player.h, 'dust', 5);
     } else if (player.jumpCount < player.maxJumps) {
-        player.vy = -player.jumpForce * 0.9;
+        player.vy = -jumpForce * 0.9;
         player.jumpCount++;
         AudioSystem.play('jump');
     }
-    
+
     updateJumpIndicator();
 }
 
@@ -186,9 +188,10 @@ function updateJumpIndicator() {
 // ===== DÉMARRAGE DU JEU =====
 function startGame(difficulty) {
     AudioSystem.resume();
-    
+
     state.difficulty = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 1.3 : 1.6;
-    state.lives = 3;
+    // Mode facile amélioré : 5 vies au lieu de 3 !
+    state.lives = difficulty === 'easy' ? 5 : 3;
     state.coins = 0;
     state.totalCoins = 0;
     
@@ -246,6 +249,15 @@ function initLevel(levelNum) {
     state.invincibilityTimer = 0;
     state.teleportTimer = 0;
     state.coins = 0;
+    state.maxCoinsInLevel = currentLevelData.coins.length;
+
+    // Reset power-ups
+    state.powerups = {
+        shield: 0,
+        superJump: 0,
+        magnet: 0,
+        star: 0
+    };
     
     ParticleSystem.clear();
     
@@ -288,6 +300,12 @@ function update() {
     if (state.invincibilityTimer > 0) state.invincibilityTimer--;
     if (state.teleportTimer > 0) state.teleportTimer--;
     if (state.screenShake > 0) state.screenShake--;
+
+    // Mise à jour des power-ups
+    if (state.powerups.shield > 0) state.powerups.shield--;
+    if (state.powerups.superJump > 0) state.powerups.superJump--;
+    if (state.powerups.magnet > 0) state.powerups.magnet--;
+    if (state.powerups.star > 0) state.powerups.star--;
     
     if (state.timerEnabled) {
         state.levelTime += CONFIG.TIME_STEP;
@@ -652,15 +670,28 @@ function updateBoss() {
 }
 
 // ===== COLLISIONS =====
-function checkCollision(a, b) {
-    return a.x < b.x + b.w && a.x + a.w > b.x &&
-           a.y < b.y + b.h && a.y + a.h > b.y;
+function checkCollision(a, b, tolerance = 0) {
+    // Tolérance pour mode facile : réduit la hitbox des ennemis
+    return a.x < b.x + b.w - tolerance && a.x + a.w > b.x + tolerance &&
+           a.y < b.y + b.h - tolerance && a.y + a.h > b.y + tolerance;
 }
 
 function checkCollisions() {
-    // Pièces
+    // Pièces (avec effet aimant !)
     for (let i = currentLevelData.coins.length - 1; i >= 0; i--) {
         const c = currentLevelData.coins[i];
+
+        // Aimant à pièces : attire les pièces proches !
+        if (state.powerups.magnet > 0) {
+            const dx = (player.x + player.w/2) - (c.x + c.w/2);
+            const dy = (player.y + player.h/2) - (c.y + c.h/2);
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 150) {
+                c.x += dx * 0.15;
+                c.y += dy * 0.15;
+            }
+        }
+
         if (checkCollision(player, c)) {
             currentLevelData.coins.splice(i, 1);
             state.coins++;
@@ -668,6 +699,15 @@ function checkCollisions() {
             updateCoinsDisplay();
             AudioSystem.play('coin');
             ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 8);
+        }
+    }
+
+    // Power-ups
+    for (let i = currentLevelData.powerups.length - 1; i >= 0; i--) {
+        const p = currentLevelData.powerups[i];
+        if (checkCollision(player, p)) {
+            currentLevelData.powerups.splice(i, 1);
+            collectPowerup(p.type);
         }
     }
     
@@ -789,9 +829,10 @@ function checkCollisions() {
             }
         }
         
-        // Ennemis
+        // Ennemis (hitbox plus tolérante en mode facile)
+        const tolerance = state.difficulty === 1 ? 8 : 0;
         for (const e of currentLevelData.enemies) {
-            if (checkCollision(player, e)) {
+            if (checkCollision(player, e, tolerance)) {
                 takeDamage("Monstre !");
             }
         }
@@ -800,7 +841,23 @@ function checkCollisions() {
 
 function takeDamage(reason) {
     if (state.invincibilityTimer > 0) return;
-    
+
+    // Étoile d'invincibilité : immunité totale !
+    if (state.powerups.star > 0) {
+        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 15);
+        return;
+    }
+
+    // Bouclier : absorbe le coup !
+    if (state.powerups.shield > 0) {
+        state.powerups.shield = 0;
+        state.invincibilityTimer = 60;
+        AudioSystem.play('coin'); // Son de blocage
+        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 20);
+        showMessage('🛡️ BOUCLIER !', 'Le bouclier t\'a protégé !', 1500);
+        return;
+    }
+
     state.lives--;
     state.invincibilityTimer = 90;
     state.screenShake = 15;
@@ -833,4 +890,64 @@ function respawnPlayer() {
     player.jumpCount = 0;
     player.currentPlatform = null;
     state.invincibilityTimer = 120; // Plus long pour laisser le temps de se remettre
+}
+
+// ===== POWER-UPS =====
+function collectPowerup(type) {
+    AudioSystem.play('powerup'); // Son spécial pour power-up
+
+    switch(type) {
+        case 'shield':
+            state.powerups.shield = CONFIG.POWERUP_DURATION.SHIELD;
+            showMessage('🛡️ BOUCLIER !', 'Protégé contre 1 coup !', 2000);
+            break;
+        case 'super_jump':
+            state.powerups.superJump = CONFIG.POWERUP_DURATION.SUPER_JUMP;
+            showMessage('🚀 SUPER SAUT !', 'Saute encore plus haut !', 2000);
+            break;
+        case 'magnet':
+            state.powerups.magnet = CONFIG.POWERUP_DURATION.MAGNET;
+            showMessage('🧲 AIMANT !', 'Attire les pièces !', 2000);
+            break;
+        case 'star':
+            state.powerups.star = CONFIG.POWERUP_DURATION.STAR;
+            showMessage('⭐ INVINCIBLE !', 'Rien ne peut t\'arrêter !', 2000);
+            break;
+    }
+
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 30);
+}
+
+function showMessage(title, text, duration) {
+    // Créer une notification temporaire en jeu
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 30px 50px;
+        border-radius: 20px;
+        border: 4px solid gold;
+        font-family: 'Patrick Hand', cursive;
+        z-index: 50;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        animation: pulse 0.5s;
+        pointer-events: none;
+    `;
+    notif.innerHTML = `
+        <div style="font-size: 36px; font-weight: bold;">${title}</div>
+        <div style="font-size: 20px; margin-top: 10px; color: rgba(255,255,255,0.9);">${text}</div>
+    `;
+
+    document.body.appendChild(notif);
+
+    setTimeout(() => {
+        notif.style.animation = 'fadeOut 0.5s';
+        notif.style.opacity = '0';
+        setTimeout(() => notif.remove(), 500);
+    }, duration);
 }

@@ -62,7 +62,10 @@ function draw() {
     
     // Pièces
     drawCoins();
-    
+
+    // Power-ups !
+    drawPowerups();
+
     // Clé
     drawKey();
     
@@ -1184,4 +1187,202 @@ function drawGoal() {
                 }
             }
     }
+}
+
+function drawPowerups() {
+    for (const p of currentLevelData.powerups) {
+        const float = Math.sin(state.frameTick * 0.1 + p.x) * 5;
+        const glow = 0.3 + Math.sin(state.frameTick * 0.15) * 0.2;
+
+        ctx.save();
+        ctx.translate(p.x + p.w/2, p.y + p.h/2 + float);
+
+        // Aura lumineuse
+        ctx.globalAlpha = glow;
+        ctx.fillStyle = getPowerupColor(p.type);
+        ctx.beginPath();
+        ctx.arc(0, 0, p.w/2 + 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Icône du power-up
+        drawPowerupIcon(p.type, -p.w/2, -p.h/2, p.w, p.h);
+
+        // Particules autour
+        if (state.frameTick % 15 === 0) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = p.w/2 + 15;
+            ParticleSystem.emit(
+                p.x + p.w/2 + Math.cos(angle) * dist,
+                p.y + p.h/2 + Math.sin(angle) * dist,
+                'sparkle',
+                1
+            );
+        }
+
+        ctx.restore();
+    }
+
+    // Afficher les icônes des power-ups actifs sur le joueur
+    let iconY = canvas.height - 120;
+    if (state.powerups.shield > 0) {
+        drawPowerupIndicator('shield', 20, iconY, state.powerups.shield);
+        iconY -= 50;
+    }
+    if (state.powerups.superJump > 0) {
+        drawPowerupIndicator('super_jump', 20, iconY, state.powerups.superJump);
+        iconY -= 50;
+    }
+    if (state.powerups.magnet > 0) {
+        drawPowerupIndicator('magnet', 20, iconY, state.powerups.magnet);
+        iconY -= 50;
+    }
+    if (state.powerups.star > 0) {
+        drawPowerupIndicator('star', 20, iconY, state.powerups.star);
+        iconY -= 50;
+    }
+}
+
+function getPowerupColor(type) {
+    switch(type) {
+        case 'shield': return '#3498db';
+        case 'super_jump': return '#e74c3c';
+        case 'magnet': return '#f39c12';
+        case 'star': return '#f1c40f';
+        default: return '#fff';
+    }
+}
+
+function drawPowerupIcon(type, x, y, w, h) {
+    ctx.save();
+    ctx.translate(x + w/2, y + h/2);
+
+    switch(type) {
+        case 'shield':
+            // Bouclier bleu
+            ctx.fillStyle = '#3498db';
+            ctx.strokeStyle = '#2980b9';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, -h/2);
+            ctx.lineTo(w/2 - 5, -h/4);
+            ctx.lineTo(w/2 - 5, h/4);
+            ctx.lineTo(0, h/2);
+            ctx.lineTo(-w/2 + 5, h/4);
+            ctx.lineTo(-w/2 + 5, -h/4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // Croix
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, -h/4);
+            ctx.lineTo(0, h/4);
+            ctx.moveTo(-w/4, 0);
+            ctx.lineTo(w/4, 0);
+            ctx.stroke();
+            break;
+
+        case 'super_jump':
+            // Fusée rouge
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.moveTo(0, -h/2);
+            ctx.lineTo(w/3, h/4);
+            ctx.lineTo(0, h/6);
+            ctx.lineTo(-w/3, h/4);
+            ctx.closePath();
+            ctx.fill();
+            // Flamme
+            ctx.fillStyle = '#f39c12';
+            ctx.beginPath();
+            ctx.moveTo(-w/4, h/4);
+            ctx.lineTo(0, h/2);
+            ctx.lineTo(w/4, h/4);
+            ctx.fill();
+            // Étoile
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText('↑', -5, 5);
+            break;
+
+        case 'magnet':
+            // Aimant
+            ctx.strokeStyle = '#e74c3c';
+            ctx.fillStyle = '#e74c3c';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(-w/4, 0, w/4, Math.PI, 0);
+            ctx.stroke();
+            ctx.strokeStyle = '#3498db';
+            ctx.fillStyle = '#3498db';
+            ctx.beginPath();
+            ctx.arc(w/4, 0, w/4, Math.PI, 0);
+            ctx.stroke();
+            // Traits de force
+            for (let i = 0; i < 3; i++) {
+                ctx.strokeStyle = '#f39c12';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-w/2 - 5, -h/4 + i * 10);
+                ctx.lineTo(-w/2 - 10, -h/4 + i * 10);
+                ctx.moveTo(w/2 + 5, -h/4 + i * 10);
+                ctx.lineTo(w/2 + 10, -h/4 + i * 10);
+                ctx.stroke();
+            }
+            break;
+
+        case 'star':
+            // Étoile dorée
+            ctx.fillStyle = '#f1c40f';
+            ctx.strokeStyle = '#f39c12';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 4 * Math.PI / 5) - Math.PI/2;
+                const radius = i % 2 === 0 ? w/2 : w/4;
+                const px = Math.cos(angle) * radius;
+                const py = Math.sin(angle) * radius;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // Brillance
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(-w/6, -h/6, w/8, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+    }
+
+    ctx.restore();
+}
+
+function drawPowerupIndicator(type, x, y, timer) {
+    const size = 40;
+    const typeKey = type === 'super_jump' ? 'SUPER_JUMP' : type.toUpperCase();
+    const maxTime = CONFIG.POWERUP_DURATION[typeKey];
+    const progress = timer / maxTime;
+
+    // Fond semi-transparent
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(x, y, size + 10, size + 10);
+
+    // Icône
+    drawPowerupIcon(type, x + 5, y + 5, size, size);
+
+    // Barre de progression
+    ctx.strokeStyle = getPowerupColor(type);
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x + size/2 + 5, y + size/2 + 5, size/2 + 8, -Math.PI/2, -Math.PI/2 + (progress * Math.PI * 2));
+    ctx.stroke();
+
+    // Timer
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(Math.ceil(timer / 60), x + size - 5, y + size + 20);
 }

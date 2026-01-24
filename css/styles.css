@@ -71,6 +71,12 @@ canvas {
     text-shadow: 2px 2px 0 #000;
 }
 
+#stars-display {
+    font-size: 24px;
+    color: gold;
+    text-shadow: 2px 2px 0 #000;
+}
+
 #jump-indicator {
     position: absolute;
     bottom: 200px;
@@ -426,6 +432,37 @@ canvas {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
 }
 
 .shake {
