@@ -164,8 +164,8 @@ function drawClouds() {
 
 function drawPortals() {
     for (const p of currentLevelData.portals) {
-        // Portail Nether/Retour super stylé !
-        if (p.isNetherPortal || p.isReturnPortal || p.isReturnFromNether) {
+        // Portail Nether/Retour/Sous-sol super stylé !
+        if (p.isNetherPortal || p.isReturnPortal || p.isReturnFromNether || p.isUndergroundPortal || p.isReturnFromUnderground) {
             // Cadre en obsidienne
             ctx.fillStyle = '#1a0033';
             ctx.fillRect(p.x - 10, p.y, 10, p.h);
@@ -207,10 +207,19 @@ function drawPortals() {
                 ctx.fillStyle = '#fff';
                 ctx.font = 'bold 16px Patrick Hand';
                 ctx.fillText('→ NETHER', p.x + 5, p.y - 15);
+            } else if (p.isUndergroundPortal) {
+                ctx.fillStyle = '#00ff00';
+                ctx.font = 'bold 14px Patrick Hand';
+                ctx.fillText('↓ SOUS-SOL', p.x + 5, p.y - 15);
+                ctx.fillText('(Appuie ↓)', p.x + 5, p.y - 30);
             } else if (p.isReturnPortal) {
                 ctx.fillStyle = '#00ff00';
                 ctx.font = 'bold 16px Patrick Hand';
-                ctx.fillText('← RETOUR', p.x + 5, p.y - 15);
+                if (state.inSubLevel && state.level === 4) {
+                    ctx.fillText('↑ SORTIR', p.x + 5, p.y - 15);
+                } else {
+                    ctx.fillText('← RETOUR', p.x + 5, p.y - 15);
+                }
             }
         } else {
             // Portail normal
@@ -624,17 +633,61 @@ function drawCoins() {
             ctx.stroke();
             
             ctx.restore();
+        } else if (c.secret) {
+            // Pièce secrète spéciale !
+            const pulse = Math.sin(state.frameTick * 0.15) * 0.2 + 1;
+            const glow = Math.sin(state.frameTick * 0.1) * 0.3 + 0.7;
+
+            // Aura brillante
+            ctx.fillStyle = `rgba(255, 215, 0, ${glow * 0.4})`;
+            ctx.beginPath();
+            ctx.arc(c.x + c.w / 2, c.y + c.h / 2 + wobble, c.w / 2 * pulse * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pièce diamant
+            ctx.fillStyle = "#FFD700";
+            ctx.beginPath();
+            ctx.ellipse(c.x + c.w / 2, c.y + c.h / 2 + wobble, c.w / 2 * pulse, c.h / 2 * pulse, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bordure diamant
+            ctx.strokeStyle = "#FFA500";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Étoiles intérieures
+            ctx.fillStyle = "rgba(255,255,255,0.9)";
+            for (let i = 0; i < 4; i++) {
+                const angle = (state.frameTick * 0.05) + (i * Math.PI / 2);
+                const sx = c.x + c.w / 2 + Math.cos(angle) * 5;
+                const sy = c.y + c.h / 2 + wobble + Math.sin(angle) * 5;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Valeur de la pièce
+            if (c.value && c.value > 1) {
+                ctx.fillStyle = "#fff";
+                ctx.strokeStyle = "#000";
+                ctx.lineWidth = 3;
+                ctx.font = "bold 14px Arial";
+                ctx.textAlign = "center";
+                ctx.strokeText(`×${c.value}`, c.x + c.w / 2, c.y + c.h / 2 + wobble + 5);
+                ctx.fillText(`×${c.value}`, c.x + c.w / 2, c.y + c.h / 2 + wobble + 5);
+                ctx.textAlign = "left";
+            }
         } else {
             // Pièce normale
             ctx.fillStyle = "gold";
             ctx.beginPath();
             ctx.ellipse(c.x + c.w / 2, c.y + c.h / 2 + wobble, c.w / 2, c.h / 2, 0, 0, Math.PI * 2);
             ctx.fill();
-            
+
             ctx.strokeStyle = "#b8860b";
             ctx.lineWidth = 2;
             ctx.stroke();
-            
+
             // Brillance
             ctx.fillStyle = "rgba(255,255,255,0.5)";
             ctx.beginPath();
@@ -913,26 +966,26 @@ function drawEnemies() {
             case 'badnik':
                 // Robot style Sonic - Motobug
                 const bobble = Math.sin(state.frameTick * 0.2) * 2;
-                
+
                 // Corps métallique
                 ctx.fillStyle = '#e74c3c';
                 ctx.beginPath();
                 ctx.ellipse(e.x + e.w/2, e.y + e.h/2 + bobble, e.w/2, e.h/2 - 5, 0, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 // Yeux méchants
                 ctx.fillStyle = '#fff';
                 ctx.beginPath();
                 ctx.ellipse(e.x + 12, e.y + 12 + bobble, 8, 10, 0, 0, Math.PI * 2);
                 ctx.ellipse(e.x + e.w - 12, e.y + 12 + bobble, 8, 10, 0, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 ctx.fillStyle = '#000';
                 ctx.beginPath();
                 ctx.arc(e.x + 14, e.y + 14 + bobble, 4, 0, Math.PI * 2);
                 ctx.arc(e.x + e.w - 10, e.y + 14 + bobble, 4, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 // Antenne
                 ctx.strokeStyle = '#7f8c8d';
                 ctx.lineWidth = 3;
@@ -944,13 +997,230 @@ function drawEnemies() {
                 ctx.beginPath();
                 ctx.arc(e.x + e.w/2, e.y - 12 + bobble, 5, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 // Roues
                 ctx.fillStyle = '#2c3e50';
                 ctx.beginPath();
                 ctx.arc(e.x + 10, e.y + e.h, 8, 0, Math.PI * 2);
                 ctx.arc(e.x + e.w - 10, e.y + e.h, 8, 0, Math.PI * 2);
                 ctx.fill();
+                break;
+
+            case 'creeper':
+                // Le fameux Creeper de Minecraft - Vert avec visage pixelisé
+                ctx.fillStyle = "#0d9e00";
+                ctx.fillRect(e.x, e.y, e.w, e.h);
+
+                // Tête carrée
+                ctx.fillRect(e.x + 5, e.y - 25, e.w - 10, 25);
+
+                // Visage pixelisé du Creeper
+                ctx.fillStyle = "#000";
+                // Yeux
+                ctx.fillRect(e.x + 12, e.y - 18, 8, 8);
+                ctx.fillRect(e.x + e.w - 20, e.y - 18, 8, 8);
+                // Bouche/nez
+                ctx.fillRect(e.x + e.w/2 - 4, e.y - 12, 8, 4);
+                ctx.fillRect(e.x + e.w/2 - 6, e.y - 8, 4, 8);
+                ctx.fillRect(e.x + e.w/2 + 2, e.y - 8, 4, 8);
+
+                // Pieds
+                ctx.fillStyle = "#0a7a00";
+                ctx.fillRect(e.x + 5, e.y + e.h, 12, 8);
+                ctx.fillRect(e.x + e.w - 17, e.y + e.h, 12, 8);
+
+                // Effet de clignotement si proche (danger d'explosion)
+                if (Math.abs(e.x - player.x) < 100) {
+                    if (state.frameTick % 10 < 5) {
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+                        ctx.fillRect(e.x, e.y - 25, e.w, e.h + 25);
+                    }
+                }
+                break;
+
+            case 'spider':
+                // Araignée de Minecraft - Noire avec yeux rouges
+                // Corps principal
+                ctx.fillStyle = "#1a1a1a";
+                ctx.fillRect(e.x + e.w/4, e.y + e.h/3, e.w/2, e.h/2);
+
+                // Tête
+                ctx.fillRect(e.x + e.w/3, e.y + e.h/4, e.w/3, e.h/3);
+
+                // Yeux rouges lumineux
+                ctx.fillStyle = "#ff0000";
+                const eyeGlow = Math.sin(state.frameTick * 0.1) * 0.3 + 0.7;
+                ctx.globalAlpha = eyeGlow;
+                ctx.fillRect(e.x + e.w/3 + 3, e.y + e.h/4 + 3, 6, 6);
+                ctx.fillRect(e.x + e.w/3 + e.w/3 - 9, e.y + e.h/4 + 3, 6, 6);
+                ctx.globalAlpha = 1;
+
+                // Pattes (4 de chaque côté)
+                ctx.strokeStyle = "#1a1a1a";
+                ctx.lineWidth = 3;
+                const legBounce = Math.sin(state.frameTick * 0.15 + e.x) * 5;
+                for (let i = 0; i < 4; i++) {
+                    // Pattes gauches
+                    ctx.beginPath();
+                    ctx.moveTo(e.x + e.w/4, e.y + e.h/2);
+                    ctx.lineTo(e.x - 10, e.y + e.h/2 + legBounce + i * 5);
+                    ctx.lineTo(e.x - 15, e.y + e.h + i * 3);
+                    ctx.stroke();
+                    // Pattes droites
+                    ctx.beginPath();
+                    ctx.moveTo(e.x + 3*e.w/4, e.y + e.h/2);
+                    ctx.lineTo(e.x + e.w + 10, e.y + e.h/2 - legBounce + i * 5);
+                    ctx.lineTo(e.x + e.w + 15, e.y + e.h + i * 3);
+                    ctx.stroke();
+                }
+                break;
+
+            case 'skeleton':
+                // Squelette Minecraft avec arc
+                // Corps osseux
+                ctx.fillStyle = "#e0e0e0";
+                ctx.fillRect(e.x + e.w/2 - 8, e.y + 20, 16, e.h - 20);
+
+                // Tête carrée
+                ctx.fillRect(e.x + e.w/2 - 12, e.y, 24, 20);
+
+                // Yeux noirs
+                ctx.fillStyle = "#000";
+                ctx.fillRect(e.x + e.w/2 - 8, e.y + 5, 4, 6);
+                ctx.fillRect(e.x + e.w/2 + 4, e.y + 5, 4, 6);
+
+                // Bras avec arc
+                ctx.fillStyle = "#d0d0d0";
+                ctx.fillRect(e.x + 5, e.y + 22, 8, 20);
+                ctx.fillRect(e.x + e.w - 13, e.y + 22, 8, 20);
+
+                // Arc
+                ctx.strokeStyle = "#8B4513";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(e.x - 10, e.y + 30, 15, -Math.PI/3, Math.PI/3);
+                ctx.stroke();
+
+                // Corde de l'arc
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(e.x - 10 - 13, e.y + 22);
+                ctx.lineTo(e.x - 10 - 13, e.y + 38);
+                ctx.stroke();
+
+                // Jambes
+                ctx.fillStyle = "#e0e0e0";
+                if (state.frameTick % 20 < 10) {
+                    ctx.fillRect(e.x + e.w/2 - 10, e.y + e.h, 8, 10);
+                    ctx.fillRect(e.x + e.w/2 + 2, e.y + e.h - 2, 8, 12);
+                } else {
+                    ctx.fillRect(e.x + e.w/2 - 10, e.y + e.h - 2, 8, 12);
+                    ctx.fillRect(e.x + e.w/2 + 2, e.y + e.h, 8, 10);
+                }
+                break;
+
+            case 'blaze':
+                // Blaze du Nether - Monstre de feu flottant
+                const blazeFloat = Math.sin(state.frameTick * 0.1) * 8;
+
+                // Corps central doré
+                ctx.fillStyle = "#ffaa00";
+                ctx.fillRect(e.x + e.w/4, e.y + blazeFloat, e.w/2, e.h/2);
+
+                // Tête
+                ctx.fillStyle = "#ffcc00";
+                ctx.fillRect(e.x + e.w/4, e.y - 15 + blazeFloat, e.w/2, 15);
+
+                // Yeux de feu
+                ctx.fillStyle = "#ff0000";
+                ctx.fillRect(e.x + e.w/4 + 3, e.y - 10 + blazeFloat, 6, 6);
+                ctx.fillRect(e.x + 3*e.w/4 - 9, e.y - 10 + blazeFloat, 6, 6);
+
+                // Bâtons de feu tournants
+                const rotation = state.frameTick * 0.05;
+                ctx.fillStyle = "#ff6600";
+                for (let i = 0; i < 8; i++) {
+                    const angle = rotation + (i * Math.PI / 4);
+                    const rx = Math.cos(angle) * 25;
+                    const ry = Math.sin(angle) * 10;
+                    ctx.save();
+                    ctx.translate(e.x + e.w/2, e.y + e.h/2 + blazeFloat);
+                    ctx.rotate(angle);
+                    ctx.fillRect(-3, 15, 6, 20);
+                    ctx.restore();
+                }
+
+                // Particules de feu
+                if (state.frameTick % 5 === 0) {
+                    ctx.fillStyle = `rgba(255, ${100 + Math.random() * 100}, 0, 0.6)`;
+                    for (let i = 0; i < 3; i++) {
+                        const px = e.x + Math.random() * e.w;
+                        const py = e.y + blazeFloat + Math.random() * e.h;
+                        ctx.fillRect(px, py, 4, 4);
+                    }
+                }
+                break;
+
+            case 'ghast':
+                // Ghast - Grosse méduse blanche du Nether
+                const ghastFloat = Math.sin(state.frameTick * 0.08) * 10;
+
+                // Corps carré blanc
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(e.x, e.y + ghastFloat, e.w, e.w);
+
+                // Yeux rouges tristes
+                ctx.fillStyle = "#ff0000";
+                ctx.fillRect(e.x + 10, e.y + 15 + ghastFloat, 12, 18);
+                ctx.fillRect(e.x + e.w - 22, e.y + 15 + ghastFloat, 12, 18);
+
+                // Pupilles noires
+                ctx.fillStyle = "#000";
+                ctx.fillRect(e.x + 14, e.y + 20 + ghastFloat, 4, 8);
+                ctx.fillRect(e.x + e.w - 18, e.y + 20 + ghastFloat, 4, 8);
+
+                // Bouche triste
+                ctx.fillStyle = "#000";
+                ctx.fillRect(e.x + e.w/2 - 10, e.y + 45 + ghastFloat, 20, 8);
+
+                // Tentacules qui ondulent
+                ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                for (let i = 0; i < 9; i++) {
+                    const wave = Math.sin(state.frameTick * 0.1 + i) * 3;
+                    ctx.fillRect(e.x + 5 + i * 8, e.y + e.w + ghastFloat, 6, 20 + wave);
+                }
+                break;
+
+            case 'magma_cube':
+                // Magma Cube - Cube de magma qui rebondit
+                const bounce = Math.abs(Math.sin(state.frameTick * 0.15)) * 15;
+
+                // Corps de magma
+                ctx.fillStyle = "#ff4400";
+                ctx.fillRect(e.x, e.y + e.h - e.w + bounce, e.w, e.w - bounce);
+
+                // Effet de lave interne
+                ctx.fillStyle = "#ffaa00";
+                ctx.fillRect(e.x + 8, e.y + e.h - e.w + 8 + bounce, e.w - 16, e.w - 16 - bounce);
+
+                // Bordures noires
+                ctx.strokeStyle = "#000";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(e.x, e.y + e.h - e.w + bounce, e.w, e.w - bounce);
+
+                // Yeux
+                ctx.fillStyle = "#000";
+                ctx.fillRect(e.x + 10, e.y + e.h - e.w + 12 + bounce, 8, 8);
+                ctx.fillRect(e.x + e.w - 18, e.y + e.h - e.w + 12 + bounce, 8, 8);
+
+                // Particules de lave
+                if (bounce < 5) {
+                    ctx.fillStyle = "rgba(255, 100, 0, 0.7)";
+                    for (let i = 0; i < 4; i++) {
+                        ctx.fillRect(e.x + Math.random() * e.w, e.y + e.h - 3, 3, 3);
+                    }
+                }
                 break;
         }
     }

@@ -207,10 +207,14 @@ function startGame(difficulty) {
     updateHud();
     updateProgressBar();
     
-    // Tutoriel au niveau 1
+    // Tutoriel au niveau 1 (disparaît après 3 secondes)
     if (state.level === 1 && !state.tutorialShown) {
         document.getElementById('tutorial').style.display = 'block';
         state.tutorialShown = true;
+        // Fermer automatiquement après 3 secondes
+        setTimeout(() => {
+            closeTutorial();
+        }, 3000);
     }
     
     state.lastTime = 0;
@@ -514,6 +518,18 @@ function updatePortals() {
                 return;
             }
 
+            // Portail vers le sous-sol (Niveau 4) !
+            if (p.isUndergroundPortal && state.level === 4 && keys.down) {
+                enterUnderground();
+                return;
+            }
+
+            // Portail de retour depuis le sous-sol
+            if (p.isReturnPortal && state.level === 4 && state.inSubLevel && keys.up) {
+                exitUnderground();
+                return;
+            }
+
             // Portail normal
             player.x = p.destX;
             player.y = p.destY;
@@ -600,6 +616,82 @@ function exitNether() {
 
     // Message de retour
     showMessage('✅ RETOUR !', 'Tu as la clé du Nether !', 3000);
+}
+
+// ===== SOUS-SOL (NIVEAU 4) =====
+function enterUnderground() {
+    AudioSystem.play('jump'); // Son de tuyau
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 30);
+
+    // Sauvegarder l'état du monde principal
+    state.mainLevelData = currentLevelData;
+    state.mainPlayerPos = { x: player.x, y: player.y };
+    state.inSubLevel = true;
+
+    // Charger le sous-sol
+    const undergroundLevel = LEVELS[4].setupUnderground(canvas.width, canvas.height);
+    currentLevelData = undergroundLevel;
+
+    // Téléporter le joueur au début du sous-sol
+    player.reset(100, canvas.height - 150);
+    player.vx = 0;
+    player.vy = 0;
+
+    state.teleportTimer = 60;
+
+    // Changer le fond pour le sous-sol (sombre)
+    document.body.style.backgroundColor = '#1a1a1a';
+
+    // Message d'entrée
+    showMessage('🍄 SOUS-SOL !', 'Trouve la clé secrète !', 3000);
+}
+
+function exitUnderground() {
+    // On doit avoir la clé du sous-sol pour sortir !
+    if (!state.hasKey) {
+        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'damage', 10);
+        showMessage('🔒 FERMÉ !', 'Trouve la clé d\'abord !', 2000);
+        return; // Impossible de sortir sans la clé
+    }
+
+    AudioSystem.play('victory'); // Son spécial
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'coin', 50);
+
+    // Restaurer le monde principal
+    currentLevelData = state.mainLevelData;
+    state.inSubLevel = false;
+
+    // Créer le portail de retour dans le monde principal
+    const returnPos = currentLevelData.returnPortalPos;
+    if (returnPos && !currentLevelData.portals.find(p => p.isReturnFromUnderground)) {
+        currentLevelData.portals.push({
+            x: returnPos.x,
+            y: returnPos.y,
+            w: 60,
+            h: 100,
+            color: '#00FF00',
+            destX: returnPos.x + 80,
+            destY: returnPos.y + 50,
+            isReturnFromUnderground: true,
+            isPipe: true
+        });
+    }
+
+    // Téléporter le joueur à côté du portail de retour
+    if (returnPos) {
+        player.x = returnPos.x + 80;
+        player.y = returnPos.y + 50;
+    }
+
+    player.vx = 0;
+    player.vy = 0;
+    state.teleportTimer = 60;
+
+    // Restaurer le fond normal
+    document.body.style.backgroundColor = LEVELS[4].bgColor;
+
+    // Message de retour avec bonus !
+    showMessage('✅ RETOUR !', 'Bonus de pièces collecté !', 3000);
 }
 
 function updateFireBars() {
@@ -734,11 +826,20 @@ function checkCollisions() {
 
         if (checkCollision(player, c)) {
             currentLevelData.coins.splice(i, 1);
-            state.coins++;
-            state.totalCoins++;
+            const coinValue = c.value || 1; // Pièces secrètes peuvent valoir plus !
+            state.coins += coinValue;
+            state.totalCoins += coinValue;
             updateCoinsDisplay();
-            AudioSystem.play('coin');
-            ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 8);
+
+            // Son spécial pour pièces secrètes
+            if (c.secret) {
+                AudioSystem.play('powerup');
+                ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 20);
+                showMessage('💎 SECRET !', `+${coinValue} pièces !`, 1500);
+            } else {
+                AudioSystem.play('coin');
+                ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 8);
+            }
         }
     }
 
