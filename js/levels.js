@@ -178,43 +178,157 @@ const LEVELS = {
     },
     
     5: {
-        name: "Monde Cubique",
+        name: "Aventure Minecraft",
         bgColor: "#87CEEB",
         playerStart: { x: 50, y: 300 },
+        needsKey: true,
         setup: (w, h) => {
             const blockSize = 40;
             const level = createEmptyLevel();
-            
+
+            // ===== MONDE PRINCIPAL =====
             level.clouds = [];
-            for (let i = 0; i < 8; i++) level.clouds.push({ x: Math.random() * w * 3, y: 50 + Math.random() * 150, w: 50 + Math.random() * 40 });
-            
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 8; i++) level.clouds.push({ x: Math.random() * w * 2, y: 50 + Math.random() * 150, w: 50 + Math.random() * 40 });
+
+            // Sol de départ
+            for (let i = 0; i < 18; i++) {
                 level.platforms.push({ x: i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
                 level.platforms.push({ x: i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
             }
-            for (let i = 0; i < 4; i++) level.coins.push({ x: 100 + i * 80, y: h - blockSize * 2 - 50, w: 20, h: 20 });
-            
-            let treeX = 300;
+            for (let i = 0; i < 5; i++) level.coins.push({ x: 100 + i * 80, y: h - blockSize * 2 - 50, w: 20, h: 20 });
+
+            // Arbre avec power-up
+            let treeX = 280;
             level.platforms.push({ x: treeX, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'wood' });
             level.platforms.push({ x: treeX - blockSize, y: h - blockSize * 7, w: blockSize * 3, h: blockSize * 2, type: 'leaves' });
             level.platforms.push({ x: treeX, y: h - blockSize * 8, w: blockSize, h: blockSize, type: 'leaves' });
-            level.keyItem = { x: treeX, y: h - blockSize * 9, w: 30, h: 30, type: 'diamond' };
-            
-            let caveX = 650;
-            level.platforms.push({ x: caveX, y: h - blockSize * 4, w: blockSize * 2, h: blockSize, type: 'stone' });
-            level.platforms.push({ x: caveX + 150, y: h - blockSize * 2, w: blockSize * 2, h: blockSize, type: 'stone' });
-            level.hazards.push({ x: caveX, y: h - 20, w: 400, h: 20, type: 'lava_floor' });
-            level.coins.push({ x: caveX + 30, y: h - blockSize * 4 - 50, w: 20, h: 20 });
-            level.coins.push({ x: caveX + 180, y: h - blockSize * 2 - 50, w: 20, h: 20 });
-            
-            let netherX = caveX + 400;
-            level.platforms.push({ x: netherX, y: h - blockSize * 5, w: blockSize * 4, h: blockSize, type: 'netherrack' });
-            level.goal = { x: netherX + blockSize, y: h - blockSize * 5 - 80, w: 60, h: 80, type: 'nether_portal' };
-            level.enemies.push({ x: netherX + 50, y: h - blockSize * 5 - 60, w: 50, h: 60, type: 'zombie', patrolStart: netherX, patrolEnd: netherX + 150, dir: 1, speed: 2 * state.difficulty });
+            level.powerups.push({ x: treeX, y: h - blockSize * 8 - 40, w: 35, h: 35, type: 'shield' });
+            level.coins.push({ x: treeX, y: h - blockSize * 7 - 30, w: 20, h: 20 });
+
+            // Mini-saut vers la mine
+            let gapX = treeX + 180;
+            level.platforms.push({ x: gapX, y: h - blockSize * 3, w: blockSize, h: blockSize, type: 'stone' });
+            level.coins.push({ x: gapX + 5, y: h - blockSize * 3 - 40, w: 20, h: 20 });
+
+            // Mine avec lave
+            let caveX = gapX + 150;
+            for (let i = 0; i < 3; i++) {
+                level.platforms.push({ x: caveX + i * blockSize, y: h - blockSize * 4, w: blockSize, h: blockSize, type: 'stone' });
+            }
+            level.hazards.push({ x: caveX - 50, y: h - 30, w: 250, h: 30, type: 'lava_floor' });
+            level.coins.push({ x: caveX + 50, y: h - blockSize * 4 - 40, w: 20, h: 20 });
+
+            // Plateforme vers le portail Nether
+            let portalAreaX = caveX + 300;
+            for (let i = 0; i < 8; i++) {
+                level.platforms.push({ x: portalAreaX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'netherrack' });
+                level.platforms.push({ x: portalAreaX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'netherrack' });
+            }
+
+            // ===== PORTAIL VERS LE NETHER (pas la sortie!) =====
+            let netherPortalX = portalAreaX + blockSize * 2;
+            level.portals.push({
+                x: netherPortalX,
+                y: h - blockSize * 2 - 100,
+                w: 60,
+                h: 100,
+                color: '#8B00FF',
+                destX: -999, // Code spécial pour aller au Nether
+                destY: -999,
+                isNetherPortal: true
+            });
+
+            // Obsidienne autour du portail (décoratif)
+            level.platforms.push({ x: netherPortalX - 10, y: h - blockSize * 2, w: 10, h: 100, type: 'netherrack' });
+            level.platforms.push({ x: netherPortalX + 60, y: h - blockSize * 2, w: 10, h: 100, type: 'netherrack' });
+
+            // Zombie gardien du portail
+            level.enemies.push({ x: netherPortalX + 100, y: h - blockSize * 2 - 60, w: 50, h: 60, type: 'zombie', patrolStart: portalAreaX, patrolEnd: portalAreaX + 280, dir: -1, speed: 2 * state.difficulty });
+
+            // ===== ZONE DE RETOUR DU NETHER =====
+            let returnX = portalAreaX + 450;
+            for (let i = 0; i < 6; i++) {
+                level.platforms.push({ x: returnX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
+                level.platforms.push({ x: returnX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
+            }
+
+            // Portail de retour du Nether (apparaîtra ici)
+            level.returnPortalPos = { x: returnX + 40, y: h - blockSize * 2 - 100 };
+
+            // ===== SORTIE FINALE (nécessite la clé du Nether!) =====
+            let exitX = returnX + 300;
+            for (let i = 0; i < 6; i++) {
+                level.platforms.push({ x: exitX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
+                level.platforms.push({ x: exitX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
+            }
+
+            // Maison de sortie
+            level.platforms.push({ x: exitX + 200, y: h - blockSize * 2 - 120, w: 100, h: 120, type: 'wood' });
+            level.goal = { x: exitX + 230, y: h - blockSize * 2 - 80, w: 40, h: 80, type: 'nether_portal' };
+
+            // Vide
             level.hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
 
-            // Power-up bouclier dans l'arbre
-            level.powerups.push({ x: treeX, y: h - blockSize * 6, w: 35, h: 35, type: 'shield' });
+            return level;
+        },
+
+        // ===== SOUS-NIVEAU : LE NETHER ! =====
+        setupNether: (w, h) => {
+            const blockSize = 40;
+            const level = createEmptyLevel();
+
+            // Pas de clés, pas de nuages dans le Nether !
+            level.clouds = [];
+
+            // Sol de Netherrack partout
+            for (let i = 0; i < 25; i++) {
+                level.platforms.push({ x: i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'netherrack' });
+                level.platforms.push({ x: i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'netherrack' });
+            }
+
+            // Lave au sol (danger!)
+            level.hazards.push({ x: 0, y: h - 30, w: 100, h: 30, type: 'lava_floor' });
+            level.hazards.push({ x: 250, y: h - 30, w: 150, h: 30, type: 'lava_floor' });
+            level.hazards.push({ x: 550, y: h - 30, w: 200, h: 30, type: 'lava_floor' });
+
+            // Parcours avec plateformes
+            let platformsY = h - blockSize * 4;
+            level.platforms.push({ x: 120, y: platformsY, w: blockSize * 2, h: blockSize, type: 'netherrack' });
+            level.coins.push({ x: 135, y: platformsY - 40, w: 20, h: 20 });
+
+            level.platforms.push({ x: 280, y: platformsY - 60, w: blockSize * 2, h: blockSize, type: 'netherrack' });
+            level.powerups.push({ x: 295, y: platformsY - 100, w: 35, h: 35, type: 'star' }); // Étoile d'invincibilité!
+
+            level.platforms.push({ x: 420, y: platformsY, w: blockSize * 2, h: blockSize, type: 'netherrack' });
+
+            // Zombie Pigman hostile!
+            level.enemies.push({ x: 450, y: platformsY - 60, w: 50, h: 60, type: 'zombie', patrolStart: 420, patrolEnd: 500, dir: 1, speed: 3 * state.difficulty });
+
+            // Plateforme avec LA CLÉ !
+            let keyPlatformX = 650;
+            level.platforms.push({ x: keyPlatformX, y: platformsY - 120, w: blockSize * 3, h: blockSize, type: 'netherrack' });
+            level.keyItem = { x: keyPlatformX + 40, y: platformsY - 180, w: 40, h: 40, type: 'diamond' }; // Diamant du Nether!
+            level.coins.push({ x: keyPlatformX + 10, y: platformsY - 160, w: 20, h: 20 });
+            level.coins.push({ x: keyPlatformX + 90, y: platformsY - 160, w: 20, h: 20 });
+
+            // Portail de retour vers le monde principal
+            let returnPortalX = 850;
+            level.platforms.push({ x: returnPortalX - 50, y: h - blockSize * 2, w: blockSize * 4, h: blockSize, type: 'netherrack' });
+
+            // Portail magique de retour
+            level.portals.push({
+                x: returnPortalX,
+                y: h - blockSize * 2 - 100,
+                w: 60,
+                h: 100,
+                color: '#00FF00', // Vert pour le retour!
+                destX: -998, // Code spécial pour retourner au monde principal
+                destY: -998,
+                isReturnPortal: true
+            });
+
+            // Vide mortel partout
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
 
             return level;
         }

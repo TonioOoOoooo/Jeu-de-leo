@@ -63,6 +63,13 @@ const state = {
     maxCoinsInLevel: 0,      // Nombre max de pièces dans le niveau actuel
     badges: {},              // Badges débloqués
 
+    // Sous-niveaux (pour portail Nether niveau 5!)
+    inSubLevel: false,       // True si dans un sous-niveau
+    subLevelData: null,      // Données du sous-niveau actuel
+    mainLevelData: null,     // Données du niveau principal (sauvegardées)
+    netherKeyCollected: false, // Clé du Nether collectée
+    mainPlayerPos: null,     // Position du joueur dans le monde principal
+
     // Power-ups actifs
     powerups: {
         shield: 0,           // Timer du bouclier

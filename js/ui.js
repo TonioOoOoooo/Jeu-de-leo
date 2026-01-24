@@ -8,6 +8,16 @@ function updateHud() {
     for (let i = 0; i < state.lives; i++) hearts += "❤️";
     for (let i = state.lives; i < 3; i++) hearts += "🖤";
     document.getElementById('hearts').textContent = hearts;
+
+    // Indicateur spécial pour le Nether
+    const levelDisplay = document.getElementById('level-display');
+    if (state.level === 5 && state.inSubLevel) {
+        levelDisplay.textContent = '🔥 NETHER';
+        levelDisplay.style.color = '#ff4400';
+    } else {
+        levelDisplay.textContent = `NIVEAU ${state.level}`;
+        levelDisplay.style.color = '#fff';
+    }
 }
 
 function updateCoinsDisplay() {

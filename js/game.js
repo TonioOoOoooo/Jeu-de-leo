@@ -255,6 +255,12 @@ function initLevel(levelNum) {
     state.coins = 0;
     state.maxCoinsInLevel = currentLevelData.coins.length;
 
+    // Reset sous-niveaux (pour niveau 5)
+    state.inSubLevel = false;
+    state.netherKeyCollected = false;
+    state.mainLevelData = null;
+    state.mainPlayerPos = null;
+
     // Reset power-ups
     state.powerups = {
         shield: 0,
@@ -493,18 +499,107 @@ function updateHazards() {
 
 function updatePortals() {
     if (state.teleportTimer > 0) return;
-    
+
     for (const p of currentLevelData.portals) {
         if (checkCollision(player, p)) {
+            // Portail spécial vers le Nether !
+            if (p.isNetherPortal && state.level === 5) {
+                enterNether();
+                return;
+            }
+
+            // Portail de retour depuis le Nether
+            if (p.isReturnPortal && state.level === 5 && state.inSubLevel) {
+                exitNether();
+                return;
+            }
+
+            // Portail normal
             player.x = p.destX;
             player.y = p.destY;
             player.vx = 0;
             player.vy = 0;
             state.teleportTimer = 60;
             ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 20);
+            AudioSystem.play('key');
             break;
         }
     }
+}
+
+// ===== SYSTÈME DE PORTAIL NETHER =====
+function enterNether() {
+    AudioSystem.play('victory'); // Son spécial
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'boss', 50);
+
+    // Sauvegarder l'état du monde principal
+    state.mainLevelData = currentLevelData;
+    state.mainPlayerPos = { x: player.x, y: player.y };
+    state.inSubLevel = true;
+
+    // Charger le Nether
+    const netherLevel = LEVELS[5].setupNether(canvas.width, canvas.height);
+    currentLevelData = netherLevel;
+
+    // Téléporter le joueur au début du Nether
+    player.reset(50, canvas.height - 200);
+    player.vx = 0;
+    player.vy = 0;
+
+    state.teleportTimer = 60;
+
+    // Changer le fond pour le Nether!
+    document.body.style.backgroundColor = '#5C0000';
+
+    // Message d'entrée
+    showMessage('🔥 NETHER !', 'Trouve la clé et reviens !', 3000);
+}
+
+function exitNether() {
+    // On doit avoir la clé du Nether pour sortir!
+    if (!state.netherKeyCollected) {
+        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'damage', 10);
+        return; // Impossible de sortir sans la clé!
+    }
+
+    AudioSystem.play('victory'); // Son spécial
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 50);
+
+    // Restaurer le monde principal
+    currentLevelData = state.mainLevelData;
+    state.inSubLevel = false;
+
+    // Créer le portail de retour dans le monde principal
+    const returnPos = currentLevelData.returnPortalPos;
+    if (returnPos && !currentLevelData.portals.find(p => p.isReturnFromNether)) {
+        currentLevelData.portals.push({
+            x: returnPos.x,
+            y: returnPos.y,
+            w: 60,
+            h: 100,
+            color: '#8B00FF',
+            destX: returnPos.x + 80,
+            destY: returnPos.y + 50,
+            isReturnFromNether: true
+        });
+    }
+
+    // Téléporter le joueur à côté du portail de retour
+    if (returnPos) {
+        player.x = returnPos.x + 80;
+        player.y = returnPos.y + 50;
+    }
+
+    player.vx = 0;
+    player.vy = 0;
+    state.teleportTimer = 60;
+    state.hasKey = true; // On a maintenant la clé pour la sortie finale !
+
+    // Restaurer le fond normal
+    document.body.style.backgroundColor = LEVELS[5].bgColor;
+
+    // Message de retour
+    showMessage('✅ RETOUR !', 'Tu as la clé du Nether !', 3000);
 }
 
 function updateFireBars() {
@@ -723,11 +818,21 @@ function checkCollisions() {
     // Clé
     if (!state.hasKey && currentLevelData.keyItem) {
         if (checkCollision(player, currentLevelData.keyItem)) {
-            state.hasKey = true;
-            currentLevelData.keyItem = null;
-            document.getElementById('key-display').style.display = 'inline';
-            AudioSystem.play('key');
-            ParticleSystem.emit(player.x + player.w/2, player.y, 'sparkle', 20);
+            // Clé spéciale du Nether
+            if (state.level === 5 && state.inSubLevel) {
+                state.netherKeyCollected = true;
+                currentLevelData.keyItem = null;
+                AudioSystem.play('key');
+                ParticleSystem.emit(player.x + player.w/2, player.y, 'sparkle', 30);
+                showMessage('💎 CLÉ DU NETHER !', 'Retourne au portail vert !', 2500);
+            } else {
+                // Clé normale
+                state.hasKey = true;
+                currentLevelData.keyItem = null;
+                document.getElementById('key-display').style.display = 'inline';
+                AudioSystem.play('key');
+                ParticleSystem.emit(player.x + player.w/2, player.y, 'sparkle', 20);
+            }
         }
     }
     

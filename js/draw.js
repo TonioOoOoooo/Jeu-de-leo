@@ -164,16 +164,67 @@ function drawClouds() {
 
 function drawPortals() {
     for (const p of currentLevelData.portals) {
-        ctx.strokeStyle = p.color;
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.ellipse(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, p.h / 2, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = 0.3 + Math.sin(state.frameTick * 0.1) * 0.1;
-        ctx.fill();
-        ctx.globalAlpha = 1;
+        // Portail Nether/Retour super stylé !
+        if (p.isNetherPortal || p.isReturnPortal || p.isReturnFromNether) {
+            // Cadre en obsidienne
+            ctx.fillStyle = '#1a0033';
+            ctx.fillRect(p.x - 10, p.y, 10, p.h);
+            ctx.fillRect(p.x + p.w, p.y, 10, p.h);
+            ctx.fillRect(p.x - 10, p.y - 10, p.w + 20, 10);
+            ctx.fillRect(p.x - 10, p.y + p.h, p.w + 20, 10);
+
+            // Effet de tourbillon
+            const time = state.frameTick * 0.05;
+            for (let i = 0; i < 8; i++) {
+                const angle = time + (i * Math.PI / 4);
+                const radius = (p.w / 2) * (0.3 + Math.sin(time * 2 + i) * 0.2);
+                const x = p.x + p.w/2 + Math.cos(angle) * radius;
+                const y = p.y + p.h/2 + Math.sin(angle) * radius * 1.5;
+
+                ctx.fillStyle = p.color || '#8B00FF';
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            // Centre du portail animé
+            ctx.fillStyle = p.color || '#8B00FF';
+            ctx.globalAlpha = 0.4 + Math.sin(state.frameTick * 0.1) * 0.2;
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            ctx.globalAlpha = 1;
+
+            // Particules magiques
+            if (state.frameTick % 5 === 0) {
+                const px = p.x + Math.random() * p.w;
+                const py = p.y + Math.random() * p.h;
+                ParticleSystem.emit(px, py, 'sparkle', 1);
+            }
+
+            // Texte indicatif
+            if (p.isNetherPortal) {
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 16px Patrick Hand';
+                ctx.fillText('→ NETHER', p.x + 5, p.y - 15);
+            } else if (p.isReturnPortal) {
+                ctx.fillStyle = '#00ff00';
+                ctx.font = 'bold 16px Patrick Hand';
+                ctx.fillText('← RETOUR', p.x + 5, p.y - 15);
+            }
+        } else {
+            // Portail normal
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.ellipse(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, p.h / 2, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = 0.3 + Math.sin(state.frameTick * 0.1) * 0.1;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
     }
 }
 
