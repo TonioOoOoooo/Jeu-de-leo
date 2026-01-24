@@ -113,18 +113,22 @@ function handleKey(e, pressed) {
     if (k === 'arrowup' || k === 'w') keys.up = pressed;
     if (k === 'arrowdown' || k === 's') keys.down = pressed;
     
-    // Saut avec ESPACE
-    if (pressed && (k === ' ' || code === 'Space')) {
-        e.preventDefault();
-        
+    // Saut avec ESPACE ou FLÈCHE HAUT
+    if (pressed && (k === ' ' || code === 'Space' || k === 'arrowup')) {
         // Si message affiché, continuer
         const msgBox = document.getElementById('message-box');
         if (msgBox.style.display === 'block') {
+            e.preventDefault();
             nextLevelAction();
             return;
         }
-        
+
         if (state.current === GameState.PLAYING) {
+            // Si flèche haut et on touche une échelle, ne pas sauter (on grimpe à la place)
+            if (k === 'arrowup' && isTouchingLadder()) {
+                return;
+            }
+            e.preventDefault();
             doJump();
         }
     }
@@ -341,18 +345,23 @@ function update() {
     updateJumpIndicator();
 }
 
-function updatePlayer() {
-    const prevY = player.y;
-    
-    // Échelles
-    let touchingLadder = false;
+// Vérifie si le joueur touche une échelle
+function isTouchingLadder() {
+    if (!currentLevelData || !currentLevelData.ladders) return false;
     for (const l of currentLevelData.ladders) {
         if (player.x + player.w > l.x && player.x < l.x + l.w &&
             player.y + player.h > l.y - 10 && player.y < l.y + l.h + 20) {
-            touchingLadder = true;
-            break;
+            return true;
         }
     }
+    return false;
+}
+
+function updatePlayer() {
+    const prevY = player.y;
+
+    // Échelles
+    const touchingLadder = isTouchingLadder();
     
     if (touchingLadder && (keys.up || keys.down)) {
         player.climbing = true;
