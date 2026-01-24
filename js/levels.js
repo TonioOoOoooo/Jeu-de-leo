@@ -15,6 +15,15 @@ const LEVELS = {
             for (let i = 0; i < 3; i++) {
                 level.coins.push({ x: 150 + i * 50, y: unit * 2 - 50, w: 20, h: 20 });
             }
+
+            // ===== 🎁 ZONE SECRÈTE #1 : Plateforme cachée au-dessus =====
+            level.platforms.push({ x: 100, y: unit * 0.5, w: 150, h: 20, type: 'gold_block' });
+            // Super pièces secrètes (valent 5 pièces chacune!)
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: 115 + i * 40, y: unit * 0.5 - 30, w: 25, h: 25, value: 5, secret: true });
+            }
+            // Power-up étoile secret !
+            level.powerups.push({ x: 165, y: unit * 0.5 - 70, w: 35, h: 35, type: 'star' });
             
             let trapX = 550, trapY = unit * 3;
             level.platforms.push({ x: trapX, y: trapY, w: unit * 4, h: unit });
@@ -100,40 +109,140 @@ const LEVELS = {
     },
     
     3: {
-        name: "Le Donjon",
-        bgColor: "#2c3e50",
-        playerStart: { x: 50, y: 300 },
+        name: "⚔️ Le Donjon Maudit ⚔️",
+        bgColor: "#1a1a2e",
+        playerStart: { x: 50, y: 400 },
         needsKey: false,
         setup: (w, h) => {
             const unit = h / 10;
             const level = createEmptyLevel();
-            
-            level.platforms.push({ x: -50, y: unit * 6, w: 200, h: unit });
-            
-            let isle1 = 250;
-            level.platforms.push({ x: isle1, y: unit * 6, w: 100, h: unit });
-            level.fireBars.push({ cx: isle1 + 50, cy: unit * 6 + 10, length: 120, angle: 0, speed: 0.05 * state.difficulty });
-            level.coins.push({ x: isle1 + 40, y: unit * 6 - 120, w: 20, h: 20 });
-            
-            let isle2 = 450;
-            level.platforms.push({ x: isle2, y: unit * 5, w: 100, h: unit });
-            level.fireBars.push({ cx: isle2 + 50, cy: unit * 5 + 10, length: 130, angle: Math.PI, speed: -0.06 * state.difficulty });
-            level.coins.push({ x: isle2 + 40, y: unit * 5 - 120, w: 20, h: 20 });
-            
-            let isle3 = 650;
-            level.platforms.push({ x: isle3, y: unit * 4, w: 100, h: unit });
-            level.coins.push({ x: isle3 + 40, y: unit * 4 - 50, w: 20, h: 20 });
-            
-            let bridgeX = 850;
-            level.platforms.push({ x: bridgeX, y: unit * 4, w: 400, h: unit });
-            level.enemies.push({ x: bridgeX + 200, y: unit * 4 - 80, w: 80, h: 80, type: 'chest_monster', patrolStart: bridgeX, patrolEnd: bridgeX + 300, dir: 1, speed: 3 * state.difficulty });
-            for (let i = 0; i < 5; i++) level.coins.push({ x: bridgeX + 50 + i * 60, y: unit * 4 - 50, w: 20, h: 20 });
-            
-            level.goal = { x: bridgeX + 350, y: unit * 4 - 60, w: 40, h: 60, type: 'axe' };
-            level.hazards.push({ x: -1000, y: h - 50, w: w * 30, h: 100, type: 'lava_floor' });
 
-            // Power-up étoile pour traverser les obstacles
-            level.powerups.push({ x: isle2 + 40, y: unit * 5 - 70, w: 35, h: 35, type: 'star' });
+            // ===== SECTION 1 : SALLE D'ENTRÉE =====
+            // Sol de départ avec murs de pierre
+            level.platforms.push({ x: 0, y: unit * 7, w: 300, h: unit * 3, type: 'stone' });
+
+            // Squelettes gardiens de l'entrée
+            level.enemies.push({ x: 150, y: unit * 7 - 60, w: 50, h: 60, type: 'skeleton', patrolStart: 100, patrolEnd: 250, dir: 1, speed: 2 * state.difficulty });
+
+            // Pièces d'entrée
+            for (let i = 0; i < 4; i++) level.coins.push({ x: 80 + i * 40, y: unit * 7 - 100, w: 20, h: 20 });
+
+            // ===== SECTION 2 : COULOIR DES PIQUES =====
+            let corridorX = 320;
+            level.platforms.push({ x: corridorX, y: unit * 7, w: 350, h: unit * 3, type: 'stone' });
+
+            // Piques montantes dangereuses espacées
+            for (let i = 0; i < 5; i++) {
+                level.hazards.push({ x: corridorX + 50 + i * 60, y: unit * 7 - 40, w: 40, h: 40, type: 'spikes' });
+            }
+
+            // Plateformes surélevées pour éviter les piques
+            level.platforms.push({ x: corridorX + 40, y: unit * 6.3, w: 80, h: 20, type: 'wood' });
+            level.platforms.push({ x: corridorX + 160, y: unit * 6, w: 80, h: 20, type: 'wood' });
+            level.platforms.push({ x: corridorX + 280, y: unit * 6.3, w: 80, h: 20, type: 'wood' });
+
+            // Pièces sur les plateformes
+            level.coins.push({ x: corridorX + 65, y: unit * 6.3 - 30, w: 20, h: 20 });
+            level.coins.push({ x: corridorX + 190, y: unit * 6 - 30, w: 20, h: 20 });
+            level.coins.push({ x: corridorX + 310, y: unit * 6.3 - 30, w: 20, h: 20 });
+
+            // Power-up bouclier pour traverser
+            level.powerups.push({ x: corridorX + 190, y: unit * 6 - 70, w: 35, h: 35, type: 'shield' });
+
+            // ===== SECTION 3 : SALLE DES BARRES DE FEU =====
+            let fireRoomX = 690;
+
+            // Grande plateforme centrale
+            level.platforms.push({ x: fireRoomX, y: unit * 7, w: 500, h: unit * 3, type: 'stone' });
+
+            // Trois barres de feu tournantes en séquence
+            level.fireBars.push({ cx: fireRoomX + 100, cy: unit * 7 + 10, length: 140, angle: 0, speed: 0.05 * state.difficulty });
+            level.fireBars.push({ cx: fireRoomX + 250, cy: unit * 7 + 10, length: 150, angle: Math.PI, speed: -0.06 * state.difficulty });
+            level.fireBars.push({ cx: fireRoomX + 400, cy: unit * 7 + 10, length: 140, angle: Math.PI/2, speed: 0.07 * state.difficulty });
+
+            // Plateformes pour naviguer au-dessus
+            level.platforms.push({ x: fireRoomX + 40, y: unit * 5.5, w: 70, h: 20, type: 'wood' });
+            level.platforms.push({ x: fireRoomX + 180, y: unit * 5, w: 70, h: 20, type: 'wood' });
+            level.platforms.push({ x: fireRoomX + 320, y: unit * 5.5, w: 70, h: 20, type: 'wood' });
+            level.platforms.push({ x: fireRoomX + 440, y: unit * 6, w: 70, h: 20, type: 'wood' });
+
+            // Pièces sur chaque plateforme
+            level.coins.push({ x: fireRoomX + 60, y: unit * 5.5 - 30, w: 20, h: 20 });
+            level.coins.push({ x: fireRoomX + 205, y: unit * 5 - 30, w: 20, h: 20 });
+            level.coins.push({ x: fireRoomX + 345, y: unit * 5.5 - 30, w: 20, h: 20 });
+            level.coins.push({ x: fireRoomX + 460, y: unit * 6 - 30, w: 20, h: 20 });
+
+            // Power-up super saut
+            level.powerups.push({ x: fireRoomX + 205, y: unit * 5 - 70, w: 35, h: 35, type: 'super_jump' });
+
+            // ===== 🎁 ZONE SECRÈTE #2 : Plateforme cachée au plafond =====
+            level.platforms.push({ x: fireRoomX + 180, y: unit * 2, w: 150, h: 20, type: 'gold_block' });
+            // Pièces secrètes diamant
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({ x: fireRoomX + 195 + i * 30, y: unit * 2 - 30, w: 25, h: 25, value: 3, secret: true });
+            }
+            // Power-up magnet secret
+            level.powerups.push({ x: fireRoomX + 235, y: unit * 2 - 70, w: 35, h: 35, type: 'magnet' });
+
+            // ===== SECTION 4 : PRISON VERTICALE =====
+            let prisonX = 1210;
+
+            // Structure verticale avec échelles
+            level.platforms.push({ x: prisonX, y: unit * 7, w: 200, h: unit * 3, type: 'stone' });
+            level.platforms.push({ x: prisonX, y: unit * 5, w: 200, h: 40, type: 'stone' });
+            level.platforms.push({ x: prisonX, y: unit * 3.5, w: 200, h: 40, type: 'stone' });
+
+            // Échelles pour grimper
+            level.ladders.push({ x: prisonX + 30, y: unit * 5 + 40, w: 30, h: unit * 2 - 40 });
+            level.ladders.push({ x: prisonX + 140, y: unit * 3.5 + 40, w: 30, h: unit * 1.5 - 40 });
+
+            // Squelettes gardiens dans la prison
+            level.enemies.push({ x: prisonX + 100, y: unit * 5 - 60, w: 50, h: 60, type: 'skeleton', patrolStart: prisonX + 50, patrolEnd: prisonX + 150, dir: 1, speed: 2 * state.difficulty });
+            level.enemies.push({ x: prisonX + 80, y: unit * 3.5 - 60, w: 50, h: 60, type: 'skeleton', patrolStart: prisonX + 40, patrolEnd: prisonX + 160, dir: -1, speed: 2.5 * state.difficulty });
+
+            // Pièces sur chaque étage
+            for (let i = 0; i < 3; i++) level.coins.push({ x: prisonX + 60 + i * 40, y: unit * 5 - 30, w: 20, h: 20 });
+            for (let i = 0; i < 3; i++) level.coins.push({ x: prisonX + 60 + i * 40, y: unit * 3.5 - 30, w: 20, h: 20 });
+
+            // ===== SECTION 5 : SALLE DU TRÉSOR =====
+            let treasureX = 1430;
+
+            // Grande salle du trésor
+            level.platforms.push({ x: treasureX, y: unit * 7, w: 400, h: unit * 3, type: 'gold_block' });
+            level.platforms.push({ x: treasureX, y: unit * 3.5, w: 400, h: 40, type: 'stone' });
+
+            // Échelle pour descendre
+            level.ladders.push({ x: treasureX + 50, y: unit * 3.5 + 40, w: 30, h: unit * 3.5 - 40 });
+
+            // Boss coffre monstre gardant le trésor
+            level.enemies.push({ x: treasureX + 200, y: unit * 7 - 80, w: 80, h: 80, type: 'chest_monster', patrolStart: treasureX + 100, patrolEnd: treasureX + 300, dir: 1, speed: 3 * state.difficulty });
+
+            // Beaucoup de pièces dans le trésor
+            for (let i = 0; i < 8; i++) level.coins.push({ x: treasureX + 50 + i * 40, y: unit * 7 - 100, w: 20, h: 20 });
+            for (let i = 0; i < 5; i++) level.coins.push({ x: treasureX + 100 + i * 50, y: unit * 7 - 150, w: 20, h: 20 });
+
+            // Power-up aimant pour collecter facilement
+            level.powerups.push({ x: treasureX + 200, y: unit * 3.5 - 70, w: 35, h: 35, type: 'magnet' });
+
+            // ===== SECTION 6 : SALLE DU TRÔNE =====
+            let throneX = 1850;
+
+            // Salle finale avec escalier
+            level.platforms.push({ x: throneX, y: unit * 7, w: 350, h: unit * 3, type: 'stone' });
+
+            // Escalier majestueux
+            for (let i = 0; i < 5; i++) {
+                level.platforms.push({ x: throneX + 50 + i * 50, y: unit * 7 - (i + 1) * 35, w: 50, h: 35 + (i + 1) * 35, type: 'stone' });
+            }
+
+            // Hache légendaire au sommet
+            level.goal = { x: throneX + 280, y: unit * 7 - 200, w: 40, h: 60, type: 'axe' };
+
+            // Pièces finales
+            for (let i = 0; i < 5; i++) level.coins.push({ x: throneX + 70 + i * 50, y: unit * 7 - (i + 1) * 35 - 30, w: 20, h: 20 });
+
+            // Sol de lave en-dessous de tout
+            level.hazards.push({ x: -1000, y: h - 50, w: w * 30, h: 100, type: 'lava_floor' });
 
             return level;
         }
@@ -143,42 +252,155 @@ const LEVELS = {
         name: "Monde Champignon",
         bgColor: "#5c94fc",
         playerStart: { x: 50, y: 400 },
+        needsKey: true,
         setup: (w, h) => {
             const unit = h / 10;
             const level = createEmptyLevel();
-            
+
             level.clouds = [];
             for (let i = 0; i < 10; i++) level.clouds.push({ x: Math.random() * w * 4, y: Math.random() * (h / 2), w: 60 + Math.random() * 40 });
-            
+
             let groundY = h - unit;
             level.platforms.push({ x: -50, y: groundY, w: 400, h: unit, type: 'brick_floor' });
             for (let i = 0; i < 5; i++) level.coins.push({ x: 80 + i * 60, y: groundY - 50, w: 20, h: 20 });
-            
+
+            // ===== TUYAU MAGIQUE VERS SOUS-SOL ! =====
             let pipe1X = 450;
             level.platforms.push({ x: pipe1X, y: groundY - 60, w: 60, h: 60 + unit, type: 'pipe' });
+
+            // Portail d'entrée dans le tuyau (appuyer sur bas pour descendre)
+            level.portals.push({
+                x: pipe1X + 10,
+                y: groundY - 55,
+                w: 40,
+                h: 50,
+                color: '#00FF00',
+                destX: -997, // Code spécial pour aller au sous-sol
+                destY: -997,
+                isUndergroundPortal: true
+            });
+
             level.platforms.push({ x: pipe1X + 150, y: groundY, w: 300, h: unit, type: 'brick_floor' });
             level.enemies.push({ x: pipe1X + 200, y: groundY - 60, w: 50, h: 60, type: 'zombie', patrolStart: pipe1X + 150, patrolEnd: pipe1X + 400, dir: -1, speed: 2 * state.difficulty });
             
-            let pipe2X = pipe1X + 350;
+            // ===== ZONE DE RETOUR DU SOUS-SOL =====
+            let returnX = pipe1X + 150;
+            // Portail de retour du sous-sol (apparaîtra ici après visite)
+            level.returnPortalPos = { x: returnX + 180, y: groundY - 100 };
+
+            let pipe2X = returnX + 350;
             level.platforms.push({ x: pipe2X, y: groundY - 90, w: 60, h: 90 + unit, type: 'pipe' });
-            
+
             let bricksX = pipe2X + 200, bricksY = groundY - 150;
             level.platforms.push({ x: bricksX, y: bricksY, w: 180, h: 40, type: 'brick_block' });
             level.platforms.push({ x: bricksX + 250, y: bricksY - 50, w: 40, h: 40, type: 'gold_block' });
             level.keyItem = { x: bricksX + 255, y: bricksY - 100, w: 30, h: 30 };
             for (let i = 0; i < 4; i++) level.coins.push({ x: bricksX + 20 + i * 45, y: bricksY - 50, w: 20, h: 20 });
-            
+
             let endGroundX = bricksX + 400;
             level.platforms.push({ x: endGroundX, y: groundY, w: 600, h: unit, type: 'brick_floor' });
             let stairsX = endGroundX + 100;
             for (let i = 0; i < 5; i++) level.platforms.push({ x: stairsX + (i * 40), y: groundY - (i * 40) - 40, w: 40, h: 40, type: 'brick_block' });
-            
+
             level.goal = { x: stairsX + 350, y: groundY - 120, w: 10, h: 120, type: 'flag' };
             level.platforms.push({ x: stairsX + 400, y: groundY - 100, w: 100, h: 100, type: 'castle' });
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
 
             // Power-up aimant à pièces sur le bloc doré
             level.powerups.push({ x: bricksX + 255, y: bricksY - 140, w: 35, h: 35, type: 'magnet' });
+
+            return level;
+        },
+
+        // ===== SOUS-NIVEAU : ZONE SOUTERRAINE ! =====
+        setupUnderground: (w, h) => {
+            const unit = h / 10;
+            const level = createEmptyLevel();
+
+            // Pas de nuages sous terre !
+            level.clouds = [];
+
+            // ===== SOL ET MUR DE BRIQUES SOMBRES =====
+            let groundY = h - unit;
+
+            // Sol complet
+            for (let i = 0; i < 30; i++) {
+                level.platforms.push({ x: i * 60, y: groundY, w: 60, h: unit, type: 'brick_block' });
+            }
+
+            // Plafond de briques
+            for (let i = 0; i < 30; i++) {
+                level.platforms.push({ x: i * 60, y: 0, w: 60, h: 40, type: 'brick_block' });
+            }
+
+            // ===== TUYAU D'ARRIVÉE =====
+            let arrivalX = 100;
+            level.platforms.push({ x: arrivalX - 30, y: groundY - 80, w: 60, h: 80, type: 'pipe' });
+
+            // ===== PARCOURS SOUTERRAIN AVEC TRÉSORS ! =====
+
+            // Plateforme 1 avec pièces
+            let plat1X = 250;
+            level.platforms.push({ x: plat1X, y: groundY - 100, w: 120, h: 20, type: 'brick_block' });
+            for (let i = 0; i < 5; i++) level.coins.push({ x: plat1X + 15 + i * 20, y: groundY - 130, w: 20, h: 20 });
+
+            // Badnik ennemi !
+            level.enemies.push({ x: plat1X + 60, y: groundY - 150, w: 50, h: 50, type: 'badnik', patrolStart: plat1X, patrolEnd: plat1X + 120, dir: 1, speed: 2 * state.difficulty });
+
+            // Plateforme 2 avec super pièces secrètes !
+            let plat2X = 450;
+            level.platforms.push({ x: plat2X, y: groundY - 180, w: 150, h: 20, type: 'gold_block' });
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({ x: plat2X + 25 + i * 35, y: groundY - 210, w: 25, h: 25, value: 3, secret: true });
+            }
+
+            // Plateforme 3 avec échelle
+            let plat3X = 680;
+            level.platforms.push({ x: plat3X, y: groundY - 100, w: 100, h: 20, type: 'brick_block' });
+            level.ladders.push({ x: plat3X + 35, y: groundY - 100, w: 30, h: 100 });
+
+            // Coins bonus dans les hauteurs
+            for (let i = 0; i < 3; i++) level.coins.push({ x: plat3X + 35, y: groundY - 120 - i * 40, w: 20, h: 20 });
+
+            // ===== ZONE DU TRÉSOR ! =====
+            let treasureX = 850;
+            level.platforms.push({ x: treasureX, y: groundY - 120, w: 200, h: 20, type: 'gold_block' });
+
+            // Coffre monstre gardien du trésor souterrain !
+            level.enemies.push({ x: treasureX + 100, y: groundY - 200, w: 60, h: 80, type: 'chest_monster', patrolStart: treasureX + 50, patrolEnd: treasureX + 150, dir: -1, speed: 2.5 * state.difficulty });
+
+            // LA CLÉ SOUTERRAINE !
+            level.keyItem = { x: treasureX + 85, y: groundY - 180, w: 40, h: 40 };
+
+            // Beaucoup de pièces bonus !
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({ x: treasureX + 20 + i * 22, y: groundY - 150, w: 20, h: 20 });
+            }
+
+            // Power-up étoile !
+            level.powerups.push({ x: treasureX + 90, y: groundY - 220, w: 35, h: 35, type: 'star' });
+
+            // ===== TUYAU DE SORTIE =====
+            let exitX = 1100;
+            level.platforms.push({ x: exitX, y: groundY - 80, w: 60, h: 80, type: 'pipe' });
+
+            // Portail de sortie dans le tuyau (remonter avec ↑)
+            level.portals.push({
+                x: exitX + 10,
+                y: groundY - 75,
+                w: 40,
+                h: 70,
+                color: '#00FF00',
+                destX: -996, // Code spécial pour retourner au monde principal
+                destY: -996,
+                isReturnPortal: true
+            });
+
+            // Pièces indicatrices vers la sortie
+            for (let i = 0; i < 3; i++) level.coins.push({ x: exitX - 60 - i * 30, y: groundY - 50, w: 20, h: 20 });
+
+            // Vide mortel
+            level.hazards.push({ x: -1000, y: h + 50, w: w * 30, h: 100, type: 'void' });
 
             return level;
         }
@@ -212,6 +434,9 @@ const LEVELS = {
             level.powerups.push({ x: treeX, y: h - blockSize * 8 - 40, w: 35, h: 35, type: 'shield' });
             level.coins.push({ x: treeX, y: h - blockSize * 7 - 30, w: 20, h: 20 });
 
+            // Creeper caché près de l'arbre !
+            level.enemies.push({ x: treeX + 80, y: h - blockSize * 2 - 60, w: 40, h: 60, type: 'creeper', patrolStart: treeX + 60, patrolEnd: treeX + 140, dir: 1, speed: 1.5 * state.difficulty });
+
             // Mini-saut vers la mine
             let gapX = treeX + 180;
             level.platforms.push({ x: gapX, y: h - blockSize * 3, w: blockSize, h: blockSize, type: 'stone' });
@@ -224,6 +449,9 @@ const LEVELS = {
             }
             level.hazards.push({ x: caveX - 50, y: h - 30, w: 250, h: 30, type: 'lava_floor' });
             level.coins.push({ x: caveX + 50, y: h - blockSize * 4 - 40, w: 20, h: 20 });
+
+            // Spider dans la mine !
+            level.enemies.push({ x: caveX + 60, y: h - blockSize * 4 - 50, w: 50, h: 50, type: 'spider', patrolStart: caveX, patrolEnd: caveX + 120, dir: -1, speed: 2.5 * state.difficulty });
 
             // Plateforme vers le portail Nether
             let portalAreaX = caveX + 300;
@@ -249,8 +477,9 @@ const LEVELS = {
             level.platforms.push({ x: netherPortalX - 10, y: h - blockSize * 2, w: 10, h: 100, type: 'netherrack' });
             level.platforms.push({ x: netherPortalX + 60, y: h - blockSize * 2, w: 10, h: 100, type: 'netherrack' });
 
-            // Zombie gardien du portail
-            level.enemies.push({ x: netherPortalX + 100, y: h - blockSize * 2 - 60, w: 50, h: 60, type: 'zombie', patrolStart: portalAreaX, patrolEnd: portalAreaX + 280, dir: -1, speed: 2 * state.difficulty });
+            // Gardiens du portail Nether
+            level.enemies.push({ x: netherPortalX + 100, y: h - blockSize * 2 - 60, w: 50, h: 60, type: 'zombie', patrolStart: portalAreaX, patrolEnd: portalAreaX + 180, dir: -1, speed: 2 * state.difficulty });
+            level.enemies.push({ x: netherPortalX - 80, y: h - blockSize * 2 - 60, w: 40, h: 60, type: 'skeleton', patrolStart: portalAreaX, patrolEnd: portalAreaX + 280, dir: 1, speed: 1.8 * state.difficulty });
 
             // ===== ZONE DE RETOUR DU NETHER =====
             let returnX = portalAreaX + 450;
@@ -303,12 +532,18 @@ const LEVELS = {
             level.platforms.push({ x: 120, y: platformsY, w: blockSize * 2, h: blockSize, type: 'netherrack' });
             level.coins.push({ x: 135, y: platformsY - 40, w: 20, h: 20 });
 
+            // Magma Cube qui rebondit !
+            level.enemies.push({ x: 160, y: platformsY - 50, w: 45, h: 50, type: 'magma_cube', patrolStart: 120, patrolEnd: 200, dir: 1, speed: 2 * state.difficulty });
+
             level.platforms.push({ x: 280, y: platformsY - 60, w: blockSize * 2, h: blockSize, type: 'netherrack' });
             level.powerups.push({ x: 295, y: platformsY - 100, w: 35, h: 35, type: 'star' }); // Étoile d'invincibilité!
 
+            // Blaze flottant dangereux !
+            level.enemies.push({ x: 320, y: platformsY - 150, w: 50, h: 60, type: 'blaze', patrolStart: 280, patrolEnd: 380, dir: -1, speed: 1.5 * state.difficulty });
+
             level.platforms.push({ x: 420, y: platformsY, w: blockSize * 2, h: blockSize, type: 'netherrack' });
 
-            // Zombie Pigman hostile!
+            // Zombie Pigman hostile !
             level.enemies.push({ x: 450, y: platformsY - 60, w: 50, h: 60, type: 'zombie', patrolStart: 420, patrolEnd: 500, dir: 1, speed: 3 * state.difficulty });
 
             // Plateforme avec LA CLÉ !
@@ -317,6 +552,9 @@ const LEVELS = {
             level.keyItem = { x: keyPlatformX + 40, y: platformsY - 180, w: 40, h: 40, type: 'diamond' }; // Diamant du Nether!
             level.coins.push({ x: keyPlatformX + 10, y: platformsY - 160, w: 20, h: 20 });
             level.coins.push({ x: keyPlatformX + 90, y: platformsY - 160, w: 20, h: 20 });
+
+            // Ghast gardien de la clé du Nether !
+            level.enemies.push({ x: keyPlatformX - 50, y: platformsY - 250, w: 60, h: 60, type: 'ghast', patrolStart: keyPlatformX - 100, patrolEnd: keyPlatformX + 150, dir: 1, speed: 1.2 * state.difficulty });
 
             // Portail de retour vers le monde principal
             let returnPortalX = 850;
@@ -706,14 +944,15 @@ const LEVELS = {
             level.platforms.push({ x: arenaStart + 220, y: groundY - 180, w: 70, h: 15, type: 'moving', vx: 0, vy: 1.5, minY: groundY - 220, maxY: groundY - 100 });
             level.platforms.push({ x: arenaStart + arenaWidth - 290, y: groundY - 220, w: 70, h: 15, type: 'moving', vx: 0, vy: -1.5, minY: groundY - 260, maxY: groundY - 140 });
             
-            // ===== LE BOSS : DR. EGGMAN-LIKE (VERSION FACILE POUR LÉO!) =====
+            // ===== LE BOSS : DR. EGGMAN-LIKE (ADAPTÉ À LA DIFFICULTÉ!) =====
+            const bossHp = state.difficulty <= 0.7 ? 3 : state.difficulty <= 1.2 ? 5 : 8;
             level.boss = {
                 x: arenaStart + arenaWidth / 2,
                 y: groundY - 250,
                 w: 100,
                 h: 100,
-                hp: 5,        // Réduit de 8 à 5 (plus facile!)
-                maxHp: 5,
+                hp: bossHp,
+                maxHp: bossHp,
                 phase: 1,
                 attackTimer: 0,
                 invincible: 0,
