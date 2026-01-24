@@ -725,24 +725,83 @@ function drawHazards() {
                 break;
                 
             case 'knight':
-                ctx.fillStyle = "#c0c0c0";
-                ctx.fillRect(h.x, h.y, h.w, 30);
-                ctx.fillRect(h.x + 10, h.y + 30, 20, 50);
-                ctx.fillStyle = "#333";
-                ctx.fillRect(h.x + 10, h.y + 5, 20, 5);
-                // Lance
-                ctx.strokeStyle = "#8B4513";
-                ctx.lineWidth = 4;
+                // Chevalier médiéval amélioré !
+                const knightCenterX = h.x + h.w / 2;
+
+                // Corps en armure argentée avec reflets
+                ctx.fillStyle = "#d0d0d0";
+                ctx.fillRect(h.x + 5, h.y + 30, 30, 50);
+
+                // Reflets sur l'armure
+                ctx.fillStyle = "#f0f0f0";
+                ctx.fillRect(h.x + 8, h.y + 35, 4, 20);
+
+                // Tête avec casque
+                ctx.fillStyle = "#b0b0b0";
+                ctx.fillRect(h.x, h.y, h.w, 35);
+
+                // Fente du casque (visière)
+                ctx.fillStyle = "#000";
+                ctx.fillRect(h.x + 8, h.y + 12, 24, 8);
+
+                // Détails du casque (crête)
+                ctx.fillStyle = "#ff4444";
+                ctx.fillRect(h.x + h.w/2 - 2, h.y - 8, 4, 10);
+
+                // Épaules
+                ctx.fillStyle = "#909090";
                 ctx.beginPath();
-                ctx.moveTo(h.x + h.w / 2, h.y);
-                ctx.lineTo(h.x + h.w / 2, h.y - 40);
-                ctx.stroke();
-                ctx.fillStyle = "#7f8c8d";
-                ctx.beginPath();
-                ctx.moveTo(h.x + h.w / 2, h.y - 40);
-                ctx.lineTo(h.x + h.w / 2 - 8, h.y - 25);
-                ctx.lineTo(h.x + h.w / 2 + 8, h.y - 25);
+                ctx.arc(h.x + 5, h.y + 30, 8, 0, Math.PI * 2);
+                ctx.arc(h.x + h.w - 5, h.y + 30, 8, 0, Math.PI * 2);
                 ctx.fill();
+
+                // Lance épique avec mouvement !
+                const lanceAngle = Math.sin(state.frameTick * 0.05) * 0.1; // Légère oscillation
+                const lanceLength = 60;
+
+                // Manche de la lance (bois)
+                ctx.strokeStyle = "#8B4513";
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(knightCenterX, h.y + 10);
+                ctx.lineTo(knightCenterX + Math.sin(lanceAngle) * 5, h.y - lanceLength + 20);
+                ctx.stroke();
+
+                // Pointe de la lance (métal brillant)
+                ctx.save();
+                ctx.translate(knightCenterX + Math.sin(lanceAngle) * 5, h.y - lanceLength + 20);
+                ctx.rotate(lanceAngle);
+
+                // Pointe principale
+                ctx.fillStyle = "#e0e0e0";
+                ctx.beginPath();
+                ctx.moveTo(0, -20);
+                ctx.lineTo(-10, 0);
+                ctx.lineTo(10, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                // Reflet sur la pointe
+                ctx.fillStyle = "#fff";
+                ctx.beginPath();
+                ctx.moveTo(0, -18);
+                ctx.lineTo(-3, -8);
+                ctx.lineTo(0, -10);
+                ctx.closePath();
+                ctx.fill();
+
+                // Garde de la lance
+                ctx.fillStyle = "#d4af37";
+                ctx.fillRect(-12, -2, 24, 4);
+
+                ctx.restore();
+
+                // Ombre du chevalier
+                ctx.fillStyle = "rgba(0,0,0,0.2)";
+                ctx.beginPath();
+                ctx.ellipse(knightCenterX, h.y + 82, 20, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
                 break;
         }
     }
@@ -1045,13 +1104,60 @@ function drawProjectiles() {
     for (const p of currentLevelData.projectiles) {
         switch (p.type) {
             case 'arrow':
-                ctx.fillStyle = "white";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Flèche médiévale améliorée !
+                ctx.save();
+
+                // Corps de la flèche (bois)
+                ctx.fillStyle = "#8B4513";
+                ctx.fillRect(p.x + 8, p.y + p.h/2 - 2, p.w - 8, 4);
+
+                // Pointe de la flèche (métal brillant)
+                ctx.fillStyle = "#d0d0d0";
                 ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p.x - 10, p.y + p.h / 2);
-                ctx.lineTo(p.x, p.y + p.h);
+                ctx.moveTo(p.x, p.y + p.h / 2);
+                ctx.lineTo(p.x + 12, p.y);
+                ctx.lineTo(p.x + 12, p.y + p.h);
+                ctx.closePath();
                 ctx.fill();
+
+                // Reflet sur la pointe
+                ctx.fillStyle = "#fff";
+                ctx.beginPath();
+                ctx.moveTo(p.x + 2, p.y + p.h / 2);
+                ctx.lineTo(p.x + 8, p.y + 2);
+                ctx.lineTo(p.x + 8, p.y + p.h / 2 - 1);
+                ctx.closePath();
+                ctx.fill();
+
+                // Empennage (plumes rouges)
+                ctx.fillStyle = "#e74c3c";
+                ctx.beginPath();
+                ctx.moveTo(p.x + p.w, p.y + p.h / 2);
+                ctx.lineTo(p.x + p.w - 8, p.y);
+                ctx.lineTo(p.x + p.w - 8, p.y + p.h);
+                ctx.closePath();
+                ctx.fill();
+
+                // Deuxième plume (jaune)
+                ctx.fillStyle = "#f1c40f";
+                ctx.beginPath();
+                ctx.moveTo(p.x + p.w - 3, p.y + p.h / 2);
+                ctx.lineTo(p.x + p.w - 10, p.y + 2);
+                ctx.lineTo(p.x + p.w - 10, p.y + p.h - 2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Traînée de mouvement
+                if (Math.abs(p.speed) > 4) {
+                    ctx.strokeStyle = "rgba(139, 69, 19, 0.3)";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x + p.w, p.y + p.h/2);
+                    ctx.lineTo(p.x + p.w + 10, p.y + p.h/2);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
                 break;
                 
             case 'fireball':
