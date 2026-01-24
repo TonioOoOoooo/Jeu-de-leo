@@ -452,35 +452,144 @@ const LEVELS = {
     },
     
     8: {
-        name: "Royaume des Rêves",
+        name: "🌙 Royaume des Rêves 🌙",
         bgColor: "#9290FF",
         playerStart: { x: 50, y: 400 },
         setup: (w, h) => {
             const unit = h / 10;
             const level = createEmptyLevel();
-            
-            let groundY = h - unit;
-            level.platforms.push({ x: -50, y: groundY, w: 300, h: unit, type: 'smb2_grass' });
-            for (let i = 0; i < 3; i++) level.coins.push({ x: 80 + i * 60, y: groundY - 50, w: 20, h: 20 });
-            
-            level.platforms.push({ x: 300, y: groundY - 60, w: 50, h: 60 + unit, type: 'jar' });
-            level.platforms.push({ x: 400, y: groundY - 120, w: 100, h: 20, type: 'smb2_log' });
-            level.platforms.push({ x: 550, y: groundY - 180, w: 100, h: 20, type: 'smb2_log' });
-            level.enemies.push({ x: 600, y: groundY - 180 - 60, w: 40, h: 40, type: 'shy_guy', patrolStart: 550, patrolEnd: 650, dir: 1, speed: 2 * state.difficulty });
-            level.coins.push({ x: 420, y: groundY - 170, w: 20, h: 20 });
-            level.coins.push({ x: 570, y: groundY - 230, w: 20, h: 20 });
-            
-            level.platforms.push({ x: 700, y: groundY, w: 500, h: unit, type: 'smb2_grass' });
-            level.platforms.push({ x: 800, y: groundY - 250, w: 80, h: 20, type: 'smb2_log' });
-            level.keyItem = { x: 820, y: groundY - 300, w: 30, h: 30, type: 'turnip' };
-            for (let i = 0; i < 4; i++) level.coins.push({ x: 720 + i * 80, y: groundY - 50, w: 20, h: 20 });
-            
-            level.goal = { x: 1000, y: groundY - 100, w: 80, h: 100, type: 'hawkmouth' };
-            level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
+            const groundY = h - unit;
 
-            // Power-up aimant et bouclier
-            level.powerups.push({ x: 570, y: groundY - 230, w: 35, h: 35, type: 'magnet' });
-            level.powerups.push({ x: 900, y: groundY - 70, w: 35, h: 35, type: 'shield' });
+            // Nuages décoratifs !
+            level.clouds = [];
+            for (let i = 0; i < 12; i++) {
+                level.clouds.push({ x: Math.random() * w * 2, y: 30 + Math.random() * 200, w: 60 + Math.random() * 40 });
+            }
+
+            // ===== SECTION 1 : JARDIN DE DÉPART =====
+            level.platforms.push({ x: -50, y: groundY, w: 400, h: unit, type: 'smb2_grass' });
+            for (let i = 0; i < 5; i++) level.coins.push({ x: 80 + i * 60, y: groundY - 50, w: 20, h: 20 });
+
+            // Premier jarre
+            level.platforms.push({ x: 300, y: groundY - 60, w: 50, h: 60 + unit, type: 'jar' });
+            level.powerups.push({ x: 315, y: groundY - 110, w: 35, h: 35, type: 'super_jump' });
+
+            // ===== SECTION 2 : ESCALADE DE RONDINS =====
+            let logX = 450;
+            for (let i = 0; i < 5; i++) {
+                const logY = groundY - 100 - i * 80;
+                level.platforms.push({ x: logX + (i % 2) * 150, y: logY, w: 120, h: 20, type: 'smb2_log' });
+
+                if (i < 4) {
+                    level.coins.push({ x: logX + (i % 2) * 150 + 50, y: logY - 50, w: 20, h: 20 });
+                }
+
+                // Shy Guys en patrouille
+                if (i === 1 || i === 3) {
+                    const enemyX = logX + (i % 2) * 150 + 40;
+                    level.enemies.push({
+                        x: enemyX,
+                        y: logY - 60,
+                        w: 40, h: 40,
+                        type: 'shy_guy',
+                        patrolStart: logX + (i % 2) * 150,
+                        patrolEnd: logX + (i % 2) * 150 + 110,
+                        dir: 1,
+                        speed: 2 * state.difficulty
+                    });
+                }
+            }
+
+            // ===== SECTION 3 : ZONE DE JARRES =====
+            let jarArea = 850;
+            level.platforms.push({ x: jarArea, y: groundY, w: 500, h: unit, type: 'smb2_grass' });
+
+            // Plusieurs jarres avec pièges et récompenses
+            level.platforms.push({ x: jarArea + 80, y: groundY - 60, w: 50, h: 60 + unit, type: 'jar' });
+            level.hazards.push({ x: jarArea + 95, y: groundY - 70, w: 20, h: 20, type: 'spike' });
+
+            level.platforms.push({ x: jarArea + 220, y: groundY - 60, w: 50, h: 60 + unit, type: 'jar' });
+            level.coins.push({ x: jarArea + 235, y: groundY - 90, w: 20, h: 20 });
+
+            level.platforms.push({ x: jarArea + 360, y: groundY - 60, w: 50, h: 60 + unit, type: 'jar' });
+            level.powerups.push({ x: jarArea + 375, y: groundY - 110, w: 35, h: 35, type: 'shield' });
+
+            // ===== SECTION 4 : PLATEFORME MOBILE DANGEREUSE =====
+            let mobilePlatX = jarArea + 600;
+            level.platforms.push({ x: mobilePlatX - 100, y: groundY, w: 150, h: unit, type: 'smb2_grass' });
+
+            // Plateforme mobile qui monte et descend
+            level.platforms.push({
+                x: mobilePlatX,
+                y: groundY - 120,
+                w: 100,
+                h: 20,
+                type: 'moving',
+                vx: 0,
+                vy: -2 * state.difficulty,
+                minY: groundY - 280,
+                maxY: groundY - 120
+            });
+
+            // Pièces en hauteur
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({ x: mobilePlatX + 30, y: groundY - 240 - i * 50, w: 20, h: 20 });
+            }
+
+            // ===== SECTION 5 : ZONE FINALE AVEC CLÉ =====
+            let finalArea = mobilePlatX + 250;
+            level.platforms.push({ x: finalArea, y: groundY - 250, w: 300, h: 20, type: 'smb2_log' });
+
+            // Boss Shy Guy qui garde la clé !
+            level.enemies.push({
+                x: finalArea + 120,
+                y: groundY - 250 - 60,
+                w: 50, h: 50,
+                type: 'shy_guy',
+                patrolStart: finalArea + 20,
+                patrolEnd: finalArea + 260,
+                dir: -1,
+                speed: 3 * state.difficulty
+            });
+
+            // LA CLÉ ! (navet magique)
+            level.keyItem = { x: finalArea + 240, y: groundY - 250 - 50, w: 30, h: 30, type: 'turnip' };
+
+            // Pièces bonus
+            for (let i = 0; i < 5; i++) {
+                level.coins.push({ x: finalArea + 40 + i * 50, y: groundY - 250 - 50, w: 20, h: 20 });
+            }
+
+            // ===== SECTION 6 : DESCENTE VERS LA SORTIE =====
+            let exitArea = finalArea + 350;
+
+            // Plateformes descendantes
+            for (let i = 0; i < 4; i++) {
+                level.platforms.push({
+                    x: exitArea + i * 120,
+                    y: groundY - 250 + i * 70,
+                    w: 100,
+                    h: 20,
+                    type: 'smb2_log'
+                });
+            }
+
+            // Sol final
+            level.platforms.push({ x: exitArea + 400, y: groundY, w: 400, h: unit, type: 'smb2_grass' });
+
+            // Power-up aimant avant la sortie
+            level.powerups.push({ x: exitArea + 500, y: groundY - 60, w: 35, h: 35, type: 'magnet' });
+
+            // SORTIE : Hawkmouth géant !
+            level.goal = { x: exitArea + 680, y: groundY - 100, w: 80, h: 100, type: 'hawkmouth' };
+
+            // Pièces finales
+            for (let i = 0; i < 6; i++) {
+                level.coins.push({ x: exitArea + 450 + i * 50, y: groundY - 50, w: 20, h: 20 });
+            }
+
+            // Vide mortel
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
 
             return level;
         }
