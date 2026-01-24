@@ -82,7 +82,14 @@ const LEVELS = {
             level.keyItem = { x: topX + unit * 3, y: unit * 2 - 50, w: 40, h: 40 };
             let exitY = h - unit;
             level.platforms.push({ x: midLandX - 200, y: exitY, w: w + 200, h: unit });
-            level.goal = { x: topX + 300, y: exitY - 80, w: 70, h: 80 };
+
+            // ===== ASCENSEUR POUR REMONTER DU SOL BAS ! =====
+            let returnLiftX = topX + 200;
+            level.platforms.push({ x: returnLiftX, y: exitY, w: 100, h: 20, type: 'moving', vy: -2 * state.difficulty, minY: midLandY, maxY: exitY, vx: 0 });
+            // Pièces pour indiquer l'ascenseur
+            level.coins.push({ x: returnLiftX + 40, y: exitY - 50, w: 20, h: 20 });
+
+            level.goal = { x: topX + 400, y: exitY - 80, w: 70, h: 80 };
             level.hazards.push({ x: -1000, y: h + 50, w: w * 30, h: 100, type: 'void' });
 
             // Power-up super saut sur la plateforme mobile
@@ -335,36 +342,72 @@ const LEVELS = {
     },
     
     6: {
-        name: "Les Portails",
+        name: "Labyrinthe des Portails",
         bgColor: "#1a1a2e",
         playerStart: { x: 50, y: 400 },
         setup: (w, h) => {
             const unit = h / 10;
             const level = createEmptyLevel();
-            
-            level.platforms.push({ x: -50, y: h - unit * 2, w: 300, h: unit, type: 'metal' });
-            level.portals.push({ x: 200, y: h - unit * 2 - 80, w: 50, h: 80, color: '#00FFFF', destX: w - 200, destY: unit * 3 - 58 });
-            
-            level.platforms.push({ x: w - 300, y: unit * 3, w: 300, h: 20, type: 'metal' });
-            level.enemies.push({ x: w - 200, y: unit * 3 - 60, w: 50, h: 60, type: 'zombie', patrolStart: w - 280, patrolEnd: w - 50, dir: -1, speed: 2.5 * state.difficulty });
-            for (let i = 0; i < 3; i++) level.coins.push({ x: w - 280 + i * 80, y: unit * 3 - 50, w: 20, h: 20 });
-            
-            level.portals.push({ x: w - 100, y: unit * 3 - 80, w: 50, h: 80, color: '#FF9900', destX: 100, destY: unit * 5 - 58 });
-            level.platforms.push({ x: 50, y: unit * 5, w: 300, h: 20, type: 'metal' });
-            level.hazards.push({ x: 180, y: unit * 5 - 25, w: 25, h: 25, type: 'spike' });
-            level.keyItem = { x: 80, y: unit * 5 - 50, w: 40, h: 40 };
-            level.coins.push({ x: 250, y: unit * 5 - 50, w: 20, h: 20 });
-            
-            level.portals.push({ x: 300, y: unit * 5 - 80, w: 50, h: 80, color: '#CC00FF', destX: w - 150, destY: h - unit * 2 - 58 });
-            level.platforms.push({ x: w - 300, y: h - unit * 2, w: 300, h: unit, type: 'metal' });
-            level.enemies.push({ x: w - 250, y: h - unit * 2 - 60, w: 60, h: 60, type: 'chest_monster', patrolStart: w - 280, patrolEnd: w - 100, dir: 1, speed: 2 });
-            
-            level.goal = { x: w - 80, y: h - unit * 2 - 80, w: 70, h: 80 };
-            level.platforms.push({ x: w / 2 - 100, y: h - unit, w: 200, h: 20, type: 'moving', vx: 2, minX: 200, maxX: w - 200 });
-            level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
 
-            // Power-up super saut près du premier portail
-            level.powerups.push({ x: 220, y: h - unit * 2 - 130, w: 35, h: 35, type: 'super_jump' });
+            // ===== ZONE 1 : DÉPART =====
+            level.platforms.push({ x: -50, y: h - unit * 2, w: 350, h: unit, type: 'metal' });
+            for (let i = 0; i < 4; i++) level.coins.push({ x: 80 + i * 50, y: h - unit * 2 - 50, w: 20, h: 20 });
+
+            // Premier défi : pièges !
+            level.hazards.push({ x: 250, y: h - unit * 2 - 25, w: 25, h: 25, type: 'spike' });
+
+            // PORTAIL 1 : CYAN → Zone haute gauche
+            level.portals.push({ x: 260, y: h - unit * 2 - 80, w: 50, h: 80, color: '#00FFFF', destX: 150, destY: unit * 2 - 58 });
+
+            // ===== ZONE 2 : HAUTE GAUCHE (après portail cyan) =====
+            level.platforms.push({ x: 50, y: unit * 2, w: 300, h: 20, type: 'metal' });
+            level.enemies.push({ x: 150, y: unit * 2 - 60, w: 50, h: 60, type: 'zombie', patrolStart: 50, patrolEnd: 300, dir: 1, speed: 2 * state.difficulty });
+            for (let i = 0; i < 3; i++) level.coins.push({ x: 100 + i * 60, y: unit * 2 - 50, w: 20, h: 20 });
+
+            // Power-up bouclier
+            level.powerups.push({ x: 280, y: unit * 2 - 60, w: 35, h: 35, type: 'shield' });
+
+            // PORTAIL 2 : ORANGE → Zone milieu droit
+            level.portals.push({ x: 280, y: unit * 2 - 80, w: 50, h: 80, color: '#FF9900', destX: w - 250, destY: unit * 5 - 58 });
+
+            // ===== ZONE 3 : MILIEU DROIT (après portail orange) =====
+            level.platforms.push({ x: w - 400, y: unit * 5, w: 400, h: 20, type: 'metal' });
+
+            // Plateforme mobile avec pièges
+            level.platforms.push({ x: w - 450, y: unit * 6, w: 100, h: 20, type: 'moving', vx: 2, minX: w - 500, maxX: w - 200 });
+            level.hazards.push({ x: w - 350, y: unit * 5 - 25, w: 25, h: 25, type: 'spike' });
+            level.coins.push({ x: w - 300, y: unit * 5 - 50, w: 20, h: 20 });
+
+            // PORTAIL 3 : VIOLET → Zone basse centrale
+            level.portals.push({ x: w - 100, y: unit * 5 - 80, w: 50, h: 80, color: '#CC00FF', destX: w / 2, destY: h - unit * 3 - 58 });
+
+            // ===== ZONE 4 : BASSE CENTRALE (après portail violet) =====
+            level.platforms.push({ x: w / 2 - 250, y: h - unit * 3, w: 500, h: 20, type: 'metal' });
+
+            // Monstre coffre gardien
+            level.enemies.push({ x: w / 2, y: h - unit * 3 - 60, w: 60, h: 60, type: 'chest_monster', patrolStart: w / 2 - 200, patrolEnd: w / 2 + 150, dir: -1, speed: 2.5 * state.difficulty });
+
+            // LA CLÉ ! Bien cachée
+            level.keyItem = { x: w / 2 + 180, y: h - unit * 3 - 50, w: 40, h: 40 };
+            for (let i = 0; i < 3; i++) level.coins.push({ x: w / 2 - 100 + i * 80, y: h - unit * 3 - 50, w: 20, h: 20 });
+
+            // PORTAIL 4 : VERT → Retour zone départ (mais plus haut!)
+            level.portals.push({ x: w / 2 - 220, y: h - unit * 3 - 80, w: 50, h: 80, color: '#00FF00', destX: 80, destY: h - unit * 4 - 58 });
+
+            // ===== ZONE 5 : RETOUR HAUT (après portail vert) =====
+            level.platforms.push({ x: -50, y: h - unit * 4, w: 400, h: 20, type: 'metal' });
+            level.powerups.push({ x: 200, y: h - unit * 4 - 60, w: 35, h: 35, type: 'super_jump' });
+
+            // Échelle vers la sortie
+            level.ladders.push({ x: 320, y: h - unit * 6, w: 30, h: unit * 2 });
+            level.platforms.push({ x: 250, y: h - unit * 6, w: 200, h: 20, type: 'metal' });
+
+            // ===== SORTIE FINALE =====
+            level.goal = { x: 380, y: h - unit * 6 - 80, w: 70, h: 80 };
+            for (let i = 0; i < 2; i++) level.coins.push({ x: 290 + i * 60, y: h - unit * 6 - 50, w: 20, h: 20 });
+
+            // Vide mortel
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
 
             return level;
         }
@@ -554,14 +597,14 @@ const LEVELS = {
             level.platforms.push({ x: arenaStart + 220, y: groundY - 180, w: 70, h: 15, type: 'moving', vx: 0, vy: 1.5, minY: groundY - 220, maxY: groundY - 100 });
             level.platforms.push({ x: arenaStart + arenaWidth - 290, y: groundY - 220, w: 70, h: 15, type: 'moving', vx: 0, vy: -1.5, minY: groundY - 260, maxY: groundY - 140 });
             
-            // ===== LE BOSS : DR. EGGMAN-LIKE =====
+            // ===== LE BOSS : DR. EGGMAN-LIKE (VERSION FACILE POUR LÉO!) =====
             level.boss = {
                 x: arenaStart + arenaWidth / 2,
                 y: groundY - 250,
                 w: 100,
                 h: 100,
-                hp: 8,
-                maxHp: 8,
+                hp: 5,        // Réduit de 8 à 5 (plus facile!)
+                maxHp: 5,
                 phase: 1,
                 attackTimer: 0,
                 invincible: 0,

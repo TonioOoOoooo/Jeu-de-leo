@@ -634,143 +634,79 @@ function updateProjectiles() {
 function updateBoss() {
     const boss = currentLevelData.boss;
     if (!boss || boss.hp <= 0) return;
-    
+
     boss.attackTimer++;
     if (boss.invincible > 0) boss.invincible--;
-    
+
     // Flottement
     boss.floatY += boss.floatDir * 0.5;
     if (boss.floatY > 20) boss.floatDir = -1;
     if (boss.floatY < -20) boss.floatDir = 1;
-    
-    // Calcul de la phase basée sur HP
-    if (boss.hp <= 2) boss.phase = 3;
-    else if (boss.hp <= 5) boss.phase = 2;
+
+    // Calcul de la phase basée sur HP (VERSION FACILE : seulement 2 phases!)
+    if (boss.hp <= 2) boss.phase = 2;
     else boss.phase = 1;
-    
+
     const arenaStart = 2350;
     const arenaWidth = 700;
-    const arenaCenter = arenaStart + arenaWidth / 2;
-    
-    // === PHASE 1 : Tirs simples + déplacement horizontal ===
+
+    // === PHASE 1 : Tirs lents et prévisibles (FACILE!) ===
     if (boss.phase === 1) {
-        // Mouvement horizontal
-        boss.x += boss.dir * 2;
+        // Mouvement LENT horizontal
+        boss.x += boss.dir * 1.2;
         if (boss.x > arenaStart + arenaWidth - 150) boss.dir = -1;
         if (boss.x < arenaStart + 50) boss.dir = 1;
-        
-        // Tir toutes les 90 frames
-        if (boss.attackTimer % 90 === 0) {
+
+        // Tir toutes les 150 frames (au lieu de 90 = beaucoup plus lent!)
+        if (boss.attackTimer % 150 === 0) {
             currentLevelData.projectiles.push({
                 x: boss.x + boss.w / 2 - 15,
                 y: boss.y + boss.h,
                 w: 30, h: 30,
-                vx: 0, vy: 5,
+                vx: 0, vy: 3.5, // Plus lent (était 5)
                 type: 'boss_bomb'
             });
             AudioSystem.play('boss_hit');
         }
     }
-    
-    // === PHASE 2 : Dash horizontal + tirs multiples ===
+
+    // === PHASE 2 : Un peu plus rapide mais SIMPLE (FACILE!) ===
     else if (boss.phase === 2) {
-        if (boss.chargeTimer > 0) {
-            // En train de charger/dasher
-            boss.chargeTimer--;
-            if (boss.chargeTimer > 30) {
-                // Préparation (tremblement)
-                boss.x += (Math.random() - 0.5) * 4;
-            } else {
-                // DASH !
-                boss.x += boss.dashSpeed;
-                if (boss.x > arenaStart + arenaWidth - 120) {
-                    boss.x = arenaStart + arenaWidth - 120;
-                    boss.dashSpeed = 0;
-                    boss.chargeTimer = 0;
-                }
-                if (boss.x < arenaStart + 20) {
-                    boss.x = arenaStart + 20;
-                    boss.dashSpeed = 0;
-                    boss.chargeTimer = 0;
-                }
-            }
-        } else {
-            // Mouvement normal
-            boss.x += boss.dir * 1.5;
-            if (boss.x > arenaStart + arenaWidth - 150) boss.dir = -1;
-            if (boss.x < arenaStart + 50) boss.dir = 1;
-            
-            // Déclencher un dash toutes les 180 frames
-            if (boss.attackTimer % 180 === 0) {
-                boss.chargeTimer = 60;
-                boss.dashSpeed = player.x > boss.x ? 12 : -12;
-            }
-            
-            // Tir en éventail toutes les 100 frames
-            if (boss.attackTimer % 100 === 0) {
-                for (let angle = -30; angle <= 30; angle += 30) {
-                    const rad = (angle + 90) * Math.PI / 180;
-                    currentLevelData.projectiles.push({
-                        x: boss.x + boss.w / 2,
-                        y: boss.y + boss.h,
-                        w: 20, h: 20,
-                        vx: Math.cos(rad) * 4,
-                        vy: Math.sin(rad) * 4,
-                        type: 'boss_fire'
-                    });
-                }
-            }
-        }
-    }
-    
-    // === PHASE 3 : RAGE MODE ! ===
-    else if (boss.phase === 3) {
-        // Mouvement rapide et erratique
-        boss.x += boss.dir * 4;
-        if (boss.x > arenaStart + arenaWidth - 130) boss.dir = -1;
-        if (boss.x < arenaStart + 30) boss.dir = 1;
-        
-        // Changement de direction aléatoire
-        if (Math.random() < 0.02) boss.dir *= -1;
-        
-        // Spawn de badniks toutes les 200 frames
-        if (boss.attackTimer % 200 === 0 && currentLevelData.enemies.length < 4) {
-            currentLevelData.enemies.push({
-                x: boss.x, y: boss.y + boss.h,
-                w: 45, h: 40, type: 'badnik',
-                patrolStart: arenaStart + 50, patrolEnd: arenaStart + arenaWidth - 100,
-                dir: Math.random() > 0.5 ? 1 : -1, speed: 3 * state.difficulty
-            });
-            ParticleSystem.emit(boss.x + boss.w/2, boss.y + boss.h, 'boss', 10);
-        }
-        
-        // Tirs rapides
-        if (boss.attackTimer % 50 === 0) {
-            // Tir vers le joueur
-            const dx = player.x - boss.x;
-            const dy = player.y - boss.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+        // Mouvement plus rapide mais prévisible
+        boss.x += boss.dir * 2;
+        if (boss.x > arenaStart + arenaWidth - 150) boss.dir = -1;
+        if (boss.x < arenaStart + 50) boss.dir = 1;
+
+        // Tir simple toutes les 100 frames (au lieu de patterns complexes)
+        if (boss.attackTimer % 100 === 0) {
             currentLevelData.projectiles.push({
-                x: boss.x + boss.w / 2,
-                y: boss.y + boss.h / 2,
-                w: 25, h: 25,
-                vx: (dx / dist) * 6,
-                vy: (dy / dist) * 6,
-                type: 'boss_fire'
-            });
-        }
-        
-        // Bombes en plus
-        if (boss.attackTimer % 120 === 0) {
-            currentLevelData.projectiles.push({
-                x: boss.x + boss.w / 2 - 20,
+                x: boss.x + boss.w / 2 - 15,
                 y: boss.y + boss.h,
-                w: 40, h: 40,
-                vx: 0, vy: 3,
+                w: 30, h: 30,
+                vx: 0, vy: 4, // Plus lent
                 type: 'boss_bomb'
             });
+            AudioSystem.play('boss_hit');
+        }
+
+        // Tir en éventail SIMPLE toutes les 180 frames (au lieu de 100)
+        if (boss.attackTimer % 180 === 0) {
+            // Seulement 3 projectiles au lieu de multiples
+            for (let angle = -20; angle <= 20; angle += 20) {
+                const rad = (angle + 90) * Math.PI / 180;
+                currentLevelData.projectiles.push({
+                    x: boss.x + boss.w / 2,
+                    y: boss.y + boss.h,
+                    w: 20, h: 20,
+                    vx: Math.cos(rad) * 2.5, // Beaucoup plus lent (était 4)
+                    vy: Math.sin(rad) * 2.5,
+                    type: 'boss_fire'
+                });
+            }
         }
     }
+
+    // PAS DE PHASE 3 RAGE MODE pour enfant de 7 ans ! Trop difficile !
 }
 
 // ===== COLLISIONS =====
@@ -868,7 +804,7 @@ function checkCollisions() {
             player.y + player.h > bossY && player.y + player.h < bossY + 50) {
             
             boss.hp--;
-            boss.invincible = 90;
+            boss.invincible = 120; // Plus long (était 90) pour donner plus de temps à Léo
             player.vy = -14;
             state.screenShake = 15;
             AudioSystem.play('boss_hit');
