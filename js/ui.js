@@ -6,7 +6,9 @@
 function updateHud() {
     let hearts = "";
     for (let i = 0; i < state.lives; i++) hearts += "❤️";
-    for (let i = state.lives; i < 3; i++) hearts += "🖤";
+    // Afficher les cœurs noirs perdus (max basé sur difficulté)
+    const maxLives = state.difficulty <= 0.7 ? 7 : state.difficulty <= 1.2 ? 4 : 2;
+    for (let i = state.lives; i < maxLives; i++) hearts += "🖤";
     document.getElementById('hearts').textContent = hearts;
 
     // Indicateur spécial pour le Nether

@@ -944,14 +944,15 @@ const LEVELS = {
             level.platforms.push({ x: arenaStart + 220, y: groundY - 180, w: 70, h: 15, type: 'moving', vx: 0, vy: 1.5, minY: groundY - 220, maxY: groundY - 100 });
             level.platforms.push({ x: arenaStart + arenaWidth - 290, y: groundY - 220, w: 70, h: 15, type: 'moving', vx: 0, vy: -1.5, minY: groundY - 260, maxY: groundY - 140 });
             
-            // ===== LE BOSS : DR. EGGMAN-LIKE (VERSION FACILE POUR LÉO!) =====
+            // ===== LE BOSS : DR. EGGMAN-LIKE (ADAPTÉ À LA DIFFICULTÉ!) =====
+            const bossHp = state.difficulty <= 0.7 ? 3 : state.difficulty <= 1.2 ? 5 : 8;
             level.boss = {
                 x: arenaStart + arenaWidth / 2,
                 y: groundY - 250,
                 w: 100,
                 h: 100,
-                hp: 5,        // Réduit de 8 à 5 (plus facile!)
-                maxHp: 5,
+                hp: bossHp,
+                maxHp: bossHp,
                 phase: 1,
                 attackTimer: 0,
                 invincible: 0,

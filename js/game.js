@@ -193,9 +193,18 @@ function updateJumpIndicator() {
 function startGame(difficulty) {
     AudioSystem.resume();
 
-    state.difficulty = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 1.3 : 1.6;
-    // Mode facile amélioré : 5 vies au lieu de 3 !
-    state.lives = difficulty === 'easy' ? 5 : 3;
+    // Difficultés nettement différenciées
+    state.difficulty = difficulty === 'easy' ? 0.7 : difficulty === 'medium' ? 1.2 : 1.8;
+
+    // Vies selon difficulté
+    if (difficulty === 'easy') {
+        state.lives = 7; // Facile : beaucoup de vies !
+    } else if (difficulty === 'medium') {
+        state.lives = 4; // Moyen : vies standard
+    } else {
+        state.lives = 2; // Dur : très peu de vies !
+    }
+
     state.coins = 0;
     state.totalCoins = 0;
     
@@ -981,7 +990,7 @@ function checkCollisions() {
         }
         
         // Ennemis (hitbox plus tolérante en mode facile)
-        const tolerance = state.difficulty === 1 ? 8 : 0;
+        const tolerance = state.difficulty <= 0.7 ? 15 : state.difficulty <= 1.2 ? 5 : 0;
         for (const e of currentLevelData.enemies) {
             if (checkCollision(player, e, tolerance)) {
                 takeDamage("Monstre !");
