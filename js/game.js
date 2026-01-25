@@ -300,6 +300,16 @@ function initLevel(levelNum) {
     // Reset checkpoint (nouveau niveau = recommencer au début)
     state.lastCheckpoint = null;
 
+    // Reset BombJack (niveau 9)
+    state.bombJackSequence = [];
+    state.bombJackNextExpected = 1;
+    state.bombJackPerfect = true;
+
+    // Niveau 9 : Pouvoir de vol permanent ! (comme dans BombJack original)
+    if (levelNum === 9 && levelDef.bombJackLevel) {
+        state.powerups.superJump = 99999; // Vol permanent pour ce niveau !
+    }
+
     ParticleSystem.clear();
     
     // UI
@@ -913,6 +923,67 @@ function checkCollisions() {
             } else {
                 AudioSystem.play('coin');
                 ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 8);
+            }
+        }
+    }
+
+    // Pièces spéciales numérotées (BombJack - Niveau 9)
+    if (currentLevelData.specialCoins) {
+        for (let i = 0; i < currentLevelData.specialCoins.length; i++) {
+            const sc = currentLevelData.specialCoins[i];
+            if (sc.collected) continue;
+
+            if (checkCollision(player, sc)) {
+                // Vérifier si c'est dans l'ordre
+                const isCorrectOrder = (sc.number === state.bombJackNextExpected);
+
+                if (isCorrectOrder) {
+                    // PARFAIT ! Dans l'ordre !
+                    sc.collected = true;
+                    state.bombJackSequence.push(sc.number);
+                    state.bombJackNextExpected++;
+
+                    // Bonus progressif pour chaque pièce dans l'ordre
+                    const bonusCoins = sc.number * 2; // Pièce 1=2 coins, 2=4, 3=6, etc.
+                    state.coins += bonusCoins;
+                    state.totalCoins += bonusCoins;
+                    state.coinsForNextLife += bonusCoins;
+
+                    AudioSystem.play('powerup');
+                    ParticleSystem.emit(sc.x + sc.w/2, sc.y + sc.h/2, 'sparkle', 25);
+                    showMessage(`💣 BOMBE ${sc.number} !`, `Ordre parfait ! +${bonusCoins} pièces`, 1800);
+
+                    // Si c'était la dernière pièce dans l'ordre parfait = SUPER BONUS !
+                    if (sc.number === currentLevelData.specialCoins.length && state.bombJackPerfect) {
+                        const superBonus = 100;
+                        state.coins += superBonus;
+                        state.totalCoins += superBonus;
+                        state.coinsForNextLife += superBonus;
+                        state.lives++; // Vie bonus !
+
+                        AudioSystem.play('win');
+                        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'confetti', 80);
+                        showMessage('🎉 ORDRE PARFAIT ! 🎉', `SUPER BONUS ! +${superBonus} pièces + 1 vie !`, 4000);
+                        state.screenShake = 20;
+                    }
+                } else {
+                    // Mauvais ordre ! On peut quand même la collecter mais pas de bonus
+                    sc.collected = true;
+                    state.bombJackPerfect = false; // Plus de super bonus possible
+
+                    const regularCoins = 5; // Juste quelques pièces
+                    state.coins += regularCoins;
+                    state.totalCoins += regularCoins;
+                    state.coinsForNextLife += regularCoins;
+
+                    AudioSystem.play('coin');
+                    ParticleSystem.emit(sc.x + sc.w/2, sc.y + sc.h/2, 'coin', 10);
+                    showMessage('💣 Bombe collectée', `Pas dans l'ordre... +${regularCoins} pièces`, 1500);
+                }
+
+                updateCoinsDisplay();
+                updateHud();
+                break; // Une seule pièce à la fois
             }
         }
     }

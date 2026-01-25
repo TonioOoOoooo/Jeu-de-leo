@@ -832,10 +832,117 @@ const LEVELS = {
     },
     
     // ========================================
-    // NIVEAU 9 - ÉPIQUE FINAL !
-    // Zone Sonic + Boss Multi-Phases
+    // NIVEAU 9 - BOMBJACK !
+    // Collecter les pièces dans l'ordre pour un SUPER BONUS !
     // ========================================
     9: {
+        name: "💣 TEMPLE DES BOMBES 💣",
+        bgColor: "#0a1628",
+        playerStart: { x: 400, y: 500 },
+        needsKey: false,
+        bombJackLevel: true, // Flag spécial pour activer le vol !
+        setup: (w, h) => {
+            const level = createEmptyLevel();
+            const groundY = h - 60;
+
+            // Pyramides égyptiennes en arrière-plan
+            level.pyramids = [
+                { x: 50, y: groundY - 200, size: 200 },
+                { x: w - 250, y: groundY - 180, size: 180 }
+            ];
+
+            // Étoiles dans le ciel
+            level.stars = [];
+            for (let i = 0; i < 100; i++) {
+                level.stars.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h * 0.6,
+                    size: Math.random() * 2 + 1,
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Sol principal (petit, juste pour démarrer)
+            level.platforms.push({ x: 200, y: groundY, w: 400, h: 60, type: 'egyptian_ground' });
+
+            // ===== PLATEFORMES FLOTTANTES STYLE BOMBJACK =====
+            // Disposition en grille asymétrique pour le fun!
+
+            // Rangée du bas (y = groundY - 120)
+            level.platforms.push({ x: 100, y: groundY - 120, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 350, y: groundY - 120, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 600, y: groundY - 120, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 850, y: groundY - 120, w: 120, h: 15, type: 'floating' });
+
+            // Rangée du milieu-bas (y = groundY - 220)
+            level.platforms.push({ x: 50, y: groundY - 220, w: 100, h: 15, type: 'floating' });
+            level.platforms.push({ x: 250, y: groundY - 220, w: 140, h: 15, type: 'floating' });
+            level.platforms.push({ x: 500, y: groundY - 220, w: 100, h: 15, type: 'floating' });
+            level.platforms.push({ x: 700, y: groundY - 220, w: 140, h: 15, type: 'floating' });
+            level.platforms.push({ x: 900, y: groundY - 220, w: 100, h: 15, type: 'floating' });
+
+            // Rangée du milieu (y = groundY - 320)
+            level.platforms.push({ x: 150, y: groundY - 320, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 400, y: groundY - 320, w: 160, h: 15, type: 'floating' });
+            level.platforms.push({ x: 700, y: groundY - 320, w: 120, h: 15, type: 'floating' });
+
+            // Rangée du milieu-haut (y = groundY - 420)
+            level.platforms.push({ x: 100, y: groundY - 420, w: 100, h: 15, type: 'floating' });
+            level.platforms.push({ x: 300, y: groundY - 420, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 550, y: groundY - 420, w: 100, h: 15, type: 'floating' });
+            level.platforms.push({ x: 800, y: groundY - 420, w: 120, h: 15, type: 'floating' });
+
+            // Rangée du haut (y = groundY - 500)
+            level.platforms.push({ x: 200, y: groundY - 500, w: 140, h: 15, type: 'floating' });
+            level.platforms.push({ x: 500, y: groundY - 500, w: 140, h: 15, type: 'floating' });
+            level.platforms.push({ x: 750, y: groundY - 500, w: 120, h: 15, type: 'floating' });
+
+            // ===== PIÈCES SPÉCIALES NUMÉROTÉES (6 pièces) =====
+            // Ces pièces doivent être collectées dans l'ordre 1→2→3→4→5→6 pour le SUPER BONUS!
+
+            level.specialCoins = [
+                { x: 660, y: groundY - 160, w: 30, h: 30, number: 1, collected: false },  // Bas droite
+                { x: 110, y: groundY - 260, w: 30, h: 30, number: 2, collected: false },  // Milieu-bas gauche
+                { x: 540, y: groundY - 260, w: 30, h: 30, number: 3, collected: false },  // Milieu-bas centre
+                { x: 760, y: groundY - 360, w: 30, h: 30, number: 4, collected: false },  // Milieu droite
+                { x: 350, y: groundY - 460, w: 30, h: 30, number: 5, collected: false },  // Milieu-haut gauche
+                { x: 550, y: groundY - 540, w: 30, h: 30, number: 6, collected: false }   // Tout en haut centre
+            ];
+
+            // Pièces normales partout pour faire joli (comme dans BombJack original)
+            for (let i = 0; i < 20; i++) {
+                level.coins.push({
+                    x: 80 + Math.random() * 900,
+                    y: groundY - 80 - Math.random() * 480,
+                    w: 20,
+                    h: 20
+                });
+            }
+
+            // Power-ups stratégiques
+            level.powerups.push({ x: 450, y: groundY - 360, w: 35, h: 35, type: 'shield' });
+            level.powerups.push({ x: 210, y: groundY - 460, w: 35, h: 35, type: 'magnet' });
+
+            // Ennemis volants (style sphinx/scarabées)
+            level.enemies.push({ x: 200, y: groundY - 250, w: 40, h: 40, type: 'sphinx', patrolStart: 150, patrolEnd: 350, dir: 1, speed: 1.5 * state.difficulty });
+            level.enemies.push({ x: 600, y: groundY - 350, w: 40, h: 40, type: 'sphinx', patrolStart: 500, patrolEnd: 750, dir: -1, speed: 1.8 * state.difficulty });
+            level.enemies.push({ x: 400, y: groundY - 450, w: 40, h: 40, type: 'sphinx', patrolStart: 300, patrolEnd: 600, dir: 1, speed: 2 * state.difficulty });
+
+            // Sortie (pyramide avec porte)
+            level.goal = { x: 450, y: groundY - 70, w: 80, h: 70, type: 'pyramid_door' };
+
+            // Vide
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 3, h: 100, type: 'void' });
+
+            return level;
+        }
+    },
+
+    // ========================================
+    // NIVEAU 10 - ÉPIQUE FINAL !
+    // Zone Sonic + Boss Multi-Phases
+    // ========================================
+    10: {
         name: "⚡ ZONE FINALE ⚡",
         bgColor: "#0a0a2e",
         playerStart: { x: 80, y: 400 },

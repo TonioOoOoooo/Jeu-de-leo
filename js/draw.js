@@ -3,7 +3,10 @@
 // ============================================================
 
 function draw() {
-    // IMPORTANT : Clear canvas complet pour éviter les bugs d'affichage !
+    // IMPORTANT : Reset COMPLET de la matrice de transformation pour éviter l'accumulation !
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // Clear canvas complet pour éviter les bugs d'affichage !
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
@@ -36,11 +39,16 @@ function draw() {
     ctx.save();
     ctx.translate(camX, 0);
     
-    // Étoiles (niveau 9)
+    // Étoiles (niveaux 9 et 10)
     if (currentLevelData.stars && currentLevelData.stars.length > 0) {
         drawStars();
     }
-    
+
+    // Pyramides (niveau 9 - BombJack)
+    if (currentLevelData.pyramids && currentLevelData.pyramids.length > 0) {
+        drawPyramids();
+    }
+
     // Nuages
     if (currentLevelData.clouds && currentLevelData.clouds.length > 0) {
         drawClouds();
@@ -65,6 +73,11 @@ function draw() {
     
     // Pièces
     drawCoins();
+
+    // Pièces spéciales numérotées (niveau 9 - BombJack)
+    if (currentLevelData.specialCoins && currentLevelData.specialCoins.length > 0) {
+        drawSpecialCoins();
+    }
 
     // Power-ups !
     drawPowerups();
@@ -124,6 +137,57 @@ function drawStars() {
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size * (0.8 + twinkle * 0.4), 0, Math.PI * 2);
         ctx.fill();
+    }
+}
+
+function drawPyramids() {
+    for (const pyramid of currentLevelData.pyramids) {
+        // Dessin style pyramide égyptienne
+        const x = pyramid.x;
+        const y = pyramid.y;
+        const size = pyramid.size;
+
+        // Ombre
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.beginPath();
+        ctx.moveTo(x + size / 2, y);
+        ctx.lineTo(x + size, y + size);
+        ctx.lineTo(x, y + size);
+        ctx.closePath();
+        ctx.fill();
+
+        // Corps de la pyramide (dégradé de sable)
+        const gradient = ctx.createLinearGradient(x, y, x, y + size);
+        gradient.addColorStop(0, '#d4a574');
+        gradient.addColorStop(0.5, '#c8956d');
+        gradient.addColorStop(1, '#b8845c');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.moveTo(x + size / 2, y);
+        ctx.lineTo(x + size - 5, y + size - 5);
+        ctx.lineTo(x + 5, y + size - 5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Lignes de briques
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 8; i++) {
+            const ly = y + (size / 8) * i;
+            const lw = size - (size / 8) * i;
+            ctx.beginPath();
+            ctx.moveTo(x + (size - lw) / 2, ly);
+            ctx.lineTo(x + (size + lw) / 2, ly);
+            ctx.stroke();
+        }
+
+        // Reflet de lumière
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + size / 2, y + 5);
+        ctx.lineTo(x + size / 2 - size / 3, y + size / 2);
+        ctx.stroke();
     }
 }
 
@@ -590,7 +654,64 @@ function drawPlatforms() {
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
                 break;
-                
+
+            // === BOMBJACK NIVEAU 9 ===
+            case 'egyptian_ground':
+                // Sol de sable égyptien
+                const sandGradient = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+                sandGradient.addColorStop(0, '#d4a574');
+                sandGradient.addColorStop(1, '#c8956d');
+                ctx.fillStyle = sandGradient;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+
+                // Motif de briques de pierre
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < p.w; i += 40) {
+                    ctx.strokeRect(p.x + i, p.y, 40, p.h);
+                }
+
+                // Bord supérieur doré
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(p.x, p.y, p.w, 5);
+                break;
+
+            case 'floating':
+                // Plateforme flottante style BombJack
+                const floatY = Math.sin(state.frameTick * 0.05 + p.x * 0.01) * 2;
+
+                // Ombre sous la plateforme
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+                ctx.beginPath();
+                ctx.ellipse(p.x + p.w/2, p.y + p.h + floatY + 5, p.w/2 - 3, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Corps de la plateforme (doré avec bordure)
+                ctx.fillStyle = '#f39c12';
+                ctx.fillRect(p.x, p.y + floatY, p.w, p.h);
+
+                // Bordure décorative
+                ctx.strokeStyle = '#d68910';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(p.x, p.y + floatY, p.w, p.h);
+
+                // Motif de losanges dorés
+                ctx.fillStyle = '#f1c40f';
+                for (let i = 0; i < p.w; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x + i + 10, p.y + floatY + 2);
+                    ctx.lineTo(p.x + i + 15, p.y + floatY + p.h/2);
+                    ctx.lineTo(p.x + i + 10, p.y + floatY + p.h - 2);
+                    ctx.lineTo(p.x + i + 5, p.y + floatY + p.h/2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Brillance sur le dessus
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(p.x + 2, p.y + floatY + 2, p.w - 4, 3);
+                break;
+
             case 'invisible_wall':
                 // Ne rien dessiner
                 break;
@@ -700,6 +821,90 @@ function drawCoins() {
             ctx.arc(c.x + c.w / 3, c.y + c.h / 3 + wobble, 3, 0, Math.PI * 2);
             ctx.fill();
         }
+    }
+}
+
+function drawSpecialCoins() {
+    // Pièces numérotées style BombJack !
+    for (const sc of currentLevelData.specialCoins) {
+        if (sc.collected) continue; // Ne pas dessiner si déjà collectée
+
+        const wobble = Math.sin(state.frameTick * 0.15 + sc.x * 0.01) * 3;
+        const pulse = Math.sin(state.frameTick * 0.1 + sc.number) * 0.15 + 1;
+
+        // Déterminer si c'est la prochaine pièce attendue
+        const isNext = (sc.number === state.bombJackNextExpected);
+        const isCorrectOrder = state.bombJackSequence.includes(sc.number - 1) || sc.number === 1;
+
+        // Couleurs selon l'état
+        let bombColor, glowColor;
+        if (isNext) {
+            // Prochaine pièce = verte brillante !
+            bombColor = '#00ff00';
+            glowColor = 'rgba(0, 255, 0, 0.6)';
+        } else if (!isCorrectOrder) {
+            // Pas encore disponible = grise
+            bombColor = '#666666';
+            glowColor = 'rgba(100, 100, 100, 0.3)';
+        } else {
+            // Disponible mais pas la prochaine = jaune
+            bombColor = '#ffd700';
+            glowColor = 'rgba(255, 215, 0, 0.5)';
+        }
+
+        // Aura pulsante
+        if (isNext) {
+            const glowSize = sc.w / 2 * pulse * 2;
+            ctx.fillStyle = glowColor;
+            ctx.beginPath();
+            ctx.arc(sc.x + sc.w / 2, sc.y + sc.h / 2 + wobble, glowSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Corps de la bombe/pièce (cercle)
+        ctx.fillStyle = bombColor;
+        ctx.beginPath();
+        ctx.arc(sc.x + sc.w / 2, sc.y + sc.h / 2 + wobble, sc.w / 2 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bordure
+        ctx.strokeStyle = isNext ? '#ffffff' : (isCorrectOrder ? '#ff8800' : '#333333');
+        ctx.lineWidth = isNext ? 4 : 3;
+        ctx.stroke();
+
+        // Reflet brillant
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.beginPath();
+        ctx.arc(sc.x + sc.w / 2 - 5, sc.y + sc.h / 2 + wobble - 5, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // NUMÉRO au centre (TRÈS VISIBLE!)
+        ctx.fillStyle = '#000000';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Ombre du texte
+        ctx.strokeText(sc.number.toString(), sc.x + sc.w / 2, sc.y + sc.h / 2 + wobble);
+        // Texte
+        ctx.fillText(sc.number.toString(), sc.x + sc.w / 2, sc.y + sc.h / 2 + wobble);
+
+        // Petit indicateur de flèche si c'est la prochaine
+        if (isNext) {
+            const arrowY = sc.y - 15 + Math.sin(state.frameTick * 0.2) * 5;
+            ctx.fillStyle = '#00ff00';
+            ctx.beginPath();
+            ctx.moveTo(sc.x + sc.w / 2, arrowY);
+            ctx.lineTo(sc.x + sc.w / 2 - 6, arrowY - 8);
+            ctx.lineTo(sc.x + sc.w / 2 + 6, arrowY - 8);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
     }
 }
 
@@ -1010,6 +1215,104 @@ function drawEnemies() {
                 ctx.arc(e.x + 10, e.y + e.h, 8, 0, Math.PI * 2);
                 ctx.arc(e.x + e.w - 10, e.y + e.h, 8, 0, Math.PI * 2);
                 ctx.fill();
+                break;
+
+            case 'sphinx':
+                // Sphinx volant égyptien pour le niveau BombJack
+                const float = Math.sin(state.frameTick * 0.1 + e.x * 0.01) * 8;
+                const wingFlap = Math.sin(state.frameTick * 0.3) * 10;
+
+                // Ombre au sol
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(e.x + e.w/2, e.y + e.h + float + 15, e.w/2 - 5, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Corps doré
+                ctx.fillStyle = '#d4a574';
+                ctx.beginPath();
+                ctx.ellipse(e.x + e.w/2, e.y + e.h/2 + float, e.w/2 - 2, e.h/2 - 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Bordure dorée
+                ctx.strokeStyle = '#b8845c';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Tête de pharaon
+                ctx.fillStyle = '#c8956d';
+                ctx.fillRect(e.x + e.w/2 - 8, e.y + float, 16, 18);
+
+                // Némès (coiffe rayée)
+                ctx.fillStyle = '#3498db';
+                ctx.beginPath();
+                ctx.moveTo(e.x + e.w/2 - 12, e.y + 3 + float);
+                ctx.lineTo(e.x + e.w/2 + 12, e.y + 3 + float);
+                ctx.lineTo(e.x + e.w/2 + 15, e.y + 14 + float);
+                ctx.lineTo(e.x + e.w/2 - 15, e.y + 14 + float);
+                ctx.closePath();
+                ctx.fill();
+
+                // Rayures dorées
+                ctx.strokeStyle = '#f1c40f';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(e.x + e.w/2 - 12 + i*2, e.y + 5 + i*3 + float);
+                    ctx.lineTo(e.x + e.w/2 + 12 - i*2, e.y + 5 + i*3 + float);
+                    ctx.stroke();
+                }
+
+                // Yeux mystérieux
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(e.x + e.w/2 - 6, e.y + 10 + float, 3, 4);
+                ctx.fillRect(e.x + e.w/2 + 3, e.y + 10 + float, 3, 4);
+
+                // Ailes battantes dorées
+                ctx.fillStyle = '#f4d03f';
+                ctx.strokeStyle = '#f1c40f';
+                ctx.lineWidth = 2;
+
+                // Aile gauche
+                ctx.beginPath();
+                ctx.moveTo(e.x + e.w/2 - 5, e.y + e.h/2 + float);
+                ctx.quadraticCurveTo(
+                    e.x + e.w/2 - 18, e.y + e.h/2 + float - 10 - wingFlap,
+                    e.x + e.w/2 - 20, e.y + e.h/2 + float + 5
+                );
+                ctx.quadraticCurveTo(
+                    e.x + e.w/2 - 15, e.y + e.h/2 + float + 10,
+                    e.x + e.w/2 - 5, e.y + e.h/2 + float + 8
+                );
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Aile droite
+                ctx.beginPath();
+                ctx.moveTo(e.x + e.w/2 + 5, e.y + e.h/2 + float);
+                ctx.quadraticCurveTo(
+                    e.x + e.w/2 + 18, e.y + e.h/2 + float - 10 - wingFlap,
+                    e.x + e.w/2 + 20, e.y + e.h/2 + float + 5
+                );
+                ctx.quadraticCurveTo(
+                    e.x + e.w/2 + 15, e.y + e.h/2 + float + 10,
+                    e.x + e.w/2 + 5, e.y + e.h/2 + float + 8
+                );
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Petit ankh (symbole égyptien) sur le corps
+                ctx.strokeStyle = '#f1c40f';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(e.x + e.w/2, e.y + e.h/2 + float - 5, 3, 0, Math.PI * 2);
+                ctx.moveTo(e.x + e.w/2, e.y + e.h/2 + float - 2);
+                ctx.lineTo(e.x + e.w/2, e.y + e.h/2 + float + 5);
+                ctx.moveTo(e.x + e.w/2 - 4, e.y + e.h/2 + float);
+                ctx.lineTo(e.x + e.w/2 + 4, e.y + e.h/2 + float);
+                ctx.stroke();
                 break;
 
             case 'creeper':
@@ -1585,7 +1888,44 @@ function drawGoal() {
             ctx.arc(g.x + 60, g.y + 20, 8, 0, Math.PI * 2);
             ctx.fill();
             break;
-            
+
+        case 'pyramid_door':
+            // Porte de pyramide égyptienne (BombJack niveau 9)
+            const doorPulse = Math.sin(state.frameTick * 0.08) * 0.1 + 1;
+
+            // Fond sombre de la porte
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(g.x, g.y, g.w, g.h);
+
+            // Cadre doré de la porte
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 5;
+            ctx.strokeRect(g.x, g.y, g.w, g.h);
+
+            // Symboles hiéroglyphes dorés
+            ctx.fillStyle = `rgba(241, 196, 15, ${0.6 + Math.sin(state.frameTick * 0.1) * 0.4})`;
+            ctx.font = 'bold 24px serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('𓂀', g.x + g.w/2, g.y + 25); // Ankh
+            ctx.fillText('𓁹', g.x + g.w/2, g.y + 50); // Eye of Horus
+
+            // Lueur mystique pulsante
+            ctx.fillStyle = `rgba(255, 215, 0, ${0.2 * doorPulse})`;
+            ctx.fillRect(g.x + 5, g.y + 5, g.w - 10, g.h - 10);
+
+            // Particules dorées qui flottent
+            for (let i = 0; i < 3; i++) {
+                const px = g.x + 15 + i * 25;
+                const py = g.y + 20 + Math.sin(state.frameTick * 0.05 + i) * 15;
+                ctx.fillStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(state.frameTick * 0.1 + i) * 0.3})`;
+                ctx.beginPath();
+                ctx.arc(px, py, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.textAlign = 'left';
+            break;
+
         default:
             // Porte standard
             ctx.fillStyle = "#f1c40f";

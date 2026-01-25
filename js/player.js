@@ -208,11 +208,13 @@ const player = {
             ctx.fillRect(rightFootX - 4, this.y + this.h - 2, 10, 5);
         }
         
-        ctx.restore();
-        
+        ctx.restore(); // Restore du ctx.save() ligne 93
+
         // Animation frame
         if (Math.abs(this.vx) > 0.5 || !this.grounded) {
             this.animFrame++;
         }
+
+        ctx.restore(); // Restore du ctx.save() ligne 46 - CRITIQUE pour éviter l'accumulation!
     }
 };
