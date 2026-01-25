@@ -587,7 +587,9 @@ const LEVELS = {
 
             // ===== ZONE 1 : DÉPART =====
             level.platforms.push({ x: -50, y: h - unit * 2, w: 350, h: unit, type: 'metal' });
-            for (let i = 0; i < 4; i++) level.coins.push({ x: 80 + i * 50, y: h - unit * 2 - 50, w: 20, h: 20 });
+            for (let i = 0; i < 6; i++) level.coins.push({ x: 50 + i * 40, y: h - unit * 2 - 50, w: 20, h: 20 });
+            // Pièces bonus en hauteur
+            for (let i = 0; i < 3; i++) level.coins.push({ x: 80 + i * 60, y: h - unit * 2 - 120, w: 20, h: 20 });
 
             // Premier défi : pièges !
             level.hazards.push({ x: 250, y: h - unit * 2 - 25, w: 25, h: 25, type: 'spike' });
@@ -598,7 +600,9 @@ const LEVELS = {
             // ===== ZONE 2 : HAUTE GAUCHE (après portail cyan) =====
             level.platforms.push({ x: 50, y: unit * 2, w: 300, h: 20, type: 'metal' });
             level.enemies.push({ x: 150, y: unit * 2 - 60, w: 50, h: 60, type: 'zombie', patrolStart: 50, patrolEnd: 300, dir: 1, speed: 2 * state.difficulty });
-            for (let i = 0; i < 3; i++) level.coins.push({ x: 100 + i * 60, y: unit * 2 - 50, w: 20, h: 20 });
+            for (let i = 0; i < 5; i++) level.coins.push({ x: 70 + i * 50, y: unit * 2 - 50, w: 20, h: 20 });
+            // Pièces bonus en arc au-dessus du zombie
+            for (let i = 0; i < 4; i++) level.coins.push({ x: 110 + i * 50, y: unit * 2 - 100, w: 20, h: 20 });
 
             // Power-up bouclier
             level.powerups.push({ x: 280, y: unit * 2 - 60, w: 35, h: 35, type: 'shield' });
@@ -612,7 +616,10 @@ const LEVELS = {
             // Plateforme mobile avec pièges
             level.platforms.push({ x: w - 450, y: unit * 6, w: 100, h: 20, type: 'moving', vx: 2, minX: w - 500, maxX: w - 200 });
             level.hazards.push({ x: w - 350, y: unit * 5 - 25, w: 25, h: 25, type: 'spike' });
-            level.coins.push({ x: w - 300, y: unit * 5 - 50, w: 20, h: 20 });
+            // Pièces sur et autour de la plateforme
+            for (let i = 0; i < 5; i++) level.coins.push({ x: w - 380 + i * 50, y: unit * 5 - 50, w: 20, h: 20 });
+            // Pièces en hauteur dangereuses
+            for (let i = 0; i < 3; i++) level.coins.push({ x: w - 330 + i * 60, y: unit * 5 - 120, w: 20, h: 20 });
 
             // PORTAIL 3 : VIOLET → Zone basse centrale
             level.portals.push({ x: w - 100, y: unit * 5 - 80, w: 50, h: 80, color: '#CC00FF', destX: w / 2, destY: h - unit * 3 - 58 });
@@ -625,7 +632,10 @@ const LEVELS = {
 
             // LA CLÉ ! Bien cachée
             level.keyItem = { x: w / 2 + 180, y: h - unit * 3 - 50, w: 40, h: 40 };
-            for (let i = 0; i < 3; i++) level.coins.push({ x: w / 2 - 100 + i * 80, y: h - unit * 3 - 50, w: 20, h: 20 });
+            // Beaucoup de pièces pour récompenser l'arrivée ici
+            for (let i = 0; i < 6; i++) level.coins.push({ x: w / 2 - 150 + i * 50, y: h - unit * 3 - 50, w: 20, h: 20 });
+            // Pièces en arc au-dessus du monstre
+            for (let i = 0; i < 5; i++) level.coins.push({ x: w / 2 - 100 + i * 50, y: h - unit * 3 - 110, w: 20, h: 20 });
 
             // PORTAIL 4 : VERT → Retour zone départ (mais plus haut!)
             level.portals.push({ x: w / 2 - 220, y: h - unit * 3 - 80, w: 50, h: 80, color: '#00FF00', destX: 80, destY: h - unit * 4 - 58 });
@@ -633,14 +643,19 @@ const LEVELS = {
             // ===== ZONE 5 : RETOUR HAUT (après portail vert) =====
             level.platforms.push({ x: -50, y: h - unit * 4, w: 400, h: 20, type: 'metal' });
             level.powerups.push({ x: 200, y: h - unit * 4 - 60, w: 35, h: 35, type: 'super_jump' });
+            // Pièces le long de la plateforme
+            for (let i = 0; i < 6; i++) level.coins.push({ x: 20 + i * 60, y: h - unit * 4 - 60, w: 20, h: 20 });
 
             // Échelle vers la sortie
             level.ladders.push({ x: 320, y: h - unit * 6, w: 30, h: unit * 2 });
             level.platforms.push({ x: 250, y: h - unit * 6, w: 200, h: 20, type: 'metal' });
+            // Pièces le long de l'échelle
+            for (let i = 0; i < 4; i++) level.coins.push({ x: 310, y: h - unit * 6 + 40 + i * 60, w: 20, h: 20 });
 
             // ===== SORTIE FINALE =====
             level.goal = { x: 380, y: h - unit * 6 - 80, w: 70, h: 80 };
-            for (let i = 0; i < 2; i++) level.coins.push({ x: 290 + i * 60, y: h - unit * 6 - 50, w: 20, h: 20 });
+            // Pièces finales
+            for (let i = 0; i < 4; i++) level.coins.push({ x: 270 + i * 40, y: h - unit * 6 - 50, w: 20, h: 20 });
 
             // Vide mortel
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
@@ -664,19 +679,31 @@ const LEVELS = {
             for (let i = 0; i < 12; i++) {
                 let gap = (i % 3 === 1) ? 120 : 0;
                 let width = 150 + Math.random() * 80;
-                
+
                 if (gap > 0) {
                     level.hazards.push({ x: currentX + gap / 2 - 20, y: wallY + 50, w: 40, h: 80, type: 'knight', minY: wallY - 80, maxY: wallY + 100, speed: 2 * state.difficulty, dir: 1 });
+                    // Pièces autour des chevaliers (dangereux!)
+                    level.coins.push({ x: currentX + gap / 2 - 40, y: wallY - 50, w: 20, h: 20 });
+                    level.coins.push({ x: currentX + gap / 2 + 20, y: wallY - 50, w: 20, h: 20 });
                 }
-                
+
                 level.platforms.push({ x: currentX + gap, y: wallY, w: width, h: h, type: 'castle_wall' });
-                if (i % 2 === 0) level.coins.push({ x: currentX + gap + width / 2, y: wallY - 50, w: 20, h: 20 });
+                // Pièces sur TOUS les murs (pas seulement pairs)
+                level.coins.push({ x: currentX + gap + width / 2, y: wallY - 50, w: 20, h: 20 });
+                // Pièce bonus en hauteur sur certains murs
+                if (i % 3 === 0) level.coins.push({ x: currentX + gap + width / 2, y: wallY - 120, w: 20, h: 20 });
                 currentX += gap + width;
             }
             
             let ropeGap = 400;
             level.platforms.push({ x: currentX + 50, y: wallY - 50, w: 60, h: 10, type: 'moving', vx: 4 * state.difficulty, minX: currentX + 50, maxX: currentX + ropeGap - 50 });
+            // Pièces le long du parcours de la corde
+            for (let i = 0; i < 6; i++) level.coins.push({ x: currentX + 80 + i * 60, y: wallY - 90, w: 20, h: 20 });
+
             level.platforms.push({ x: currentX + ropeGap, y: wallY, w: 300, h: h, type: 'castle_wall' });
+            // Pièces finales avant la cloche
+            for (let i = 0; i < 4; i++) level.coins.push({ x: currentX + ropeGap + 50 + i * 50, y: wallY - 60, w: 20, h: 20 });
+
             level.goal = { x: currentX + ropeGap + 150, y: wallY - 100, w: 60, h: 80, type: 'bell' };
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
 

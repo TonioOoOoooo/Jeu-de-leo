@@ -901,19 +901,7 @@ function checkCollisions() {
             const coinValue = c.value || 1; // Pièces secrètes peuvent valoir plus !
             state.coins += coinValue;
             state.totalCoins += coinValue;
-            state.coinsForNextLife += coinValue;
             updateCoinsDisplay();
-
-            // Vie bonus selon difficulté ! Facile=30, Moyen=50, Dur=70
-            const bonusLifeThreshold = state.difficulty <= 0.7 ? 30 : state.difficulty <= 1.2 ? 50 : 70;
-            if (state.coinsForNextLife >= bonusLifeThreshold) {
-                state.lives++;
-                state.coinsForNextLife -= bonusLifeThreshold; // Reset le compteur
-                AudioSystem.play('powerup');
-                ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 30);
-                showMessage('💚 VIE BONUS !', `${bonusLifeThreshold} pièces = +1 vie !`, 2500);
-                updateHud();
-            }
 
             // Son spécial pour pièces secrètes
             if (c.secret) {
@@ -947,7 +935,6 @@ function checkCollisions() {
                     const bonusCoins = sc.number * 2; // Pièce 1=2 coins, 2=4, 3=6, etc.
                     state.coins += bonusCoins;
                     state.totalCoins += bonusCoins;
-                    state.coinsForNextLife += bonusCoins;
 
                     AudioSystem.play('powerup');
                     ParticleSystem.emit(sc.x + sc.w/2, sc.y + sc.h/2, 'sparkle', 25);
@@ -958,7 +945,6 @@ function checkCollisions() {
                         const superBonus = 100;
                         state.coins += superBonus;
                         state.totalCoins += superBonus;
-                        state.coinsForNextLife += superBonus;
                         state.lives++; // Vie bonus !
 
                         AudioSystem.play('win');
@@ -974,7 +960,6 @@ function checkCollisions() {
                     const regularCoins = 5; // Juste quelques pièces
                     state.coins += regularCoins;
                     state.totalCoins += regularCoins;
-                    state.coinsForNextLife += regularCoins;
 
                     AudioSystem.play('coin');
                     ParticleSystem.emit(sc.x + sc.w/2, sc.y + sc.h/2, 'coin', 10);

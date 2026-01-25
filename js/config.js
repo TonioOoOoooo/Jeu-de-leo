@@ -62,7 +62,6 @@ const state = {
     totalStars: 0,           // Total d'étoiles collectées
     maxCoinsInLevel: 0,      // Nombre max de pièces dans le niveau actuel
     badges: {},              // Badges débloqués
-    coinsForNextLife: 0,     // Compteur de pièces pour vie bonus
 
     // Sous-niveaux (pour portail Nether niveau 5!)
     inSubLevel: false,       // True si dans un sous-niveau
