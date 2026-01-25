@@ -296,7 +296,10 @@ function initLevel(levelNum) {
         magnet: 0,
         star: 0
     };
-    
+
+    // Reset checkpoint (nouveau niveau = recommencer au début)
+    state.lastCheckpoint = null;
+
     ParticleSystem.clear();
     
     // UI
@@ -373,6 +376,7 @@ function update() {
     updatePortals();
     updateFireBars();
     updatePlayer();
+    updateCheckpoint(); // Sauvegarder automatiquement la position du joueur
     checkCollisions();
     
     ParticleSystem.update();
@@ -480,6 +484,33 @@ function updatePlayer() {
     if (player.x < 0) {
         player.x = 0;
         player.vx = 0;
+    }
+}
+
+// ===== SYSTÈME DE CHECKPOINTS =====
+function updateCheckpoint() {
+    // Sauvegarder automatiquement la position du joueur tous les X pixels
+    // Pour éviter de recommencer au tout début quand on meurt !
+
+    // Si pas encore de checkpoint, créer le premier à la position de départ
+    if (!state.lastCheckpoint) {
+        const levelDef = LEVELS[state.level];
+        state.lastCheckpoint = {
+            x: levelDef.playerStart.x,
+            y: levelDef.playerStart.y
+        };
+        return;
+    }
+
+    // Si le joueur a progressé d'au moins checkpointDistance pixels vers la droite
+    if (player.x > state.lastCheckpoint.x + state.checkpointDistance) {
+        // Sauvegarder nouveau checkpoint (invisible pour le joueur)
+        state.lastCheckpoint = {
+            x: player.x,
+            y: player.y
+        };
+        // Petit effet visuel subtil pour indiquer le checkpoint
+        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 3);
     }
 }
 
@@ -1111,9 +1142,19 @@ function takeDamage(reason) {
 }
 
 function respawnPlayer() {
-    const start = LEVELS[state.level].playerStart;
-    player.x = start.x;
-    player.y = start.y;
+    // Utiliser le checkpoint si disponible, sinon position de départ
+    // Cela évite de recommencer au tout début du niveau !
+    let spawnPos;
+    if (state.lastCheckpoint) {
+        spawnPos = state.lastCheckpoint;
+        // Message pour indiquer qu'on respawn au checkpoint
+        showMessage('🔄 CHECKPOINT', 'Tu reprends près d\'ici !', 1500);
+    } else {
+        spawnPos = LEVELS[state.level].playerStart;
+    }
+
+    player.x = spawnPos.x;
+    player.y = spawnPos.y;
     player.vx = 0;
     player.vy = 0;
     player.grounded = false;
@@ -1121,6 +1162,9 @@ function respawnPlayer() {
     player.jumpCount = 0;
     player.currentPlatform = null;
     state.invincibilityTimer = 120; // Plus long pour laisser le temps de se remettre
+
+    // Particules au respawn
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 20);
 }
 
 // ===== POWER-UPS =====

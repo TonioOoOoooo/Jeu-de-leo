@@ -77,7 +77,11 @@ const state = {
         superJump: 0,        // Timer du super saut
         magnet: 0,           // Timer de l'aimant
         star: 0              // Timer de l'étoile (invincibilité)
-    }
+    },
+
+    // Système de checkpoints (pour éviter de recommencer au début)
+    lastCheckpoint: null,    // Dernière position de checkpoint {x, y}
+    checkpointDistance: 400  // Distance en pixels entre checkpoints
 };
 
 // Contrôles
