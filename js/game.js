@@ -166,6 +166,7 @@ function doJump() {
     AudioSystem.resume();
 
     const jumpForce = player.getJumpForce();
+    const maxJumps = player.getMaxJumps();
 
     if (player.grounded || player.climbing) {
         player.vy = -jumpForce;
@@ -174,19 +175,32 @@ function doJump() {
         player.jumpCount = 1;
         AudioSystem.play('jump');
         ParticleSystem.emit(player.x + player.w / 2, player.y + player.h, 'dust', 5);
-    } else if (player.jumpCount < player.maxJumps) {
+    } else if (player.jumpCount < maxJumps) {
         player.vy = -jumpForce * 0.9;
         player.jumpCount++;
         AudioSystem.play('jump');
+
+        // Effet spécial pour le triple saut !
+        if (player.jumpCount === 3 && state.powerups.superJump > 0) {
+            ParticleSystem.emit(player.x + player.w / 2, player.y + player.h / 2, 'sparkle', 15);
+        }
     }
 
     updateJumpIndicator();
 }
 
 function updateJumpIndicator() {
-    const jumpsLeft = player.maxJumps - player.jumpCount;
+    const maxJumps = player.getMaxJumps();
+    const jumpsLeft = maxJumps - player.jumpCount;
     document.getElementById('jump1').classList.toggle('available', jumpsLeft >= 1 || player.grounded);
     document.getElementById('jump2').classList.toggle('available', jumpsLeft >= 2 || player.grounded);
+
+    // Indicateur du 3ème saut (super saut)
+    const jump3 = document.getElementById('jump3');
+    if (jump3) {
+        jump3.style.display = maxJumps >= 3 ? 'block' : 'none';
+        jump3.classList.toggle('available', jumpsLeft >= 3 || player.grounded);
+    }
 }
 
 // ===== DÉMARRAGE DU JEU =====
@@ -265,6 +279,7 @@ function initLevel(levelNum) {
     state.levelTime = 0;
     state.invincibilityTimer = 0;
     state.teleportTimer = 0;
+    state.screenShake = 0; // IMPORTANT : Reset screen shake !
     state.coins = 0;
     state.maxCoinsInLevel = currentLevelData.coins.length;
 
@@ -324,8 +339,8 @@ function update() {
     if (state.teleportTimer > 0) state.teleportTimer--;
     if (state.screenShake > 0) state.screenShake--;
 
-    // Mise à jour des power-ups
-    if (state.powerups.shield > 0) state.powerups.shield--;
+    // Mise à jour des power-ups (sauf bouclier qui ne se consomme que sur coup)
+    // BOUCLIER : permanent jusqu'à prendre un coup !
     if (state.powerups.superJump > 0) state.powerups.superJump--;
     if (state.powerups.magnet > 0) state.powerups.magnet--;
     if (state.powerups.star > 0) state.powerups.star--;
@@ -838,7 +853,19 @@ function checkCollisions() {
             const coinValue = c.value || 1; // Pièces secrètes peuvent valoir plus !
             state.coins += coinValue;
             state.totalCoins += coinValue;
+            state.coinsForNextLife += coinValue;
             updateCoinsDisplay();
+
+            // Vie bonus selon difficulté ! Facile=30, Moyen=50, Dur=70
+            const bonusLifeThreshold = state.difficulty <= 0.7 ? 30 : state.difficulty <= 1.2 ? 50 : 70;
+            if (state.coinsForNextLife >= bonusLifeThreshold) {
+                state.lives++;
+                state.coinsForNextLife -= bonusLifeThreshold; // Reset le compteur
+                AudioSystem.play('powerup');
+                ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 30);
+                showMessage('💚 VIE BONUS !', `${bonusLifeThreshold} pièces = +1 vie !`, 2500);
+                updateHud();
+            }
 
             // Son spécial pour pièces secrètes
             if (c.secret) {
@@ -897,7 +924,44 @@ function checkCollisions() {
         
         // Niveau boss : pas de goal direct
         if (levelDef.isBoss) return;
-        
+
+        // Niveau 4 : Bonus selon hauteur du drapeau touché (comme Super Mario!)
+        if (state.level === 4 && currentLevelData.goal.type === 'flag') {
+            const goalTop = currentLevelData.goal.y;
+            const goalBottom = currentLevelData.goal.y + currentLevelData.goal.h;
+            const playerTouchY = player.y + player.h / 2; // Centre du joueur
+
+            // Calculer à quelle hauteur (en %) le joueur a touché le drapeau
+            const touchHeight = 1 - ((playerTouchY - goalTop) / (goalBottom - goalTop));
+            const touchHeightPercent = Math.max(0, Math.min(100, Math.round(touchHeight * 100)));
+
+            // Bonus de pièces selon la hauteur !
+            let bonusCoins = 0;
+            let bonusMessage = '';
+            if (touchHeightPercent >= 90) {
+                bonusCoins = 10;
+                bonusMessage = '🌟 INCROYABLE ! TOP DU DRAPEAU !';
+            } else if (touchHeightPercent >= 70) {
+                bonusCoins = 7;
+                bonusMessage = '🎯 EXCELLENT ! Très haut !';
+            } else if (touchHeightPercent >= 50) {
+                bonusCoins = 5;
+                bonusMessage = '👍 BIEN ! Milieu du drapeau';
+            } else if (touchHeightPercent >= 30) {
+                bonusCoins = 3;
+                bonusMessage = '👌 PAS MAL !';
+            } else {
+                bonusCoins = 1;
+                bonusMessage = 'Tu peux faire mieux !';
+            }
+
+            state.coins += bonusCoins;
+            state.totalCoins += bonusCoins;
+            state.coinsForNextLife += bonusCoins;
+            showMessage(bonusMessage, `+${bonusCoins} pièces bonus !`, 2500);
+            ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'coin', bonusCoins * 3);
+        }
+
         levelWin();
         return;
     }

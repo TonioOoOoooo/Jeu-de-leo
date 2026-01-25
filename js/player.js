@@ -17,9 +17,14 @@ const player = {
     animFrame: 0,
     animTimer: 0,
 
-    // Obtenir la force de saut actuelle (avec power-up)
+    // Obtenir la force de saut actuelle (normal)
     getJumpForce() {
-        return state.powerups.superJump > 0 ? this.jumpForce * 1.4 : this.jumpForce;
+        return this.jumpForce;
+    },
+
+    // Obtenir le nombre max de sauts (avec power-up super saut = triple saut !)
+    getMaxJumps() {
+        return state.powerups.superJump > 0 ? 3 : this.maxJumps;
     },
     
     reset(x, y) {
