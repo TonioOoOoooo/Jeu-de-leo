@@ -296,7 +296,20 @@ function initLevel(levelNum) {
         magnet: 0,
         star: 0
     };
-    
+
+    // Reset checkpoint (nouveau niveau = recommencer au début)
+    state.lastCheckpoint = null;
+
+    // Reset BombJack (niveau 9)
+    state.bombJackSequence = [];
+    state.bombJackNextExpected = 1;
+    state.bombJackPerfect = true;
+
+    // Niveau 9 : Pouvoir de vol permanent ! (comme dans BombJack original)
+    if (levelNum === 9 && levelDef.bombJackLevel) {
+        state.powerups.superJump = 99999; // Vol permanent pour ce niveau !
+    }
+
     ParticleSystem.clear();
     
     // UI
@@ -373,6 +386,7 @@ function update() {
     updatePortals();
     updateFireBars();
     updatePlayer();
+    updateCheckpoint(); // Sauvegarder automatiquement la position du joueur
     checkCollisions();
     
     ParticleSystem.update();
@@ -483,6 +497,33 @@ function updatePlayer() {
     }
 }
 
+// ===== SYSTÈME DE CHECKPOINTS =====
+function updateCheckpoint() {
+    // Sauvegarder automatiquement la position du joueur tous les X pixels
+    // Pour éviter de recommencer au tout début quand on meurt !
+
+    // Si pas encore de checkpoint, créer le premier à la position de départ
+    if (!state.lastCheckpoint) {
+        const levelDef = LEVELS[state.level];
+        state.lastCheckpoint = {
+            x: levelDef.playerStart.x,
+            y: levelDef.playerStart.y
+        };
+        return;
+    }
+
+    // Si le joueur a progressé d'au moins checkpointDistance pixels vers la droite
+    if (player.x > state.lastCheckpoint.x + state.checkpointDistance) {
+        // Sauvegarder nouveau checkpoint (invisible pour le joueur)
+        state.lastCheckpoint = {
+            x: player.x,
+            y: player.y
+        };
+        // Petit effet visuel subtil pour indiquer le checkpoint
+        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 3);
+    }
+}
+
 function updateEnemies() {
     for (const e of currentLevelData.enemies) {
         if (e.patrolEnd) {
@@ -528,6 +569,19 @@ function updateHazards() {
 function updatePortals() {
     if (state.teleportTimer > 0) return;
 
+    // Détection spéciale pour le tuyau underground (Niveau 4)
+    // Le joueur doit être sur un tuyau ET appuyer sur BAS
+    if (state.level === 4 && !state.inSubLevel && keys.down && player.grounded) {
+        // Vérifier si le joueur est sur une plateforme de type 'pipe'
+        if (player.currentPlatform && player.currentPlatform.type === 'pipe') {
+            // Vérifier que c'est le BON tuyau (le premier, pas le deuxième)
+            if (player.currentPlatform.x === 450) {
+                enterUnderground();
+                return;
+            }
+        }
+    }
+
     for (const p of currentLevelData.portals) {
         if (checkCollision(player, p)) {
             // Portail spécial vers le Nether !
@@ -539,12 +593,6 @@ function updatePortals() {
             // Portail de retour depuis le Nether
             if (p.isReturnPortal && state.level === 5 && state.inSubLevel) {
                 exitNether();
-                return;
-            }
-
-            // Portail vers le sous-sol (Niveau 4) !
-            if (p.isUndergroundPortal && state.level === 4 && keys.down) {
-                enterUnderground();
                 return;
             }
 
@@ -853,19 +901,7 @@ function checkCollisions() {
             const coinValue = c.value || 1; // Pièces secrètes peuvent valoir plus !
             state.coins += coinValue;
             state.totalCoins += coinValue;
-            state.coinsForNextLife += coinValue;
             updateCoinsDisplay();
-
-            // Vie bonus selon difficulté ! Facile=30, Moyen=50, Dur=70
-            const bonusLifeThreshold = state.difficulty <= 0.7 ? 30 : state.difficulty <= 1.2 ? 50 : 70;
-            if (state.coinsForNextLife >= bonusLifeThreshold) {
-                state.lives++;
-                state.coinsForNextLife -= bonusLifeThreshold; // Reset le compteur
-                AudioSystem.play('powerup');
-                ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 30);
-                showMessage('💚 VIE BONUS !', `${bonusLifeThreshold} pièces = +1 vie !`, 2500);
-                updateHud();
-            }
 
             // Son spécial pour pièces secrètes
             if (c.secret) {
@@ -875,6 +911,64 @@ function checkCollisions() {
             } else {
                 AudioSystem.play('coin');
                 ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 8);
+            }
+        }
+    }
+
+    // Pièces spéciales numérotées (BombJack - Niveau 9)
+    if (currentLevelData.specialCoins) {
+        for (let i = 0; i < currentLevelData.specialCoins.length; i++) {
+            const sc = currentLevelData.specialCoins[i];
+            if (sc.collected) continue;
+
+            if (checkCollision(player, sc)) {
+                // Vérifier si c'est dans l'ordre
+                const isCorrectOrder = (sc.number === state.bombJackNextExpected);
+
+                if (isCorrectOrder) {
+                    // PARFAIT ! Dans l'ordre !
+                    sc.collected = true;
+                    state.bombJackSequence.push(sc.number);
+                    state.bombJackNextExpected++;
+
+                    // Bonus progressif pour chaque pièce dans l'ordre
+                    const bonusCoins = sc.number * 2; // Pièce 1=2 coins, 2=4, 3=6, etc.
+                    state.coins += bonusCoins;
+                    state.totalCoins += bonusCoins;
+
+                    AudioSystem.play('powerup');
+                    ParticleSystem.emit(sc.x + sc.w/2, sc.y + sc.h/2, 'sparkle', 25);
+                    showMessage(`💣 BOMBE ${sc.number} !`, `Ordre parfait ! +${bonusCoins} pièces`, 1800);
+
+                    // Si c'était la dernière pièce dans l'ordre parfait = SUPER BONUS !
+                    if (sc.number === currentLevelData.specialCoins.length && state.bombJackPerfect) {
+                        const superBonus = 100;
+                        state.coins += superBonus;
+                        state.totalCoins += superBonus;
+                        state.lives++; // Vie bonus !
+
+                        AudioSystem.play('win');
+                        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'confetti', 80);
+                        showMessage('🎉 ORDRE PARFAIT ! 🎉', `SUPER BONUS ! +${superBonus} pièces + 1 vie !`, 4000);
+                        state.screenShake = 20;
+                    }
+                } else {
+                    // Mauvais ordre ! On peut quand même la collecter mais pas de bonus
+                    sc.collected = true;
+                    state.bombJackPerfect = false; // Plus de super bonus possible
+
+                    const regularCoins = 5; // Juste quelques pièces
+                    state.coins += regularCoins;
+                    state.totalCoins += regularCoins;
+
+                    AudioSystem.play('coin');
+                    ParticleSystem.emit(sc.x + sc.w/2, sc.y + sc.h/2, 'coin', 10);
+                    showMessage('💣 Bombe collectée', `Pas dans l'ordre... +${regularCoins} pièces`, 1500);
+                }
+
+                updateCoinsDisplay();
+                updateHud();
+                break; // Une seule pièce à la fois
             }
         }
     }
@@ -1104,9 +1198,19 @@ function takeDamage(reason) {
 }
 
 function respawnPlayer() {
-    const start = LEVELS[state.level].playerStart;
-    player.x = start.x;
-    player.y = start.y;
+    // Utiliser le checkpoint si disponible, sinon position de départ
+    // Cela évite de recommencer au tout début du niveau !
+    let spawnPos;
+    if (state.lastCheckpoint) {
+        spawnPos = state.lastCheckpoint;
+        // Message pour indiquer qu'on respawn au checkpoint
+        showMessage('🔄 CHECKPOINT', 'Tu reprends près d\'ici !', 1500);
+    } else {
+        spawnPos = LEVELS[state.level].playerStart;
+    }
+
+    player.x = spawnPos.x;
+    player.y = spawnPos.y;
     player.vx = 0;
     player.vy = 0;
     player.grounded = false;
@@ -1114,6 +1218,9 @@ function respawnPlayer() {
     player.jumpCount = 0;
     player.currentPlatform = null;
     state.invincibilityTimer = 120; // Plus long pour laisser le temps de se remettre
+
+    // Particules au respawn
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 20);
 }
 
 // ===== POWER-UPS =====

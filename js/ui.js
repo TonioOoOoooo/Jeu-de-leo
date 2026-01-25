@@ -43,6 +43,17 @@ function levelWin() {
     state.current = GameState.TRANSITIONING;
     AudioSystem.play('victory');
 
+    // 🎁 BONUS VIE SI 100% DES PIÈCES COLLECTÉES !
+    let perfectCoinsBonus = false;
+    if (state.maxCoinsInLevel > 0 && state.coins === state.maxCoinsInLevel) {
+        state.lives++;
+        perfectCoinsBonus = true;
+        AudioSystem.play('powerup');
+        updateHud();
+        // Particules de célébration !
+        ParticleSystem.emit(canvas.width / 2, canvas.height / 2, 'confetti', 50);
+    }
+
     // Calculer les étoiles gagnées !
     const stars = calculateStars();
     state.levelStars[state.level] = Math.max(state.levelStars[state.level] || 0, stars);
@@ -74,8 +85,9 @@ function levelWin() {
         isFinalLevel ? "Tu as vaincu le boss et terminé le jeu !" : starMessages[stars];
 
     const starsDisplay = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    const perfectMessage = perfectCoinsBonus ? '\n💚 100% DES PIÈCES ! +1 VIE !' : '';
     document.getElementById('msg-coins').textContent =
-        `${starsDisplay}\nPièces : ${state.coins}/${state.maxCoinsInLevel} | Total : ${state.totalCoins}`;
+        `${starsDisplay}\nPièces : ${state.coins}/${state.maxCoinsInLevel} | Total : ${state.totalCoins}${perfectMessage}`;
 
     document.getElementById('msg-btn').textContent =
         isFinalLevel ? "🎉 Rejouer" : "Continuer ▶";

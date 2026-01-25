@@ -7,13 +7,13 @@ const CONFIG = {
     GRAVITY: 0.8,
     FRICTION: 0.85,
     MAX_FALL_SPEED: 15,
-    TOTAL_LEVELS: 9,
+    TOTAL_LEVELS: 10,
     MAX_LIVES: 10,
 
     // Critères pour les étoiles
     STARS: {
-        TIME_GOLD: [60, 80, 100, 90, 110, 120, 150, 140, 200], // Temps en secondes pour 3 étoiles par niveau
-        TIME_SILVER: [90, 120, 150, 130, 160, 180, 210, 200, 300], // Temps pour 2 étoiles
+        TIME_GOLD: [60, 80, 100, 90, 110, 120, 150, 140, 90, 250], // Temps en secondes pour 3 étoiles par niveau (niv 9 = BombJack rapide!)
+        TIME_SILVER: [90, 120, 150, 130, 160, 180, 210, 200, 130, 350], // Temps pour 2 étoiles
         MIN_COINS_PERCENT: 0.7 // Collecter 70% des pièces pour étoile bonus
     },
 
@@ -62,7 +62,6 @@ const state = {
     totalStars: 0,           // Total d'étoiles collectées
     maxCoinsInLevel: 0,      // Nombre max de pièces dans le niveau actuel
     badges: {},              // Badges débloqués
-    coinsForNextLife: 0,     // Compteur de pièces pour vie bonus
 
     // Sous-niveaux (pour portail Nether niveau 5!)
     inSubLevel: false,       // True si dans un sous-niveau
@@ -77,7 +76,16 @@ const state = {
         superJump: 0,        // Timer du super saut
         magnet: 0,           // Timer de l'aimant
         star: 0              // Timer de l'étoile (invincibilité)
-    }
+    },
+
+    // Système de checkpoints (pour éviter de recommencer au début)
+    lastCheckpoint: null,    // Dernière position de checkpoint {x, y}
+    checkpointDistance: 400, // Distance en pixels entre checkpoints
+
+    // Système BombJack (niveau 9) - Pièces à collecter dans l'ordre!
+    bombJackSequence: [],    // Séquence collectée [1, 2, 3, ...]
+    bombJackNextExpected: 1, // Prochaine pièce attendue
+    bombJackPerfect: true    // True si toutes collectées dans l'ordre parfait
 };
 
 // Contrôles

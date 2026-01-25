@@ -266,20 +266,9 @@ const LEVELS = {
             for (let i = 0; i < 5; i++) level.coins.push({ x: 80 + i * 60, y: groundY - 50, w: 20, h: 20 });
 
             // ===== TUYAU MAGIQUE VERS SOUS-SOL ! =====
+            // SECRET : Appuyer sur BAS quand on est sur le tuyau pour descendre !
             let pipe1X = 450;
             level.platforms.push({ x: pipe1X, y: groundY - 60, w: 60, h: 60 + unit, type: 'pipe' });
-
-            // Portail d'entrée dans le tuyau (appuyer sur bas pour descendre)
-            level.portals.push({
-                x: pipe1X + 10,
-                y: groundY - 55,
-                w: 40,
-                h: 50,
-                color: '#00FF00',
-                destX: -997, // Code spécial pour aller au sous-sol
-                destY: -997,
-                isUndergroundPortal: true
-            });
 
             level.platforms.push({ x: pipe1X + 150, y: groundY, w: 300, h: unit, type: 'brick_floor' });
             level.enemies.push({ x: pipe1X + 200, y: groundY - 60, w: 50, h: 60, type: 'zombie', patrolStart: pipe1X + 150, patrolEnd: pipe1X + 400, dir: -1, speed: 2 * state.difficulty });
@@ -494,12 +483,18 @@ const LEVELS = {
             // Portail de retour du Nether (apparaîtra ici)
             level.returnPortalPos = { x: returnX + 40, y: h - blockSize * 2 - 100 };
 
+            // Ennemis qui apparaissent après le retour du Nether !
+            level.enemies.push({ x: returnX + 150, y: h - blockSize * 2 - 60, w: 40, h: 60, type: 'creeper', patrolStart: returnX + 100, patrolEnd: returnX + 200, dir: 1, speed: 1.5 * state.difficulty });
+
             // ===== SORTIE FINALE (nécessite la clé du Nether!) =====
             let exitX = returnX + 300;
             for (let i = 0; i < 6; i++) {
                 level.platforms.push({ x: exitX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
                 level.platforms.push({ x: exitX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
             }
+
+            // Spider hostile qui garde la sortie !
+            level.enemies.push({ x: exitX + 80, y: h - blockSize * 2 - 50, w: 50, h: 50, type: 'spider', patrolStart: exitX, patrolEnd: exitX + 180, dir: -1, speed: 2.5 * state.difficulty });
 
             // Maison de sortie
             level.platforms.push({ x: exitX + 200, y: h - blockSize * 2 - 120, w: 100, h: 120, type: 'wood' });
@@ -592,7 +587,9 @@ const LEVELS = {
 
             // ===== ZONE 1 : DÉPART =====
             level.platforms.push({ x: -50, y: h - unit * 2, w: 350, h: unit, type: 'metal' });
-            for (let i = 0; i < 4; i++) level.coins.push({ x: 80 + i * 50, y: h - unit * 2 - 50, w: 20, h: 20 });
+            for (let i = 0; i < 6; i++) level.coins.push({ x: 50 + i * 40, y: h - unit * 2 - 50, w: 20, h: 20 });
+            // Pièces bonus en hauteur
+            for (let i = 0; i < 3; i++) level.coins.push({ x: 80 + i * 60, y: h - unit * 2 - 120, w: 20, h: 20 });
 
             // Premier défi : pièges !
             level.hazards.push({ x: 250, y: h - unit * 2 - 25, w: 25, h: 25, type: 'spike' });
@@ -603,7 +600,9 @@ const LEVELS = {
             // ===== ZONE 2 : HAUTE GAUCHE (après portail cyan) =====
             level.platforms.push({ x: 50, y: unit * 2, w: 300, h: 20, type: 'metal' });
             level.enemies.push({ x: 150, y: unit * 2 - 60, w: 50, h: 60, type: 'zombie', patrolStart: 50, patrolEnd: 300, dir: 1, speed: 2 * state.difficulty });
-            for (let i = 0; i < 3; i++) level.coins.push({ x: 100 + i * 60, y: unit * 2 - 50, w: 20, h: 20 });
+            for (let i = 0; i < 5; i++) level.coins.push({ x: 70 + i * 50, y: unit * 2 - 50, w: 20, h: 20 });
+            // Pièces bonus en arc au-dessus du zombie
+            for (let i = 0; i < 4; i++) level.coins.push({ x: 110 + i * 50, y: unit * 2 - 100, w: 20, h: 20 });
 
             // Power-up bouclier
             level.powerups.push({ x: 280, y: unit * 2 - 60, w: 35, h: 35, type: 'shield' });
@@ -617,7 +616,10 @@ const LEVELS = {
             // Plateforme mobile avec pièges
             level.platforms.push({ x: w - 450, y: unit * 6, w: 100, h: 20, type: 'moving', vx: 2, minX: w - 500, maxX: w - 200 });
             level.hazards.push({ x: w - 350, y: unit * 5 - 25, w: 25, h: 25, type: 'spike' });
-            level.coins.push({ x: w - 300, y: unit * 5 - 50, w: 20, h: 20 });
+            // Pièces sur et autour de la plateforme
+            for (let i = 0; i < 5; i++) level.coins.push({ x: w - 380 + i * 50, y: unit * 5 - 50, w: 20, h: 20 });
+            // Pièces en hauteur dangereuses
+            for (let i = 0; i < 3; i++) level.coins.push({ x: w - 330 + i * 60, y: unit * 5 - 120, w: 20, h: 20 });
 
             // PORTAIL 3 : VIOLET → Zone basse centrale
             level.portals.push({ x: w - 100, y: unit * 5 - 80, w: 50, h: 80, color: '#CC00FF', destX: w / 2, destY: h - unit * 3 - 58 });
@@ -630,7 +632,10 @@ const LEVELS = {
 
             // LA CLÉ ! Bien cachée
             level.keyItem = { x: w / 2 + 180, y: h - unit * 3 - 50, w: 40, h: 40 };
-            for (let i = 0; i < 3; i++) level.coins.push({ x: w / 2 - 100 + i * 80, y: h - unit * 3 - 50, w: 20, h: 20 });
+            // Beaucoup de pièces pour récompenser l'arrivée ici
+            for (let i = 0; i < 6; i++) level.coins.push({ x: w / 2 - 150 + i * 50, y: h - unit * 3 - 50, w: 20, h: 20 });
+            // Pièces en arc au-dessus du monstre
+            for (let i = 0; i < 5; i++) level.coins.push({ x: w / 2 - 100 + i * 50, y: h - unit * 3 - 110, w: 20, h: 20 });
 
             // PORTAIL 4 : VERT → Retour zone départ (mais plus haut!)
             level.portals.push({ x: w / 2 - 220, y: h - unit * 3 - 80, w: 50, h: 80, color: '#00FF00', destX: 80, destY: h - unit * 4 - 58 });
@@ -638,14 +643,19 @@ const LEVELS = {
             // ===== ZONE 5 : RETOUR HAUT (après portail vert) =====
             level.platforms.push({ x: -50, y: h - unit * 4, w: 400, h: 20, type: 'metal' });
             level.powerups.push({ x: 200, y: h - unit * 4 - 60, w: 35, h: 35, type: 'super_jump' });
+            // Pièces le long de la plateforme
+            for (let i = 0; i < 6; i++) level.coins.push({ x: 20 + i * 60, y: h - unit * 4 - 60, w: 20, h: 20 });
 
             // Échelle vers la sortie
             level.ladders.push({ x: 320, y: h - unit * 6, w: 30, h: unit * 2 });
             level.platforms.push({ x: 250, y: h - unit * 6, w: 200, h: 20, type: 'metal' });
+            // Pièces le long de l'échelle
+            for (let i = 0; i < 4; i++) level.coins.push({ x: 310, y: h - unit * 6 + 40 + i * 60, w: 20, h: 20 });
 
             // ===== SORTIE FINALE =====
             level.goal = { x: 380, y: h - unit * 6 - 80, w: 70, h: 80 };
-            for (let i = 0; i < 2; i++) level.coins.push({ x: 290 + i * 60, y: h - unit * 6 - 50, w: 20, h: 20 });
+            // Pièces finales
+            for (let i = 0; i < 4; i++) level.coins.push({ x: 270 + i * 40, y: h - unit * 6 - 50, w: 20, h: 20 });
 
             // Vide mortel
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
@@ -669,19 +679,31 @@ const LEVELS = {
             for (let i = 0; i < 12; i++) {
                 let gap = (i % 3 === 1) ? 120 : 0;
                 let width = 150 + Math.random() * 80;
-                
+
                 if (gap > 0) {
                     level.hazards.push({ x: currentX + gap / 2 - 20, y: wallY + 50, w: 40, h: 80, type: 'knight', minY: wallY - 80, maxY: wallY + 100, speed: 2 * state.difficulty, dir: 1 });
+                    // Pièces autour des chevaliers (dangereux!)
+                    level.coins.push({ x: currentX + gap / 2 - 40, y: wallY - 50, w: 20, h: 20 });
+                    level.coins.push({ x: currentX + gap / 2 + 20, y: wallY - 50, w: 20, h: 20 });
                 }
-                
+
                 level.platforms.push({ x: currentX + gap, y: wallY, w: width, h: h, type: 'castle_wall' });
-                if (i % 2 === 0) level.coins.push({ x: currentX + gap + width / 2, y: wallY - 50, w: 20, h: 20 });
+                // Pièces sur TOUS les murs (pas seulement pairs)
+                level.coins.push({ x: currentX + gap + width / 2, y: wallY - 50, w: 20, h: 20 });
+                // Pièce bonus en hauteur sur certains murs
+                if (i % 3 === 0) level.coins.push({ x: currentX + gap + width / 2, y: wallY - 120, w: 20, h: 20 });
                 currentX += gap + width;
             }
             
             let ropeGap = 400;
             level.platforms.push({ x: currentX + 50, y: wallY - 50, w: 60, h: 10, type: 'moving', vx: 4 * state.difficulty, minX: currentX + 50, maxX: currentX + ropeGap - 50 });
+            // Pièces le long du parcours de la corde
+            for (let i = 0; i < 6; i++) level.coins.push({ x: currentX + 80 + i * 60, y: wallY - 90, w: 20, h: 20 });
+
             level.platforms.push({ x: currentX + ropeGap, y: wallY, w: 300, h: h, type: 'castle_wall' });
+            // Pièces finales avant la cloche
+            for (let i = 0; i < 4; i++) level.coins.push({ x: currentX + ropeGap + 50 + i * 50, y: wallY - 60, w: 20, h: 20 });
+
             level.goal = { x: currentX + ropeGap + 150, y: wallY - 100, w: 60, h: 80, type: 'bell' };
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
 
@@ -837,10 +859,117 @@ const LEVELS = {
     },
     
     // ========================================
-    // NIVEAU 9 - ÉPIQUE FINAL !
-    // Zone Sonic + Boss Multi-Phases
+    // NIVEAU 9 - BOMBJACK !
+    // Collecter les pièces dans l'ordre pour un SUPER BONUS !
     // ========================================
     9: {
+        name: "💣 TEMPLE DES BOMBES 💣",
+        bgColor: "#0a1628",
+        playerStart: { x: 400, y: 500 },
+        needsKey: false,
+        bombJackLevel: true, // Flag spécial pour activer le vol !
+        setup: (w, h) => {
+            const level = createEmptyLevel();
+            const groundY = h - 60;
+
+            // Pyramides égyptiennes en arrière-plan
+            level.pyramids = [
+                { x: 50, y: groundY - 200, size: 200 },
+                { x: w - 250, y: groundY - 180, size: 180 }
+            ];
+
+            // Étoiles dans le ciel
+            level.stars = [];
+            for (let i = 0; i < 100; i++) {
+                level.stars.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h * 0.6,
+                    size: Math.random() * 2 + 1,
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Sol principal (petit, juste pour démarrer)
+            level.platforms.push({ x: 200, y: groundY, w: 400, h: 60, type: 'egyptian_ground' });
+
+            // ===== PLATEFORMES FLOTTANTES STYLE BOMBJACK =====
+            // Disposition en grille asymétrique pour le fun!
+
+            // Rangée du bas (y = groundY - 120)
+            level.platforms.push({ x: 100, y: groundY - 120, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 350, y: groundY - 120, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 600, y: groundY - 120, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 850, y: groundY - 120, w: 120, h: 15, type: 'floating' });
+
+            // Rangée du milieu-bas (y = groundY - 220)
+            level.platforms.push({ x: 50, y: groundY - 220, w: 100, h: 15, type: 'floating' });
+            level.platforms.push({ x: 250, y: groundY - 220, w: 140, h: 15, type: 'floating' });
+            level.platforms.push({ x: 500, y: groundY - 220, w: 100, h: 15, type: 'floating' });
+            level.platforms.push({ x: 700, y: groundY - 220, w: 140, h: 15, type: 'floating' });
+            level.platforms.push({ x: 900, y: groundY - 220, w: 100, h: 15, type: 'floating' });
+
+            // Rangée du milieu (y = groundY - 320)
+            level.platforms.push({ x: 150, y: groundY - 320, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 400, y: groundY - 320, w: 160, h: 15, type: 'floating' });
+            level.platforms.push({ x: 700, y: groundY - 320, w: 120, h: 15, type: 'floating' });
+
+            // Rangée du milieu-haut (y = groundY - 420)
+            level.platforms.push({ x: 100, y: groundY - 420, w: 100, h: 15, type: 'floating' });
+            level.platforms.push({ x: 300, y: groundY - 420, w: 120, h: 15, type: 'floating' });
+            level.platforms.push({ x: 550, y: groundY - 420, w: 100, h: 15, type: 'floating' });
+            level.platforms.push({ x: 800, y: groundY - 420, w: 120, h: 15, type: 'floating' });
+
+            // Rangée du haut (y = groundY - 500)
+            level.platforms.push({ x: 200, y: groundY - 500, w: 140, h: 15, type: 'floating' });
+            level.platforms.push({ x: 500, y: groundY - 500, w: 140, h: 15, type: 'floating' });
+            level.platforms.push({ x: 750, y: groundY - 500, w: 120, h: 15, type: 'floating' });
+
+            // ===== PIÈCES SPÉCIALES NUMÉROTÉES (6 pièces) =====
+            // Ces pièces doivent être collectées dans l'ordre 1→2→3→4→5→6 pour le SUPER BONUS!
+
+            level.specialCoins = [
+                { x: 660, y: groundY - 160, w: 30, h: 30, number: 1, collected: false },  // Bas droite
+                { x: 110, y: groundY - 260, w: 30, h: 30, number: 2, collected: false },  // Milieu-bas gauche
+                { x: 540, y: groundY - 260, w: 30, h: 30, number: 3, collected: false },  // Milieu-bas centre
+                { x: 760, y: groundY - 360, w: 30, h: 30, number: 4, collected: false },  // Milieu droite
+                { x: 350, y: groundY - 460, w: 30, h: 30, number: 5, collected: false },  // Milieu-haut gauche
+                { x: 550, y: groundY - 540, w: 30, h: 30, number: 6, collected: false }   // Tout en haut centre
+            ];
+
+            // Pièces normales partout pour faire joli (comme dans BombJack original)
+            for (let i = 0; i < 20; i++) {
+                level.coins.push({
+                    x: 80 + Math.random() * 900,
+                    y: groundY - 80 - Math.random() * 480,
+                    w: 20,
+                    h: 20
+                });
+            }
+
+            // Power-ups stratégiques
+            level.powerups.push({ x: 450, y: groundY - 360, w: 35, h: 35, type: 'shield' });
+            level.powerups.push({ x: 210, y: groundY - 460, w: 35, h: 35, type: 'magnet' });
+
+            // Ennemis volants (style sphinx/scarabées)
+            level.enemies.push({ x: 200, y: groundY - 250, w: 40, h: 40, type: 'sphinx', patrolStart: 150, patrolEnd: 350, dir: 1, speed: 1.5 * state.difficulty });
+            level.enemies.push({ x: 600, y: groundY - 350, w: 40, h: 40, type: 'sphinx', patrolStart: 500, patrolEnd: 750, dir: -1, speed: 1.8 * state.difficulty });
+            level.enemies.push({ x: 400, y: groundY - 450, w: 40, h: 40, type: 'sphinx', patrolStart: 300, patrolEnd: 600, dir: 1, speed: 2 * state.difficulty });
+
+            // Sortie (pyramide avec porte)
+            level.goal = { x: 450, y: groundY - 70, w: 80, h: 70, type: 'pyramid_door' };
+
+            // Vide
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 3, h: 100, type: 'void' });
+
+            return level;
+        }
+    },
+
+    // ========================================
+    // NIVEAU 10 - ÉPIQUE FINAL !
+    // Zone Sonic + Boss Multi-Phases
+    // ========================================
+    10: {
         name: "⚡ ZONE FINALE ⚡",
         bgColor: "#0a0a2e",
         playerStart: { x: 80, y: 400 },
