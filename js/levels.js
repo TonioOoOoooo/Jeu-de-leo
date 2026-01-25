@@ -483,12 +483,18 @@ const LEVELS = {
             // Portail de retour du Nether (apparaîtra ici)
             level.returnPortalPos = { x: returnX + 40, y: h - blockSize * 2 - 100 };
 
+            // Ennemis qui apparaissent après le retour du Nether !
+            level.enemies.push({ x: returnX + 150, y: h - blockSize * 2 - 60, w: 40, h: 60, type: 'creeper', patrolStart: returnX + 100, patrolEnd: returnX + 200, dir: 1, speed: 1.5 * state.difficulty });
+
             // ===== SORTIE FINALE (nécessite la clé du Nether!) =====
             let exitX = returnX + 300;
             for (let i = 0; i < 6; i++) {
                 level.platforms.push({ x: exitX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
                 level.platforms.push({ x: exitX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
             }
+
+            // Spider hostile qui garde la sortie !
+            level.enemies.push({ x: exitX + 80, y: h - blockSize * 2 - 50, w: 50, h: 50, type: 'spider', patrolStart: exitX, patrolEnd: exitX + 180, dir: -1, speed: 2.5 * state.difficulty });
 
             // Maison de sortie
             level.platforms.push({ x: exitX + 200, y: h - blockSize * 2 - 120, w: 100, h: 120, type: 'wood' });
