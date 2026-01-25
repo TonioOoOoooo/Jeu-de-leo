@@ -281,7 +281,8 @@ function initLevel(levelNum) {
     state.teleportTimer = 0;
     state.screenShake = 0; // IMPORTANT : Reset screen shake !
     state.coins = 0;
-    state.maxCoinsInLevel = currentLevelData.coins.length;
+    // Compter TOUTES les pièces (normales + spéciales du niveau BombJack)
+    state.maxCoinsInLevel = currentLevelData.coins.length + (currentLevelData.specialCoins ? currentLevelData.specialCoins.length : 0);
 
     // Reset sous-niveaux (pour niveau 5)
     state.inSubLevel = false;
@@ -597,9 +598,16 @@ function updatePortals() {
             }
 
             // Portail de retour depuis le sous-sol
-            if (p.isReturnPortal && state.level === 4 && state.inSubLevel && keys.up) {
-                exitUnderground();
-                return;
+            if (p.isReturnPortal && state.level === 4 && state.inSubLevel) {
+                if (keys.up) {
+                    exitUnderground();
+                    return;
+                } else {
+                    // Message pour indiquer d'appuyer sur HAUT
+                    if (state.frameTick % 60 === 0) {
+                        showMessage('↑ SORTIE ↑', 'Appuie sur HAUT pour sortir !', 1500);
+                    }
+                }
             }
 
             // Portail normal
@@ -1006,7 +1014,18 @@ function checkCollisions() {
     // But
     if (currentLevelData.goal && checkCollision(player, currentLevelData.goal)) {
         const levelDef = LEVELS[state.level];
-        
+
+        // Niveau 9 (BombJack) : Nécessite TOUTES les bombes numérotées !
+        if (state.level === 9 && currentLevelData.specialCoins) {
+            const allCollected = currentLevelData.specialCoins.every(sc => sc.collected);
+            if (!allCollected) {
+                // Repousser le joueur
+                if (player.x < currentLevelData.goal.x) player.x -= 5;
+                showMessage('💣 PORTE VERROUILLÉE !', 'Collecte toutes les bombes numérotées !', 2000);
+                return;
+            }
+        }
+
         // Vérifier si le niveau nécessite une clé
         const needsKey = levelDef.needsKey !== false && state.level !== 3 && state.level !== 7 && state.level !== 9;
         

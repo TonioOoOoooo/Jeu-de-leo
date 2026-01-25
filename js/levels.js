@@ -328,6 +328,8 @@ const LEVELS = {
             // ===== TUYAU D'ARRIVÉE =====
             let arrivalX = 100;
             level.platforms.push({ x: arrivalX - 30, y: groundY - 80, w: 60, h: 80, type: 'pipe' });
+            // Plateforme sécurisée autour du tuyau d'arrivée
+            level.platforms.push({ x: arrivalX - 80, y: groundY - 20, w: 200, h: 20, type: 'brick_block' });
 
             // ===== PARCOURS SOUTERRAIN AVEC TRÉSORS ! =====
 
@@ -580,7 +582,7 @@ const LEVELS = {
     6: {
         name: "Labyrinthe des Portails",
         bgColor: "#1a1a2e",
-        playerStart: { x: 50, y: 400 },
+        playerStart: { x: 50, y: 300 },
         setup: (w, h) => {
             const unit = h / 10;
             const level = createEmptyLevel();
@@ -865,7 +867,7 @@ const LEVELS = {
     9: {
         name: "💣 TEMPLE DES BOMBES 💣",
         bgColor: "#0a1628",
-        playerStart: { x: 400, y: 500 },
+        playerStart: { x: 400, y: 400 },
         needsKey: false,
         bombJackLevel: true, // Flag spécial pour activer le vol !
         setup: (w, h) => {
@@ -926,14 +928,15 @@ const LEVELS = {
 
             // ===== PIÈCES SPÉCIALES NUMÉROTÉES (6 pièces) =====
             // Ces pièces doivent être collectées dans l'ordre 1→2→3→4→5→6 pour le SUPER BONUS!
+            // TOUTES SUR DES PLATEFORMES pour être accessibles !
 
             level.specialCoins = [
-                { x: 660, y: groundY - 160, w: 30, h: 30, number: 1, collected: false },  // Bas droite
-                { x: 110, y: groundY - 260, w: 30, h: 30, number: 2, collected: false },  // Milieu-bas gauche
-                { x: 540, y: groundY - 260, w: 30, h: 30, number: 3, collected: false },  // Milieu-bas centre
-                { x: 760, y: groundY - 360, w: 30, h: 30, number: 4, collected: false },  // Milieu droite
-                { x: 350, y: groundY - 460, w: 30, h: 30, number: 5, collected: false },  // Milieu-haut gauche
-                { x: 550, y: groundY - 540, w: 30, h: 30, number: 6, collected: false }   // Tout en haut centre
+                { x: 660, y: groundY - 160, w: 30, h: 30, number: 1, collected: false },  // Sur plateforme x=600
+                { x: 110, y: groundY - 260, w: 30, h: 30, number: 2, collected: false },  // Sur plateforme x=50
+                { x: 540, y: groundY - 260, w: 30, h: 30, number: 3, collected: false },  // Sur plateforme x=500
+                { x: 760, y: groundY - 360, w: 30, h: 30, number: 4, collected: false },  // Sur plateforme x=700
+                { x: 350, y: groundY - 460, w: 30, h: 30, number: 5, collected: false },  // Sur plateforme x=300
+                { x: 860, y: groundY - 460, w: 30, h: 30, number: 6, collected: false }   // Sur plateforme x=800 (haut droite)
             ];
 
             // Pièces normales partout pour faire joli (comme dans BombJack original)
