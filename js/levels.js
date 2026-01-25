@@ -94,9 +94,10 @@ const LEVELS = {
 
             // ===== ASCENSEUR POUR REMONTER DU SOL BAS ! =====
             let returnLiftX = topX + 200;
-            level.platforms.push({ x: returnLiftX, y: exitY, w: 100, h: 20, type: 'moving', vy: -2 * state.difficulty, minY: midLandY, maxY: exitY, vx: 0 });
+            level.platforms.push({ x: returnLiftX, y: exitY, w: 100, h: 20, type: 'moving', vy: -2 * state.difficulty, minY: unit * 2, maxY: exitY, vx: 0 });
             // Pièces pour indiquer l'ascenseur
             level.coins.push({ x: returnLiftX + 40, y: exitY - 50, w: 20, h: 20 });
+            level.coins.push({ x: returnLiftX + 40, y: unit * 2 - 30, w: 20, h: 20 }); // Pièce en haut pour montrer qu'il monte!
 
             level.goal = { x: topX + 400, y: exitY - 80, w: 70, h: 80 };
             level.hazards.push({ x: -1000, y: h + 50, w: w * 30, h: 100, type: 'void' });
@@ -282,7 +283,10 @@ const LEVELS = {
 
             level.platforms.push({ x: pipe1X + 150, y: groundY, w: 300, h: unit, type: 'brick_floor' });
             level.enemies.push({ x: pipe1X + 200, y: groundY - 60, w: 50, h: 60, type: 'zombie', patrolStart: pipe1X + 150, patrolEnd: pipe1X + 400, dir: -1, speed: 2 * state.difficulty });
-            
+
+            // Power-up aimant déplacé ici pour être utile !
+            level.powerups.push({ x: pipe1X + 350, y: groundY - 60, w: 35, h: 35, type: 'magnet' });
+
             // ===== ZONE DE RETOUR DU SOUS-SOL =====
             let returnX = pipe1X + 150;
             // Portail de retour du sous-sol (apparaîtra ici après visite)
@@ -302,12 +306,11 @@ const LEVELS = {
             let stairsX = endGroundX + 100;
             for (let i = 0; i < 5; i++) level.platforms.push({ x: stairsX + (i * 40), y: groundY - (i * 40) - 40, w: 40, h: 40, type: 'brick_block' });
 
-            level.goal = { x: stairsX + 350, y: groundY - 120, w: 10, h: 120, type: 'flag' };
+            // Drapeau TRÈS HAUT comme dans Super Mario !
+            const flagHeight = 350;
+            level.goal = { x: stairsX + 350, y: groundY - flagHeight, w: 10, h: flagHeight, type: 'flag' };
             level.platforms.push({ x: stairsX + 400, y: groundY - 100, w: 100, h: 100, type: 'castle' });
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
-
-            // Power-up aimant à pièces sur le bloc doré
-            level.powerups.push({ x: bricksX + 255, y: bricksY - 140, w: 35, h: 35, type: 'magnet' });
 
             return level;
         },

@@ -3,8 +3,11 @@
 // ============================================================
 
 function draw() {
+    // IMPORTANT : Clear canvas complet pour éviter les bugs d'affichage !
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     ctx.save();
-    
+
     // Screen shake
     if (state.screenShake > 0) {
         ctx.translate(
@@ -12,7 +15,7 @@ function draw() {
             (Math.random() - 0.5) * state.screenShake
         );
     }
-    
+
     // Fond
     const levelDef = LEVELS[state.level];
     ctx.fillStyle = levelDef ? levelDef.bgColor : '#fffdf0';
@@ -164,8 +167,14 @@ function drawClouds() {
 
 function drawPortals() {
     for (const p of currentLevelData.portals) {
-        // Portail Nether/Retour/Sous-sol super stylé !
-        if (p.isNetherPortal || p.isReturnPortal || p.isReturnFromNether || p.isUndergroundPortal || p.isReturnFromUnderground) {
+        // Portail underground : secret, pas d'effets visuels !
+        if (p.isUndergroundPortal) {
+            // Rien ! C'est un secret, le tuyau normal suffira
+            continue;
+        }
+
+        // Portail Nether/Retour super stylé !
+        if (p.isNetherPortal || p.isReturnPortal || p.isReturnFromNether || p.isReturnFromUnderground) {
             // Cadre en obsidienne
             ctx.fillStyle = '#1a0033';
             ctx.fillRect(p.x - 10, p.y, 10, p.h);
@@ -208,10 +217,7 @@ function drawPortals() {
                 ctx.font = 'bold 16px Patrick Hand';
                 ctx.fillText('→ NETHER', p.x + 5, p.y - 15);
             } else if (p.isUndergroundPortal) {
-                ctx.fillStyle = '#00ff00';
-                ctx.font = 'bold 14px Patrick Hand';
-                ctx.fillText('↓ SOUS-SOL', p.x + 5, p.y - 15);
-                ctx.fillText('(Appuie ↓)', p.x + 5, p.y - 30);
+                // SECRET ! Pas d'indication pour le tuyau sous-sol
             } else if (p.isReturnPortal) {
                 ctx.fillStyle = '#00ff00';
                 ctx.font = 'bold 16px Patrick Hand';

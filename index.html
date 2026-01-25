@@ -87,6 +87,7 @@
         <div id="jump-indicator">
             <div class="jump-dot available" id="jump1"></div>
             <div class="jump-dot available" id="jump2"></div>
+            <div class="jump-dot available" id="jump3" style="display: none;"></div>
         </div>
         
         <div id="tutorial">
@@ -109,13 +110,17 @@
         <div class="btn" id="btn-pause-mobile" onclick="togglePause()">⏸️</div>
 
         <div id="controls">
+            <!-- Contrôles gauche (déplacement) -->
             <div class="d-pad">
-                <div class="btn" id="btn-left">←</div>
-                <div class="btn" id="btn-right">→</div>
-            </div>
-            <div class="d-pad-right">
                 <div class="btn" id="btn-climb">↕️</div>
-                <div class="btn" id="btn-jump">SAUT</div>
+                <div class="d-pad-left-row">
+                    <div class="btn" id="btn-left">←</div>
+                    <div class="btn" id="btn-right">→</div>
+                </div>
+            </div>
+            <!-- Contrôles droite (saut) -->
+            <div class="d-pad-right">
+                <div class="btn" id="btn-jump">🦘</div>
             </div>
         </div>
     </div>
