@@ -528,6 +528,19 @@ function updateHazards() {
 function updatePortals() {
     if (state.teleportTimer > 0) return;
 
+    // Détection spéciale pour le tuyau underground (Niveau 4)
+    // Le joueur doit être sur un tuyau ET appuyer sur BAS
+    if (state.level === 4 && !state.inSubLevel && keys.down && player.grounded) {
+        // Vérifier si le joueur est sur une plateforme de type 'pipe'
+        if (player.currentPlatform && player.currentPlatform.type === 'pipe') {
+            // Vérifier que c'est le BON tuyau (le premier, pas le deuxième)
+            if (player.currentPlatform.x === 450) {
+                enterUnderground();
+                return;
+            }
+        }
+    }
+
     for (const p of currentLevelData.portals) {
         if (checkCollision(player, p)) {
             // Portail spécial vers le Nether !
@@ -539,12 +552,6 @@ function updatePortals() {
             // Portail de retour depuis le Nether
             if (p.isReturnPortal && state.level === 5 && state.inSubLevel) {
                 exitNether();
-                return;
-            }
-
-            // Portail vers le sous-sol (Niveau 4) !
-            if (p.isUndergroundPortal && state.level === 4 && keys.down) {
-                enterUnderground();
                 return;
             }
 

@@ -266,20 +266,9 @@ const LEVELS = {
             for (let i = 0; i < 5; i++) level.coins.push({ x: 80 + i * 60, y: groundY - 50, w: 20, h: 20 });
 
             // ===== TUYAU MAGIQUE VERS SOUS-SOL ! =====
+            // SECRET : Appuyer sur BAS quand on est sur le tuyau pour descendre !
             let pipe1X = 450;
             level.platforms.push({ x: pipe1X, y: groundY - 60, w: 60, h: 60 + unit, type: 'pipe' });
-
-            // Portail d'entrée dans le tuyau (appuyer sur bas pour descendre)
-            level.portals.push({
-                x: pipe1X + 10,
-                y: groundY - 55,
-                w: 40,
-                h: 50,
-                color: '#00FF00',
-                destX: -997, // Code spécial pour aller au sous-sol
-                destY: -997,
-                isUndergroundPortal: true
-            });
 
             level.platforms.push({ x: pipe1X + 150, y: groundY, w: 300, h: unit, type: 'brick_floor' });
             level.enemies.push({ x: pipe1X + 200, y: groundY - 60, w: 50, h: 60, type: 'zombie', patrolStart: pipe1X + 150, patrolEnd: pipe1X + 400, dir: -1, speed: 2 * state.difficulty });
