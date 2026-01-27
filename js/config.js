@@ -56,6 +56,9 @@ const state = {
     animationId: null,
     tutorialShown: false,
     screenShake: 0,
+    keyHintCooldown: 0,
+    secretHintCooldown: 0,
+    encouragementCooldown: 0,
 
     // Nouvelles fonctionnalités pour améliorer le jeu de Léo
     levelStars: {},          // Étoiles gagnées par niveau {1: 3, 2: 2, ...}

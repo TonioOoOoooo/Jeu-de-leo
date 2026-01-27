@@ -11,6 +11,17 @@ function updateHud() {
     for (let i = state.lives; i < maxLives; i++) hearts += "🖤";
     document.getElementById('hearts').textContent = hearts;
 
+    const keyDisplay = document.getElementById('key-display');
+    if (state.hasKey) {
+        keyDisplay.style.display = 'inline';
+        keyDisplay.textContent = '🗝️ CLÉ !';
+    } else if (currentLevelData && currentLevelData.keyItem) {
+        keyDisplay.style.display = 'inline';
+        keyDisplay.textContent = '🗝️ →';
+    } else {
+        keyDisplay.style.display = 'none';
+    }
+
     // Indicateur spécial pour le Nether
     const levelDisplay = document.getElementById('level-display');
     if (state.level === 5 && state.inSubLevel) {
