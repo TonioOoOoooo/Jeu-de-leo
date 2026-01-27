@@ -971,10 +971,10 @@ const LEVELS = {
     },
 
     // ========================================
-    // NIVEAU 11 - FRUITY FRANK !
+    // NIVEAU 10 - FRUITY FRANK !
     // Inspiré du jeu Amstrad CPC - Moteur grid-based complet
     // ========================================
-    11: {
+    10: {
         name: "🍓 FRUITY FRANK 🍓",
         bgColor: "#000000",
         playerStart: { x: 40, y: 440 },
@@ -988,10 +988,10 @@ const LEVELS = {
     },
 
     // ========================================
-    // NIVEAU 12 - BOSS FINAL !
+    // NIVEAU 11 - BOSS FINAL !
     // Zone Sonic + Boss Multi-Phases
     // ========================================
-    12: {
+    11: {
         name: "⚡ ZONE FINALE ⚡",
         bgColor: "#0a0a2e",
         playerStart: { x: 80, y: 400 },

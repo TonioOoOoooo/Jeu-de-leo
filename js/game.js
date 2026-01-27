@@ -274,8 +274,8 @@ function initLevel(levelNum) {
     const levelDef = LEVELS[levelNum];
     if (!levelDef) return;
 
-    // Niveau 11 : Fruity Frank (moteur spécial grid-based)
-    if (levelNum === 11 && levelDef.fruityFrankLevel) {
+    // Niveau 10 : Fruity Frank (moteur spécial grid-based)
+    if (levelNum === 10 && levelDef.fruityFrankLevel) {
         initFruityFrankGrid();
         currentLevelData = { fruityFrank: true }; // Marquer comme niveau Fruity Frank
         document.getElementById('level-display').textContent = `NIVEAU ${levelNum}`;
