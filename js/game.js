@@ -607,6 +607,7 @@ function updatePortals() {
                     if (state.frameTick % 60 === 0) {
                         showMessage('↑ SORTIE ↑', 'Appuie sur HAUT pour sortir !', 1500);
                     }
+                    continue; // IMPORTANT: Ne pas activer ce portail sans appuyer sur HAUT!
                 }
             }
 
