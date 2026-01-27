@@ -23,8 +23,21 @@ function draw() {
     const levelDef = LEVELS[state.level];
     ctx.fillStyle = levelDef ? levelDef.bgColor : '#fffdf0';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     if (!currentLevelData) {
+        ctx.restore();
+        return;
+    }
+
+    // Niveau Fruity Frank : rendu spécial grid-based
+    if (currentLevelData.fruityFrank) {
+        const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
+        const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
+        drawFruityFrank(ctx, offsetX, offsetY);
+        ctx.restore();
+
+        // Particules (toujours afficher)
+        ParticleSystem.draw(ctx);
         ctx.restore();
         return;
     }
