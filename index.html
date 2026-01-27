@@ -12,7 +12,7 @@
     <!-- START SCREEN -->
     <div id="start-screen" class="screen">
         <h1 class="game-title">🦸 L'Aventure de Léo</h1>
-        <p class="subtitle">Un jeu de plateforme épique en 9 niveaux !</p>
+        <p class="subtitle">Un jeu de plateforme épique en 10 niveaux !</p>
         
         <div id="saved-game" style="display: none;">
             <p>📁 Partie sauvegardée trouvée !</p>
@@ -37,7 +37,7 @@
         <div class="options">
             <div class="option-toggle">
                 <span>🔊 Sons</span>
-                <div class="toggle-switch active" id="sound-toggle" onclick="toggleSound()"></div>
+                <button class="option-button" id="sound-button" onclick="toggleSound()">🔊 Son: ON</button>
             </div>
             <div class="option-toggle">
                 <span>⏱️ Timer</span>
@@ -47,7 +47,7 @@
         
         <p style="margin-top: 30px; color: rgba(255,255,255,0.7); font-size: 14px;">
             <strong>Clavier AZERTY :</strong> A/Z pour bouger | ESPACE ou ↑ pour sauter | ↑↓ pour échelles<br>
-            ÉCHAP pour pause | <em>Cheats : 1-9 = niveau, + = vie supplémentaire</em>
+            ÉCHAP pour pause | <em>Cheats : 1-9 = niveau, + = niveau suivant, - = niveau précédent, = ou ENTRÉE (pavé num.) = vie supplémentaire</em>
         </p>
     </div>
 
