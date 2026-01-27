@@ -164,6 +164,8 @@ function handleKey(e, pressed) {
 
     // Touche = ou Entrée (pavé numérique) pour ajouter une vie
     if (pressed && (code === 'Equal' || code === 'NumpadEqual' || code === 'NumpadEnter' || k === '=' || k === 'enter')) {
+    // Touche = (pavé numérique) pour ajouter une vie
+    if (pressed && (code === 'Equal' || code === 'NumpadEqual' || k === '=')) {
         if (state.lives < CONFIG.MAX_LIVES) {
             state.lives++;
             updateHud();
