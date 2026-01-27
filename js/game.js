@@ -23,6 +23,12 @@ function init() {
     if (typeof updateSoundButton === 'function') {
         updateSoundButton();
     }
+    const startButtons = document.querySelectorAll('[data-start]');
+    startButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            startGame(button.dataset.start);
+        });
+    });
 }
 
 function checkSavedGame() {
@@ -164,8 +170,6 @@ function handleKey(e, pressed) {
 
     // Touche = ou Entrée (pavé numérique) pour ajouter une vie
     if (pressed && (code === 'Equal' || code === 'NumpadEqual' || code === 'NumpadEnter' || k === '=' || k === 'enter')) {
-    // Touche = (pavé numérique) pour ajouter une vie
-    if (pressed && (code === 'Equal' || code === 'NumpadEqual' || k === '=')) {
         if (state.lives < CONFIG.MAX_LIVES) {
             state.lives++;
             updateHud();
