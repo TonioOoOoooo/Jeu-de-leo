@@ -712,10 +712,17 @@ function enterUnderground() {
     const undergroundLevel = LEVELS[4].setupUnderground(canvas.width, canvas.height);
     currentLevelData = undergroundLevel;
 
-    // Téléporter le joueur au début du sous-sol
-    player.reset(100, canvas.height - 150);
+    // Calculer la position exacte de la plateforme d'arrivée
+    const unit = canvas.height / 10;
+    const groundY = canvas.height - unit;
+    const platformY = groundY - 20;
+
+    // Téléporter le joueur DIRECTEMENT sur la plateforme d'arrivée
+    player.x = 100;
+    player.y = platformY - player.h - 5; // 5px au-dessus pour sécurité
     player.vx = 0;
     player.vy = 0;
+    player.grounded = false; // Laisse la physique le poser
 
     state.teleportTimer = 60;
 
@@ -723,23 +730,27 @@ function enterUnderground() {
     document.body.style.backgroundColor = '#1a1a1a';
 
     // Message d'entrée
-    showMessage('🍄 SOUS-SOL !', 'Trouve la clé secrète !', 3000);
+    showMessage('🍄 SOUS-SOL SECRET !', 'Trouve la clé pour ouvrir le drapeau !', 3000);
 }
 
 function exitUnderground() {
-    // On doit avoir la clé du sous-sol pour sortir !
-    if (!state.hasKey) {
-        ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'damage', 10);
-        showMessage('🔒 FERMÉ !', 'Trouve la clé d\'abord !', 2000);
-        return; // Impossible de sortir sans la clé
-    }
+    // On peut sortir librement ! La clé sert pour le niveau principal
+    AudioSystem.play('jump'); // Son de tuyau
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 30);
 
-    AudioSystem.play('victory'); // Son spécial
-    ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'coin', 50);
+    // Sauvegarder si on a la clé du sous-sol
+    const hasUndergroundKey = state.hasKey;
 
     // Restaurer le monde principal
     currentLevelData = state.mainLevelData;
     state.inSubLevel = false;
+
+    // Restaurer la clé pour le niveau principal
+    state.hasKey = hasUndergroundKey;
+    if (hasUndergroundKey) {
+        document.getElementById('key-display').style.display = 'inline';
+        showMessage('✅ CLÉ TROUVÉE !', 'Tu peux maintenant finir le niveau !', 3000);
+    }
 
     // Créer le portail de retour dans le monde principal
     const returnPos = currentLevelData.returnPortalPos;
@@ -1028,10 +1039,17 @@ function checkCollisions() {
 
         // Vérifier si le niveau nécessite une clé
         const needsKey = levelDef.needsKey !== false && state.level !== 3 && state.level !== 7 && state.level !== 9;
-        
+
         if (needsKey && !state.hasKey) {
             // Repousser le joueur
             if (player.x < currentLevelData.goal.x) player.x -= 5;
+
+            // Message spécifique pour le niveau 4 (sous-sol)
+            if (state.level === 4) {
+                if (state.frameTick % 120 === 0) { // Toutes les 2 secondes
+                    showMessage('🔒 PORTE VERROUILLÉE !', 'Cherche la clé dans le sous-sol ! (tuyau vert)', 2500);
+                }
+            }
             return;
         }
         
