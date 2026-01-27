@@ -20,6 +20,9 @@ function init() {
     createProgressBar();
     window.addEventListener('resize', resize);
     setupControls();
+    if (typeof updateSoundButton === 'function') {
+        updateSoundButton();
+    }
 }
 
 function checkSavedGame() {
@@ -159,6 +162,8 @@ function handleKey(e, pressed) {
         jumpToLevel(state.level - 1);
     }
 
+    // Touche = ou Entrée (pavé numérique) pour ajouter une vie
+    if (pressed && (code === 'Equal' || code === 'NumpadEqual' || code === 'NumpadEnter' || k === '=' || k === 'enter')) {
     // Touche = (pavé numérique) pour ajouter une vie
     if (pressed && (code === 'Equal' || code === 'NumpadEqual' || k === '=')) {
         if (state.lives < CONFIG.MAX_LIVES) {

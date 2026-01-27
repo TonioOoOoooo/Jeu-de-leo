@@ -235,13 +235,24 @@ function quitToMenu() {
 function toggleSound() {
     state.soundEnabled = !state.soundEnabled;
     AudioSystem.enabled = state.soundEnabled;
-    document.getElementById('sound-toggle').classList.toggle('active', state.soundEnabled);
+    const toggle = document.getElementById('sound-toggle');
+    if (toggle) {
+        toggle.classList.toggle('active', state.soundEnabled);
+    }
+    updateSoundButton();
 }
 
 function toggleTimer() {
     state.timerEnabled = !state.timerEnabled;
     document.getElementById('timer-toggle').classList.toggle('active', state.timerEnabled);
     document.getElementById('timer-display').style.display = state.timerEnabled ? 'block' : 'none';
+}
+
+function updateSoundButton() {
+    const button = document.getElementById('sound-button');
+    if (!button) return;
+    button.textContent = state.soundEnabled ? '🔊 Son: ON' : '🔇 Son: OFF';
+    button.classList.toggle('off', !state.soundEnabled);
 }
 
 // ===== SYSTÈME DE BADGES =====
