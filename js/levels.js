@@ -971,10 +971,110 @@ const LEVELS = {
     },
 
     // ========================================
-    // NIVEAU 10 - ÉPIQUE FINAL !
+    // NIVEAU 11 - FRUITY FRANK !
+    // Inspiré du jeu Amstrad CPC
+    // ========================================
+    11: {
+        name: "🍓 FRUITY FRANK 🍓",
+        bgColor: "#000000",
+        playerStart: { x: 100, y: 450 },
+        needsKey: false,
+        fruityFrankLevel: true,
+        setup: (w, h) => {
+            const level = createEmptyLevel();
+            const groundY = h - 40;
+            const brickColor = '#ff4400'; // Rouge-orange style Amstrad
+
+            // ===== STRUCTURE EN BRIQUES ROUGES STYLE AMSTRAD =====
+            // Sol
+            level.platforms.push({ x: -50, y: groundY, w: w + 100, h: 60, type: 'fruity_ground' });
+
+            // Plateformes en briques disposées comme dans Fruity Frank
+            // Rangée du bas
+            level.platforms.push({ x: 80, y: groundY - 100, w: 200, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 350, y: groundY - 100, w: 200, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 620, y: groundY - 100, w: 200, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 890, y: groundY - 100, w: 120, h: 20, type: 'fruity_brick' });
+
+            // Rangée du milieu
+            level.platforms.push({ x: 50, y: groundY - 200, w: 180, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 300, y: groundY - 200, w: 250, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 620, y: groundY - 200, w: 180, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 870, y: groundY - 200, w: 150, h: 20, type: 'fruity_brick' });
+
+            // Rangée du haut
+            level.platforms.push({ x: 100, y: groundY - 300, w: 200, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 370, y: groundY - 300, w: 180, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 620, y: groundY - 300, w: 200, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 890, y: groundY - 300, w: 130, h: 20, type: 'fruity_brick' });
+
+            // Rangée très haute
+            level.platforms.push({ x: 150, y: groundY - 400, w: 150, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 400, y: groundY - 400, w: 200, h: 20, type: 'fruity_brick' });
+            level.platforms.push({ x: 700, y: groundY - 400, w: 150, h: 20, type: 'fruity_brick' });
+
+            // ===== FRUITS À COLLECTER (PAS DE POMMES !) =====
+            // Cerises (rouges) - valeur normale
+            level.coins.push({ x: 120, y: groundY - 140, w: 25, h: 25, type: 'cherry', value: 1 });
+            level.coins.push({ x: 400, y: groundY - 140, w: 25, h: 25, type: 'cherry', value: 1 });
+            level.coins.push({ x: 680, y: groundY - 140, w: 25, h: 25, type: 'cherry', value: 1 });
+            level.coins.push({ x: 940, y: groundY - 140, w: 25, h: 25, type: 'cherry', value: 1 });
+
+            // Oranges - plus de valeur
+            level.coins.push({ x: 100, y: groundY - 240, w: 25, h: 25, type: 'orange', value: 2 });
+            level.coins.push({ x: 430, y: groundY - 240, w: 25, h: 25, type: 'orange', value: 2 });
+            level.coins.push({ x: 700, y: groundY - 240, w: 25, h: 25, type: 'orange', value: 2 });
+            level.coins.push({ x: 920, y: groundY - 240, w: 25, h: 25, type: 'orange', value: 2 });
+
+            // Myrtilles (bleues) - encore plus de valeur
+            level.coins.push({ x: 200, y: groundY - 340, w: 25, h: 25, type: 'blueberry', value: 3 });
+            level.coins.push({ x: 480, y: groundY - 340, w: 25, h: 25, type: 'blueberry', value: 3 });
+            level.coins.push({ x: 760, y: groundY - 340, w: 25, h: 25, type: 'blueberry', value: 3 });
+
+            // Fraises (super bonus) - très haute
+            level.coins.push({ x: 220, y: groundY - 440, w: 30, h: 30, type: 'strawberry', value: 5 });
+            level.coins.push({ x: 500, y: groundY - 440, w: 30, h: 30, type: 'strawberry', value: 5 });
+            level.coins.push({ x: 760, y: groundY - 440, w: 30, h: 30, type: 'strawberry', value: 5 });
+
+            // ===== ENNEMIS DE DIFFÉRENTES VITESSES =====
+            // Jaune "au gros nez" - lent
+            level.enemies.push({ x: 150, y: groundY - 100 - 40, w: 35, h: 35, type: 'fruity_slow', patrolStart: 80, patrolEnd: 250, dir: 1, speed: 1 * state.difficulty });
+            level.enemies.push({ x: 450, y: groundY - 200 - 40, w: 35, h: 35, type: 'fruity_slow', patrolStart: 300, patrolEnd: 530, dir: -1, speed: 1 * state.difficulty });
+
+            // Violet "aubergine" - rapide
+            level.enemies.push({ x: 650, y: groundY - 100 - 40, w: 35, h: 35, type: 'fruity_fast', patrolStart: 620, patrolEnd: 800, dir: 1, speed: 2.5 * state.difficulty });
+            level.enemies.push({ x: 150, y: groundY - 300 - 40, w: 35, h: 35, type: 'fruity_fast', patrolStart: 100, patrolEnd: 280, dir: -1, speed: 2.5 * state.difficulty });
+
+            // Fraise - très rapide, se dirige vers le joueur!
+            level.enemies.push({ x: 700, y: groundY - 300 - 40, w: 35, h: 35, type: 'fruity_strawberry', patrolStart: 620, patrolEnd: 800, dir: 1, speed: 3.5 * state.difficulty, chases: true });
+
+            // ===== POMMES QUI TOMBENT =====
+            // Définir des zones où les pommes tombent périodiquement
+            level.fallingApples = [
+                { x: 200, spawnY: -50, active: false, timer: 0, cooldown: 180 },
+                { x: 450, spawnY: -50, active: false, timer: 0, cooldown: 200 },
+                { x: 750, spawnY: -50, active: false, timer: 0, cooldown: 220 },
+                { x: 900, spawnY: -50, active: false, timer: 0, cooldown: 240 }
+            ];
+
+            // Power-up pépin de pomme (permet de tirer)
+            level.powerups.push({ x: 500, y: groundY - 60, w: 35, h: 35, type: 'seed' });
+
+            // But - Porte de sortie au milieu
+            level.goal = { x: 500, y: groundY - 80, w: 60, h: 80, type: 'fruity_door' };
+
+            // Vide mortel
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 3, h: 100, type: 'void' });
+
+            return level;
+        }
+    },
+
+    // ========================================
+    // NIVEAU 12 - BOSS FINAL !
     // Zone Sonic + Boss Multi-Phases
     // ========================================
-    10: {
+    12: {
         name: "⚡ ZONE FINALE ⚡",
         bgColor: "#0a0a2e",
         playerStart: { x: 80, y: 400 },

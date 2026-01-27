@@ -712,6 +712,34 @@ function drawPlatforms() {
                 ctx.fillRect(p.x + 2, p.y + floatY + 2, p.w - 4, 3);
                 break;
 
+            // === FRUITY FRANK NIVEAU 11 ===
+            case 'fruity_ground':
+                // Sol noir avec bordure rouge/orange
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#ff4400';
+                ctx.fillRect(p.x, p.y, p.w, 8);
+                break;
+
+            case 'fruity_brick':
+                // Briques rouges/oranges style Amstrad CPC
+                const brickW = 20;
+                const brickH = 10;
+                for (let i = 0; i < p.w; i += brickW) {
+                    for (let j = 0; j < p.h; j += brickH) {
+                        // Alternance rouge/orange
+                        const isOrange = (Math.floor(i/brickW) + Math.floor(j/brickH)) % 2 === 0;
+                        ctx.fillStyle = isOrange ? '#ff6600' : '#ff0000';
+                        ctx.fillRect(p.x + i, p.y + j, brickW - 1, brickH - 1);
+
+                        // Bordure noire entre les briques
+                        ctx.strokeStyle = '#000000';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(p.x + i, p.y + j, brickW - 1, brickH - 1);
+                    }
+                }
+                break;
+
             case 'invisible_wall':
                 // Ne rien dessiner
                 break;
@@ -760,6 +788,73 @@ function drawCoins() {
             ctx.stroke();
             
             ctx.restore();
+        } else if (c.type === 'cherry') {
+            // Cerise rouge (Fruity Frank)
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(c.x + c.w/2 - 3, c.y + c.h/2 + wobble + 2, c.w/3, 0, Math.PI * 2);
+            ctx.arc(c.x + c.w/2 + 3, c.y + c.h/2 + wobble + 2, c.w/3, 0, Math.PI * 2);
+            ctx.fill();
+            // Tige
+            ctx.strokeStyle = '#008800';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(c.x + c.w/2, c.y + c.h/2 + wobble - 3);
+            ctx.lineTo(c.x + c.w/2 + 5, c.y + c.h/2 + wobble - 8);
+            ctx.stroke();
+        } else if (c.type === 'orange') {
+            // Orange (Fruity Frank)
+            ctx.fillStyle = '#ff8800';
+            ctx.beginPath();
+            ctx.arc(c.x + c.w/2, c.y + c.h/2 + wobble, c.w/2, 0, Math.PI * 2);
+            ctx.fill();
+            // Points texture
+            ctx.fillStyle = '#ff6600';
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2;
+                const px = c.x + c.w/2 + Math.cos(angle) * (c.w/4);
+                const py = c.y + c.h/2 + wobble + Math.sin(angle) * (c.w/4);
+                ctx.beginPath();
+                ctx.arc(px, py, 1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        } else if (c.type === 'blueberry') {
+            // Myrtille bleue (Fruity Frank)
+            ctx.fillStyle = '#0044ff';
+            ctx.beginPath();
+            ctx.arc(c.x + c.w/2, c.y + c.h/2 + wobble, c.w/2, 0, Math.PI * 2);
+            ctx.fill();
+            // Reflet
+            ctx.fillStyle = 'rgba(100, 150, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(c.x + c.w/2 - 3, c.y + c.h/2 + wobble - 3, c.w/4, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (c.type === 'strawberry') {
+            // Fraise (Fruity Frank) - le fruit le plus précieux!
+            ctx.fillStyle = '#ff0055';
+            ctx.beginPath();
+            ctx.moveTo(c.x + c.w/2, c.y + c.h/2 + wobble - c.h/2);
+            ctx.quadraticCurveTo(c.x + c.w, c.y + c.h/2 + wobble, c.x + c.w/2, c.y + c.h/2 + wobble + c.h/2);
+            ctx.quadraticCurveTo(c.x, c.y + c.h/2 + wobble, c.x + c.w/2, c.y + c.h/2 + wobble - c.h/2);
+            ctx.fill();
+            // Feuilles vertes
+            ctx.fillStyle = '#00aa00';
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(c.x + c.w/2 + (i-1)*4, c.y + c.h/2 + wobble - c.h/2);
+                ctx.lineTo(c.x + c.w/2 + (i-1)*6, c.y + c.h/2 + wobble - c.h/2 - 5);
+                ctx.lineTo(c.x + c.w/2 + (i-1)*3, c.y + c.h/2 + wobble - c.h/2 - 3);
+                ctx.fill();
+            }
+            // Pépins jaunes
+            ctx.fillStyle = '#ffff00';
+            for (let i = 0; i < 8; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * c.w/3;
+                ctx.beginPath();
+                ctx.arc(c.x + c.w/2 + Math.cos(angle) * dist, c.y + c.h/2 + wobble + Math.sin(angle) * dist, 1, 0, Math.PI * 2);
+                ctx.fill();
+            }
         } else if (c.secret) {
             // Pièce secrète spéciale !
             const pulse = Math.sin(state.frameTick * 0.15) * 0.2 + 1;
