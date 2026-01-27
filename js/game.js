@@ -146,18 +146,21 @@ function handleKey(e, pressed) {
     // === CHEATS ===
     // Touche numérique 1-9 pour changer de niveau
     if (pressed && ['1','2','3','4','5','6','7','8','9'].includes(e.key)) {
-        state.level = parseInt(e.key);
-        if (state.current === GameState.MENU) {
-            startGame('easy');
-        } else {
-            initLevel(state.level);
-            updateProgressBar();
-            state.current = GameState.PLAYING;
-        }
+        jumpToLevel(parseInt(e.key));
     }
     
-    // Touche + (pavé numérique ou clavier) pour ajouter une vie
-    if (pressed && (code === 'NumpadAdd' || k === '+' || code === 'Equal')) {
+    // Touche + (pavé numérique ou clavier) pour niveau suivant
+    if (pressed && (code === 'NumpadAdd' || k === '+')) {
+        jumpToLevel(state.level + 1);
+    }
+
+    // Touche - (pavé numérique ou clavier) pour niveau précédent
+    if (pressed && (code === 'NumpadSubtract' || k === '-')) {
+        jumpToLevel(state.level - 1);
+    }
+
+    // Touche = (pavé numérique) pour ajouter une vie
+    if (pressed && (code === 'Equal' || code === 'NumpadEqual' || k === '=')) {
         if (state.lives < CONFIG.MAX_LIVES) {
             state.lives++;
             updateHud();
@@ -165,6 +168,19 @@ function handleKey(e, pressed) {
             ParticleSystem.emit(player.x + player.w/2, player.y, 'life', 10);
         }
     }
+}
+
+function jumpToLevel(targetLevel) {
+    const nextLevel = Math.max(1, Math.min(CONFIG.TOTAL_LEVELS, targetLevel));
+    state.level = nextLevel;
+    if (state.current === GameState.MENU) {
+        startGame('easy');
+        return;
+    }
+
+    initLevel(state.level);
+    updateProgressBar();
+    state.current = GameState.PLAYING;
 }
 
 function doJump() {
@@ -274,8 +290,8 @@ function initLevel(levelNum) {
     const levelDef = LEVELS[levelNum];
     if (!levelDef) return;
 
-    // Niveau 10 : Fruity Frank (moteur spécial grid-based)
-    if (levelNum === 10 && levelDef.fruityFrankLevel) {
+    // Niveau Fruity Frank : moteur spécial grid-based
+    if (levelDef.fruityFrankLevel) {
         initFruityFrankGrid();
         currentLevelData = { fruityFrank: true }; // Marquer comme niveau Fruity Frank
         document.getElementById('level-display').textContent = `NIVEAU ${levelNum}`;
@@ -334,6 +350,7 @@ function initLevel(levelNum) {
     document.body.style.backgroundColor = levelDef.bgColor;
     
     updateCoinsDisplay();
+    updateHud();
 }
 
 // ===== BOUCLE DE JEU =====
@@ -376,6 +393,9 @@ function update() {
     if (state.invincibilityTimer > 0) state.invincibilityTimer--;
     if (state.teleportTimer > 0) state.teleportTimer--;
     if (state.screenShake > 0) state.screenShake--;
+    if (state.keyHintCooldown > 0) state.keyHintCooldown--;
+    if (state.secretHintCooldown > 0) state.secretHintCooldown--;
+    if (state.encouragementCooldown > 0) state.encouragementCooldown--;
 
     // Mise à jour des power-ups (sauf bouclier qui ne se consomme que sur coup)
     // BOUCLIER : permanent jusqu'à prendre un coup !
@@ -410,12 +430,40 @@ function update() {
     updateHazards();
     updatePortals();
     updateFireBars();
+    updateHints();
     updatePlayer();
     updateCheckpoint(); // Sauvegarder automatiquement la position du joueur
     checkCollisions();
     
     ParticleSystem.update();
     updateJumpIndicator();
+}
+
+function updateHints() {
+    if (!currentLevelData) return;
+
+    if (!state.hasKey && currentLevelData.keyItem && state.keyHintCooldown === 0) {
+        const dx = (player.x + player.w / 2) - (currentLevelData.keyItem.x + currentLevelData.keyItem.w / 2);
+        const dy = (player.y + player.h / 2) - (currentLevelData.keyItem.y + currentLevelData.keyItem.h / 2);
+        const distance = Math.hypot(dx, dy);
+        if (distance < 220) {
+            AudioSystem.play('key');
+            state.keyHintCooldown = 180;
+        }
+    }
+
+    if (currentLevelData.coins && state.secretHintCooldown === 0) {
+        const secretCoin = currentLevelData.coins.find(coin => coin.secret);
+        if (secretCoin) {
+            const dx = (player.x + player.w / 2) - (secretCoin.x + secretCoin.w / 2);
+            const dy = (player.y + player.h / 2) - (secretCoin.y + secretCoin.h / 2);
+            const distance = Math.hypot(dx, dy);
+            if (distance < 200) {
+                AudioSystem.play('powerup');
+                state.secretHintCooldown = 240;
+            }
+        }
+    }
 }
 
 // Vérifie si le joueur touche une échelle
@@ -469,7 +517,8 @@ function updatePlayer() {
         player.x += player.vx;
         
         // Gravité
-        player.vy += CONFIG.GRAVITY;
+        const gravity = CONFIG.GRAVITY * (state.difficulty <= 0.7 ? 0.85 : 1);
+        player.vy += gravity;
         player.vy = Math.min(player.vy, CONFIG.MAX_FALL_SPEED);
         player.y += player.vy;
     }
@@ -1040,7 +1089,7 @@ function checkCollisions() {
                 // Clé normale
                 state.hasKey = true;
                 currentLevelData.keyItem = null;
-                document.getElementById('key-display').style.display = 'inline';
+                updateHud();
                 AudioSystem.play('key');
                 ParticleSystem.emit(player.x + player.w/2, player.y, 'sparkle', 20);
             }
@@ -1239,7 +1288,7 @@ function takeDamage(reason) {
     }
 
     state.lives--;
-    state.invincibilityTimer = 90;
+    state.invincibilityTimer = state.difficulty <= 0.7 ? 120 : 90;
     state.screenShake = 15;
     
     player.vy = -10;
@@ -1248,6 +1297,11 @@ function takeDamage(reason) {
     updateHud();
     AudioSystem.play('hurt');
     ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'damage', 12);
+
+    if (state.encouragementCooldown === 0) {
+        showMessage('💪 Courage !', "Tu peux y arriver !", 1200);
+        state.encouragementCooldown = 240;
+    }
     
     // Vibration mobile
     if (navigator.vibrate) {
@@ -1279,7 +1333,7 @@ function respawnPlayer() {
     player.climbing = false;
     player.jumpCount = 0;
     player.currentPlatform = null;
-    state.invincibilityTimer = 120; // Plus long pour laisser le temps de se remettre
+    state.invincibilityTimer = state.difficulty <= 0.7 ? 150 : 120; // Plus long pour laisser le temps de se remettre
 
     // Particules au respawn
     ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 20);
