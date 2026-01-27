@@ -7,13 +7,13 @@ const CONFIG = {
     GRAVITY: 0.8,
     FRICTION: 0.85,
     MAX_FALL_SPEED: 15,
-    TOTAL_LEVELS: 11,
+    TOTAL_LEVELS: 10,
     MAX_LIVES: 10,
 
     // Critères pour les étoiles
     STARS: {
-        TIME_GOLD: [60, 80, 100, 90, 110, 120, 150, 140, 90, 180, 250], // Temps en secondes pour 3 étoiles par niveau (niv 9 = BombJack, 10 = Fruity Frank, 11 = Boss!)
-        TIME_SILVER: [90, 120, 150, 130, 160, 180, 210, 200, 130, 270, 350], // Temps pour 2 étoiles
+        TIME_GOLD: [60, 80, 100, 90, 110, 120, 150, 140, 90, 250], // Temps en secondes pour 3 étoiles par niveau (niv 9 = BombJack, 10 = Boss!)
+        TIME_SILVER: [90, 120, 150, 130, 160, 180, 210, 200, 130, 350], // Temps pour 2 étoiles
         MIN_COINS_PERCENT: 0.7 // Collecter 70% des pièces pour étoile bonus
     },
 
@@ -43,6 +43,8 @@ const state = {
     lives: 3,
     coins: 0,
     totalCoins: 0,
+    score: 0,
+    cheatsUsed: false,
     hasKey: false,
     difficulty: 1,
     soundEnabled: true,
@@ -56,6 +58,9 @@ const state = {
     animationId: null,
     tutorialShown: false,
     screenShake: 0,
+    keyHintCooldown: 0,
+    secretHintCooldown: 0,
+    encouragementCooldown: 0,
 
     // Nouvelles fonctionnalités pour améliorer le jeu de Léo
     levelStars: {},          // Étoiles gagnées par niveau {1: 3, 2: 2, ...}

@@ -197,6 +197,15 @@ canvas {
     text-align: center;
 }
 
+#hall-of-fame {
+    background: rgba(0, 0, 0, 0.75);
+    gap: 10px;
+}
+
+#hall-of-fame ol {
+    margin: 0;
+}
+
 #start-screen {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -278,6 +287,33 @@ canvas {
     gap: 10px;
     color: white;
     font-size: 18px;
+}
+
+.option-button {
+    padding: 6px 14px;
+    border-radius: 12px;
+    border: 2px solid #fff;
+    background: #2ecc71;
+    color: #fff;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px #333;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+}
+
+.option-button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #333;
+}
+
+.option-button:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px #333;
+}
+
+.option-button.off {
+    background: #7f8c8d;
 }
 
 .toggle-switch {

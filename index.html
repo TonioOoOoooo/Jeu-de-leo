@@ -12,7 +12,7 @@
     <!-- START SCREEN -->
     <div id="start-screen" class="screen">
         <h1 class="game-title">🦸 L'Aventure de Léo</h1>
-        <p class="subtitle">Un jeu de plateforme épique en 9 niveaux !</p>
+        <p class="subtitle">Un jeu de plateforme épique en 10 niveaux !</p>
         
         <div id="saved-game" style="display: none;">
             <p>📁 Partie sauvegardée trouvée !</p>
@@ -23,9 +23,9 @@
         <p style="font-size: 22px; color: rgba(255,255,255,0.9); margin-top: 20px;">Nouvelle partie - Choisis ta difficulté :</p>
         
         <div class="difficulty-container">
-            <button class="big-btn btn-easy" onclick="startGame('easy')">😊 FACILE</button>
-            <button class="big-btn btn-medium" onclick="startGame('medium')">😐 MOYEN</button>
-            <button class="big-btn btn-hard" onclick="startGame('hard')">😈 DUR</button>
+            <button class="big-btn btn-easy" data-start="easy">😊 FACILE</button>
+            <button class="big-btn btn-medium" data-start="medium">😐 MOYEN</button>
+            <button class="big-btn btn-hard" data-start="hard">😈 DUR</button>
         </div>
 
         <p style="font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto;">
@@ -37,7 +37,7 @@
         <div class="options">
             <div class="option-toggle">
                 <span>🔊 Sons</span>
-                <div class="toggle-switch active" id="sound-toggle" onclick="toggleSound()"></div>
+                <button class="option-button" id="sound-button" onclick="toggleSound()">🔊 Son: ON</button>
             </div>
             <div class="option-toggle">
                 <span>⏱️ Timer</span>
@@ -47,7 +47,7 @@
         
         <p style="margin-top: 30px; color: rgba(255,255,255,0.7); font-size: 14px;">
             <strong>Clavier AZERTY :</strong> A/Z pour bouger | ESPACE ou ↑ pour sauter | ↑↓ pour échelles<br>
-            ÉCHAP pour pause | <em>Cheats : 1-9 = niveau, + = vie supplémentaire</em>
+            ÉCHAP pour pause | <em>Cheats : 1-9 = niveau, + = niveau suivant, - = niveau précédent, = ou ENTRÉE (pavé num.) = vie supplémentaire</em>
         </p>
     </div>
 
@@ -105,6 +105,21 @@
             <p id="msg-coins" style="font-size: 20px; color: gold;"></p>
             <button class="big-btn btn-easy" id="msg-btn" onclick="nextLevelAction()">Continuer</button>
             <p class="space-hint" id="msg-hint">(ESPACE pour continuer)</p>
+        </div>
+
+        <div id="hall-of-fame" class="screen" style="display: none;">
+            <h2 style="font-size: 48px; color: gold; margin: 0;">🏆 Hall of Fame</h2>
+            <p id="hall-score" style="font-size: 26px; color: white; margin: 10px 0 20px;"></p>
+            <ol id="hall-list" style="list-style: decimal; padding-left: 24px; text-align: left; color: white; font-size: 22px; max-width: 420px;"></ol>
+            <div id="hall-form" style="margin-top: 20px;">
+                <p style="font-size: 20px; color: rgba(255,255,255,0.9); margin-bottom: 10px;">Entre ton nom :</p>
+                <input id="hall-name" type="text" maxlength="12" placeholder="LEO" style="padding: 8px 12px; font-size: 20px; border-radius: 10px; border: none; text-align: center;">
+                <div style="margin-top: 15px;">
+                    <button class="big-btn btn-easy" onclick="submitHallOfFame()">Enregistrer</button>
+                </div>
+            </div>
+            <p id="hall-message" style="font-size: 18px; color: rgba(255,255,255,0.8); margin-top: 12px;"></p>
+            <button class="big-btn btn-hard" style="margin-top: 20px;" onclick="returnToMenu()">🏠 Menu</button>
         </div>
 
         <div class="btn" id="btn-pause-mobile" onclick="togglePause()">⏸️</div>
