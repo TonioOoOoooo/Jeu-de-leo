@@ -104,7 +104,12 @@ function setupControls() {
 function handleKey(e, pressed) {
     const k = e.key.toLowerCase();
     const code = e.code;
-    
+
+    // Niveau Fruity Frank : gestion du tir
+    if (currentLevelData && currentLevelData.fruityFrank) {
+        handleFruityFrankInput(e, pressed);
+    }
+
     // AZERTY : A = gauche, Z = droite
     // QWERTY : Q = gauche, D = droite
     // Flèches : toujours supportées
@@ -268,7 +273,17 @@ function closeTutorial() {
 function initLevel(levelNum) {
     const levelDef = LEVELS[levelNum];
     if (!levelDef) return;
-    
+
+    // Niveau 11 : Fruity Frank (moteur spécial grid-based)
+    if (levelNum === 11 && levelDef.fruityFrankLevel) {
+        initFruityFrankGrid();
+        currentLevelData = { fruityFrank: true }; // Marquer comme niveau Fruity Frank
+        document.getElementById('level-display').textContent = `NIVEAU ${levelNum}`;
+        document.body.style.backgroundColor = levelDef.bgColor;
+        updateHud();
+        return;
+    }
+
     currentLevelData = levelDef.setup(canvas.width, canvas.height);
     
     // Reset joueur
@@ -347,7 +362,16 @@ function gameLoop(timestamp) {
 // ===== UPDATE =====
 function update() {
     if (!currentLevelData) return;
-    
+
+    // Niveau Fruity Frank : moteur spécial
+    if (currentLevelData.fruityFrank) {
+        const completed = updateFruityFrank();
+        if (completed) {
+            levelWin();
+        }
+        return;
+    }
+
     state.frameTick++;
     if (state.invincibilityTimer > 0) state.invincibilityTimer--;
     if (state.teleportTimer > 0) state.teleportTimer--;
