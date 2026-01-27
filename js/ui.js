@@ -262,13 +262,13 @@ function checkBadges() {
     }
 
     // Badge : Boss vaincu
-    if (state.level === 9 && !state.badges['boss_defeated']) {
+    if (state.level === 10 && !state.badges['boss_defeated']) {
         state.badges['boss_defeated'] = true;
         newBadges.push({ title: '⚔️ Vainqueur', desc: 'Boss vaincu !' });
     }
 
     // Badge : Toutes les étoiles
-    if (state.totalStars >= 27 && !state.badges['all_stars']) {
+    if (state.totalStars >= CONFIG.TOTAL_LEVELS * 3 && !state.badges['all_stars']) {
         state.badges['all_stars'] = true;
         newBadges.push({ title: '🌟 Maître du jeu', desc: 'Toutes les étoiles !' });
     }

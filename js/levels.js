@@ -971,27 +971,10 @@ const LEVELS = {
     },
 
     // ========================================
-    // NIVEAU 10 - FRUITY FRANK !
-    // Inspiré du jeu Amstrad CPC - Moteur grid-based complet
-    // ========================================
-    10: {
-        name: "🍓 FRUITY FRANK 🍓",
-        bgColor: "#000000",
-        playerStart: { x: 40, y: 440 },
-        needsKey: false,
-        fruityFrankLevel: true,
-        setup: (w, h) => {
-            // Le niveau Fruity Frank utilise son propre moteur grid-based
-            // Pas besoin de créer des plateformes ici
-            return { fruityFrank: true };
-        }
-    },
-
-    // ========================================
-    // NIVEAU 11 - BOSS FINAL !
+    // NIVEAU 10 - BOSS FINAL !
     // Zone Sonic + Boss Multi-Phases
     // ========================================
-    11: {
+    10: {
         name: "⚡ ZONE FINALE ⚡",
         bgColor: "#0a0a2e",
         playerStart: { x: 80, y: 400 },
@@ -1128,6 +1111,23 @@ const LEVELS = {
             level.powerups.push({ x: arenaStart + arenaWidth - 240, y: groundY - 180, w: 35, h: 35, type: 'super_jump' }); // Sur l'autre plateforme
 
             return level;
+        }
+    },
+
+    // ========================================
+    // NIVEAU 11 - FRUITY FRANK (mis de côté)
+    // Inspiré du jeu Amstrad CPC - Moteur grid-based complet
+    // ========================================
+    11: {
+        name: "🍓 FRUITY FRANK 🍓",
+        bgColor: "#000000",
+        playerStart: { x: 40, y: 440 },
+        needsKey: false,
+        fruityFrankLevel: true,
+        setup: (w, h) => {
+            // Le niveau Fruity Frank utilise son propre moteur grid-based
+            // Pas besoin de créer des plateformes ici
+            return { fruityFrank: true };
         }
     }
 };
