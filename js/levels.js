@@ -287,8 +287,10 @@ const LEVELS = {
             let bricksX = pipe2X + 200, bricksY = groundY - 150;
             level.platforms.push({ x: bricksX, y: bricksY, w: 180, h: 40, type: 'brick_block' });
             level.platforms.push({ x: bricksX + 250, y: bricksY - 50, w: 40, h: 40, type: 'gold_block' });
-            level.keyItem = { x: bricksX + 255, y: bricksY - 100, w: 30, h: 30 };
+            // PAS DE CLÉ ICI ! La clé est dans le sous-sol secret !
+            // Pièces bonus à la place
             for (let i = 0; i < 4; i++) level.coins.push({ x: bricksX + 20 + i * 45, y: bricksY - 50, w: 20, h: 20 });
+            for (let i = 0; i < 3; i++) level.coins.push({ x: bricksX + 240 + i * 30, y: bricksY - 80, w: 20, h: 20 });
 
             let endGroundX = bricksX + 400;
             level.platforms.push({ x: endGroundX, y: groundY, w: 600, h: unit, type: 'brick_floor' });
