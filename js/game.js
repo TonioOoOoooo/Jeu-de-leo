@@ -155,21 +155,25 @@ function handleKey(e, pressed) {
     // === CHEATS ===
     // Touche numérique 1-9 pour changer de niveau
     if (pressed && ['1','2','3','4','5','6','7','8','9'].includes(e.key)) {
+        state.cheatsUsed = true;
         jumpToLevel(parseInt(e.key));
     }
     
     // Touche + (pavé numérique ou clavier) pour niveau suivant
     if (pressed && (code === 'NumpadAdd' || k === '+')) {
+        state.cheatsUsed = true;
         jumpToLevel(state.level + 1);
     }
 
     // Touche - (pavé numérique ou clavier) pour niveau précédent
     if (pressed && (code === 'NumpadSubtract' || k === '-')) {
+        state.cheatsUsed = true;
         jumpToLevel(state.level - 1);
     }
 
     // Touche = ou Entrée (pavé numérique) pour ajouter une vie
     if (pressed && (code === 'Equal' || code === 'NumpadEqual' || code === 'NumpadEnter' || k === '=' || k === 'enter')) {
+        state.cheatsUsed = true;
         if (state.lives < CONFIG.MAX_LIVES) {
             state.lives++;
             updateHud();
@@ -251,6 +255,8 @@ function startGame(difficulty) {
 
     state.coins = 0;
     state.totalCoins = 0;
+    state.score = 0;
+    state.cheatsUsed = false;
     
     document.getElementById('start-screen').style.display = 'none';
     

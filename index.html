@@ -107,6 +107,21 @@
             <p class="space-hint" id="msg-hint">(ESPACE pour continuer)</p>
         </div>
 
+        <div id="hall-of-fame" class="screen" style="display: none;">
+            <h2 style="font-size: 48px; color: gold; margin: 0;">🏆 Hall of Fame</h2>
+            <p id="hall-score" style="font-size: 26px; color: white; margin: 10px 0 20px;"></p>
+            <ol id="hall-list" style="list-style: decimal; padding-left: 24px; text-align: left; color: white; font-size: 22px; max-width: 420px;"></ol>
+            <div id="hall-form" style="margin-top: 20px;">
+                <p style="font-size: 20px; color: rgba(255,255,255,0.9); margin-bottom: 10px;">Entre ton nom :</p>
+                <input id="hall-name" type="text" maxlength="12" placeholder="LEO" style="padding: 8px 12px; font-size: 20px; border-radius: 10px; border: none; text-align: center;">
+                <div style="margin-top: 15px;">
+                    <button class="big-btn btn-easy" onclick="submitHallOfFame()">Enregistrer</button>
+                </div>
+            </div>
+            <p id="hall-message" style="font-size: 18px; color: rgba(255,255,255,0.8); margin-top: 12px;"></p>
+            <button class="big-btn btn-hard" style="margin-top: 20px;" onclick="returnToMenu()">🏠 Menu</button>
+        </div>
+
         <div class="btn" id="btn-pause-mobile" onclick="togglePause()">⏸️</div>
 
         <div id="controls">

@@ -197,6 +197,15 @@ canvas {
     text-align: center;
 }
 
+#hall-of-fame {
+    background: rgba(0, 0, 0, 0.75);
+    gap: 10px;
+}
+
+#hall-of-fame ol {
+    margin: 0;
+}
+
 #start-screen {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }

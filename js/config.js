@@ -43,6 +43,8 @@ const state = {
     lives: 3,
     coins: 0,
     totalCoins: 0,
+    score: 0,
+    cheatsUsed: false,
     hasKey: false,
     difficulty: 1,
     soundEnabled: true,

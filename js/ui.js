@@ -156,11 +156,7 @@ function nextLevelAction() {
     document.getElementById('message-box').style.display = 'none';
     
     if (state.level >= CONFIG.TOTAL_LEVELS || state.current === GameState.GAME_OVER) {
-        // Retour au menu
-        state.level = 1;
-        state.current = GameState.MENU;
-        document.getElementById('start-screen').style.display = 'flex';
-        if (state.animationId) cancelAnimationFrame(state.animationId);
+        showHallOfFame();
         return;
     }
     
@@ -173,6 +169,112 @@ function nextLevelAction() {
         state.lastTime = 0;
         state.accumulator = 0;
     });
+}
+
+function getScoreMultiplier() {
+    if (state.difficulty <= 0.7) return 1;
+    if (state.difficulty <= 1.2) return 1.5;
+    return 2;
+}
+
+function calculateFinalScore() {
+    const multiplier = getScoreMultiplier();
+    const baseScore = state.totalCoins * 100 + state.totalStars * 500;
+    return Math.round(baseScore * multiplier);
+}
+
+function loadHallOfFame() {
+    try {
+        const data = JSON.parse(localStorage.getItem('leo_hall_of_fame') || '[]');
+        if (Array.isArray(data)) return data;
+    } catch (e) {}
+    return [];
+}
+
+function saveHallOfFame(entries) {
+    localStorage.setItem('leo_hall_of_fame', JSON.stringify(entries));
+}
+
+function isHighScore(score, entries) {
+    if (entries.length < 10) return true;
+    return entries.some(entry => score > entry.score);
+}
+
+function renderHallOfFame(entries) {
+    const list = document.getElementById('hall-list');
+    list.innerHTML = '';
+    if (!entries.length) {
+        const li = document.createElement('li');
+        li.textContent = 'Aucun score enregistré pour le moment.';
+        list.appendChild(li);
+        return;
+    }
+    entries.forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.name} — ${entry.score}`;
+        list.appendChild(li);
+    });
+}
+
+function showHallOfFame() {
+    const screen = document.getElementById('hall-of-fame');
+    const messageBox = document.getElementById('message-box');
+    if (messageBox) messageBox.style.display = 'none';
+    if (!screen) return;
+
+    const score = calculateFinalScore();
+    state.score = score;
+    const entries = loadHallOfFame()
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
+
+    document.getElementById('hall-score').textContent = `Score final : ${score}`;
+    const hallForm = document.getElementById('hall-form');
+    const hallMessage = document.getElementById('hall-message');
+    const nameInput = document.getElementById('hall-name');
+    if (nameInput) nameInput.value = '';
+
+    if (state.cheatsUsed) {
+        hallForm.style.display = 'none';
+        hallMessage.textContent = 'Score non éligible (cheats utilisés).';
+    } else if (isHighScore(score, entries)) {
+        hallForm.style.display = 'block';
+        hallMessage.textContent = 'Bravo ! Tu es dans le TOP 10.';
+    } else {
+        hallForm.style.display = 'none';
+        hallMessage.textContent = 'Pas dans le TOP 10 cette fois.';
+    }
+
+    renderHallOfFame(entries);
+    screen.style.display = 'flex';
+    screen.style.opacity = '1';
+}
+
+function submitHallOfFame() {
+    const nameInput = document.getElementById('hall-name');
+    const hallForm = document.getElementById('hall-form');
+    const hallMessage = document.getElementById('hall-message');
+    if (!nameInput || !hallForm) return;
+
+    const rawName = nameInput.value.trim();
+    const name = rawName ? rawName.slice(0, 12).toUpperCase() : 'ANON';
+    const entries = loadHallOfFame();
+    entries.push({ name, score: state.score });
+    entries.sort((a, b) => b.score - a.score);
+    const topEntries = entries.slice(0, 10);
+    saveHallOfFame(topEntries);
+    renderHallOfFame(topEntries);
+    hallForm.style.display = 'none';
+    hallMessage.textContent = 'Score enregistré !';
+}
+
+function returnToMenu() {
+    const hallScreen = document.getElementById('hall-of-fame');
+    if (hallScreen) hallScreen.style.display = 'none';
+    state.level = 1;
+    state.current = GameState.MENU;
+    document.getElementById('start-screen').style.display = 'flex';
+    if (state.animationId) cancelAnimationFrame(state.animationId);
 }
 
 function showTransition(levelNum, callback) {
@@ -374,3 +476,5 @@ window.restartLevel = restartLevel;
 window.quitToMenu = quitToMenu;
 window.toggleSound = toggleSound;
 window.toggleTimer = toggleTimer;
+window.submitHallOfFame = submitHallOfFame;
+window.returnToMenu = returnToMenu;
