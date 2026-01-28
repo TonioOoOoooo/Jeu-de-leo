@@ -47,6 +47,7 @@ const state = {
     cheatsUsed: false,
     hasKey: false,
     difficulty: 1,
+    difficultyName: 'easy',  // Nom de la difficulté pour l'affichage
     soundEnabled: true,
     timerEnabled: false,
     levelTime: 0,
@@ -67,6 +68,35 @@ const state = {
     totalStars: 0,           // Total d'étoiles collectées
     maxCoinsInLevel: 0,      // Nombre max de pièces dans le niveau actuel
     badges: {},              // Badges débloqués
+
+    // === NOUVELLES FONCTIONNALITÉS ===
+    // Personnalisation du personnage
+    playerColor: '#3498db',  // Couleur du corps (bleu par défaut)
+    playerName: 'Léo',       // Nom du joueur
+
+    // Statistiques de jeu
+    stats: {
+        totalPlayTime: 0,    // Temps de jeu total (ms)
+        totalDeaths: 0,      // Nombre de morts
+        totalJumps: 0,       // Nombre de sauts
+        enemiesAvoided: 0,   // Ennemis évités
+        perfectLevels: 0,    // Niveaux avec 3 étoiles
+        gamesPlayed: 0,      // Parties jouées
+        bestStreak: 0,       // Meilleure série de niveaux sans mourir
+        currentStreak: 0     // Série actuelle
+    },
+
+    // Compagnon virtuel
+    companion: {
+        enabled: true,
+        type: 'cat',         // 'cat', 'dog', 'bird', 'rabbit'
+        name: 'Minou',
+        happiness: 100,
+        lastTip: 0           // Cooldown pour les conseils
+    },
+
+    // Encouragements
+    encouragementLevel: 0,   // Niveau d'encouragement actuel (pour varier les messages)
 
     // Sous-niveaux (pour portail Nether niveau 5!)
     inSubLevel: false,       // True si dans un sous-niveau

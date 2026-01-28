@@ -21,14 +21,16 @@
         </div>
         
         <p style="font-size: 22px; color: rgba(255,255,255,0.9); margin-top: 20px;">Nouvelle partie - Choisis ta difficulté :</p>
-        
+
         <div class="difficulty-container">
+            <button class="big-btn btn-very-easy" data-start="very_easy">🌈 TRÈS FACILE</button>
             <button class="big-btn btn-easy" data-start="easy">😊 FACILE</button>
             <button class="big-btn btn-medium" data-start="medium">😐 MOYEN</button>
             <button class="big-btn btn-hard" data-start="hard">😈 DUR</button>
         </div>
 
         <p style="font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <strong>🌈 TRÈS FACILE:</strong> 10 vies, ennemis très lents, aide du compagnon !<br>
             <strong>FACILE:</strong> 7 vies, ennemis lents, hitbox tolérante<br>
             <strong>MOYEN:</strong> 4 vies, difficulté standard<br>
             <strong>DUR:</strong> 2 vies, ennemis rapides, aucune tolérance !
@@ -45,11 +47,101 @@
             </div>
         </div>
         
-        <p style="margin-top: 30px; color: rgba(255,255,255,0.7); font-size: 14px;">
+        <div class="options" style="margin-top: 20px;">
+            <button class="big-btn btn-pause" onclick="showCustomization()">🎨 Personnaliser</button>
+            <button class="big-btn btn-continue" onclick="showStats()">📊 Stats</button>
+            <button class="big-btn" style="background: #e67e22;" onclick="showBadges()">🏆 Badges</button>
+        </div>
+
+        <p style="margin-top: 20px; color: rgba(255,255,255,0.7); font-size: 14px;">
             <strong>Clavier AZERTY :</strong> A/Z pour bouger | ESPACE ou ↑ pour sauter | ↑↓ pour échelles<br>
             ÉCHAP pour pause | <em>Cheats : 1-9 = niveau, + = niveau suivant, - = niveau précédent, = ou ENTRÉE (pavé num.) = vie supplémentaire</em>
         </p>
     </div>
+
+    <!-- CUSTOMIZATION SCREEN -->
+    <div id="customization-screen" class="screen" style="display: none; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+        <h2 style="font-size: 48px; color: white; margin: 0;">🎨 Personnalisation</h2>
+        <p style="color: rgba(255,255,255,0.9); font-size: 20px;">Choisis ta couleur préférée !</p>
+
+        <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center;">
+            <button class="color-btn" data-color="#3498db" style="background: #3498db;">💙 Bleu</button>
+            <button class="color-btn" data-color="#e74c3c" style="background: #e74c3c;">❤️ Rouge</button>
+            <button class="color-btn" data-color="#2ecc71" style="background: #2ecc71;">💚 Vert</button>
+            <button class="color-btn" data-color="#9b59b6" style="background: #9b59b6;">💜 Violet</button>
+            <button class="color-btn" data-color="#f39c12" style="background: #f39c12;">🧡 Orange</button>
+            <button class="color-btn" data-color="#1abc9c" style="background: #1abc9c;">💎 Turquoise</button>
+            <button class="color-btn" data-color="#e91e63" style="background: #e91e63;">💗 Rose</button>
+            <button class="color-btn" data-color="#00bcd4" style="background: #00bcd4;">🩵 Cyan</button>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <p style="color: white; font-size: 18px;">Choisis ton compagnon :</p>
+            <div style="display: flex; gap: 15px; margin-top: 10px; justify-content: center;">
+                <button class="companion-btn" data-companion="cat" data-name="Minou">🐱 Chat</button>
+                <button class="companion-btn" data-companion="dog" data-name="Toutou">🐶 Chien</button>
+                <button class="companion-btn" data-companion="bird" data-name="Piou">🐦 Oiseau</button>
+                <button class="companion-btn" data-companion="rabbit" data-name="Lapinou">🐰 Lapin</button>
+            </div>
+        </div>
+
+        <div id="customization-preview" style="margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.2); border-radius: 15px;">
+            <p style="color: white; font-size: 16px;">Aperçu : <span id="preview-color">Bleu</span> avec <span id="preview-companion">🐱 Minou</span></p>
+        </div>
+
+        <button class="big-btn btn-continue" style="margin-top: 20px;" onclick="closeCustomization()">✅ C'est bon !</button>
+    </div>
+
+    <!-- BADGES SCREEN -->
+    <div id="badges-screen" class="screen" style="display: none; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <h2 style="font-size: 48px; color: white; margin: 0;">🏆 Mes Badges</h2>
+        <p style="color: rgba(255,255,255,0.9); font-size: 18px;">Collectionne tous les badges !</p>
+
+        <div id="badges-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; max-width: 600px;">
+            <!-- Badges will be inserted here by JavaScript -->
+        </div>
+
+        <button class="big-btn btn-continue" style="margin-top: 30px;" onclick="closeBadges()">⬅️ Retour</button>
+    </div>
+
+    <!-- STATS SCREEN -->
+    <div id="stats-screen" class="screen" style="display: none; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <h2 style="font-size: 48px; color: white; margin: 0;">📊 Statistiques</h2>
+        <p style="color: rgba(255,255,255,0.9); font-size: 18px;">Tes exploits de champion !</p>
+
+        <div id="stats-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; max-width: 500px;">
+            <!-- Stats will be inserted here by JavaScript -->
+        </div>
+
+        <button class="big-btn btn-continue" style="margin-top: 30px;" onclick="closeStats()">⬅️ Retour</button>
+    </div>
+
+    <!-- COMPANION DISPLAY (in-game) -->
+    <div id="companion-bubble" style="display: none; position: fixed; bottom: 120px; left: 20px; background: white; padding: 15px 20px; border-radius: 20px; border: 3px solid #333; max-width: 250px; z-index: 25; font-size: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">
+        <div id="companion-icon" style="font-size: 30px; margin-bottom: 5px;">🐱</div>
+        <div id="companion-text">Salut Léo ! Tu vas y arriver !</div>
+    </div>
+
+    <!-- MATH MINI-GAME (Bonus between levels) -->
+    <div id="math-game" class="screen" style="display: none; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+        <h2 style="font-size: 42px; color: #333; margin: 0;">🧮 Quiz Bonus !</h2>
+        <p style="color: #555; font-size: 18px;">Réponds pour gagner des pièces bonus !</p>
+
+        <div style="background: white; padding: 30px 50px; border-radius: 20px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <p id="math-question" style="font-size: 48px; color: #333; margin: 0;">5 + 3 = ?</p>
+        </div>
+
+        <div id="math-answers" style="display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; justify-content: center;">
+            <!-- Réponses générées par JavaScript -->
+        </div>
+
+        <div id="math-result" style="margin-top: 20px; font-size: 24px; color: #333; min-height: 40px;"></div>
+
+        <button id="math-skip" class="big-btn btn-medium" style="margin-top: 20px;" onclick="skipMathGame()">Passer ⏭️</button>
+    </div>
+
+    <!-- STREAK INDICATOR -->
+    <div id="streak-indicator">🔥 Série : <span id="streak-count">0</span></div>
 
     <!-- PAUSE SCREEN -->
     <div id="pause-screen" class="screen">
@@ -92,11 +184,33 @@
         
         <div id="tutorial">
             <h3>🎮 Comment jouer</h3>
-            <p><strong>A</strong> ← Gauche | <strong>Z</strong> → Droite</p>
-            <p><strong>ESPACE ou ↑</strong> = Sauter (x2 !)</p>
-            <p><strong>↑↓</strong> = Monter/descendre échelles</p>
-            <p>🗝️ Trouve la clé pour ouvrir la porte !</p>
-            <button onclick="closeTutorial()">C'est parti ! 🚀</button>
+
+            <div class="tutorial-step active" id="tutorial-step-1">
+                <p class="tutorial-arrow">👉</p>
+                <p><strong>Appuie sur A</strong> pour aller à gauche</p>
+                <p><strong>Appuie sur Z</strong> pour aller à droite</p>
+                <button onclick="nextTutorialStep(2)">Suivant ➡️</button>
+            </div>
+
+            <div class="tutorial-step" id="tutorial-step-2">
+                <p style="font-size: 40px;">🦘</p>
+                <p><strong>ESPACE</strong> = Sauter !</p>
+                <p>Tu peux sauter <strong>2 fois</strong> de suite !</p>
+                <button onclick="nextTutorialStep(3)">Suivant ➡️</button>
+            </div>
+
+            <div class="tutorial-step" id="tutorial-step-3">
+                <p style="font-size: 40px;">🪜</p>
+                <p>Utilise <strong>↑ ↓</strong> pour les échelles</p>
+                <button onclick="nextTutorialStep(4)">Suivant ➡️</button>
+            </div>
+
+            <div class="tutorial-step" id="tutorial-step-4">
+                <p style="font-size: 40px;">🗝️ ➡️ 🚪</p>
+                <p>Trouve la <strong>clé</strong> pour ouvrir la porte !</p>
+                <p>Collecte les <strong>pièces 🪙</strong> pour des points !</p>
+                <button onclick="closeTutorial()">C'est parti ! 🚀</button>
+            </div>
         </div>
 
         <div id="message-box">

@@ -93,15 +93,15 @@ const player = {
         ctx.save();
         const cx = this.x + this.w / 2;
         const cy = this.y + this.h / 2;
-        
+
         if (!this.facingRight) {
             ctx.translate(cx, 0);
             ctx.scale(-1, 1);
             ctx.translate(-cx, 0);
         }
-        
-        // Corps (bleu)
-        ctx.fillStyle = '#3498db';
+
+        // Corps (couleur personnalisée !)
+        ctx.fillStyle = state.playerColor || '#3498db';
         ctx.beginPath();
         ctx.ellipse(cx, cy + 5, this.w / 2 - 2, this.h / 2 - 5, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -143,8 +143,8 @@ const player = {
         ctx.arc(cx, this.y + 16, 5, 0.2, Math.PI - 0.2);
         ctx.stroke();
         
-        // Bras (animation)
-        ctx.fillStyle = '#3498db';
+        // Bras (animation) - même couleur que le corps
+        ctx.fillStyle = state.playerColor || '#3498db';
         const armSwing = Math.sin(this.animFrame * 0.3) * (Math.abs(this.vx) > 0.5 ? 15 : 5);
         
         // Bras gauche
