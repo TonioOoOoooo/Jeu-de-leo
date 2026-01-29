@@ -23,10 +23,39 @@ function init() {
     if (typeof updateSoundButton === 'function') {
         updateSoundButton();
     }
+
+    // Charger les données sauvegardées
+    loadStats();
+    loadBadges();
+    loadCustomization();
+
     const startButtons = document.querySelectorAll('[data-start]');
     startButtons.forEach(button => {
         button.addEventListener('click', () => {
             startGame(button.dataset.start);
+        });
+    });
+
+    // Event listeners pour la personnalisation des couleurs
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.playerColor = btn.dataset.color;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            updateCustomizationPreview();
+            AudioSystem.play('coin');
+        });
+    });
+
+    // Event listeners pour le choix du compagnon
+    document.querySelectorAll('.companion-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.companion.type = btn.dataset.companion;
+            state.companion.name = btn.dataset.name;
+            document.querySelectorAll('.companion-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            updateCustomizationPreview();
+            AudioSystem.play('coin');
         });
     });
 }
@@ -209,10 +238,16 @@ function doJump() {
         player.jumpCount = 1;
         AudioSystem.play('jump');
         ParticleSystem.emit(player.x + player.w / 2, player.y + player.h, 'dust', 5);
+
+        // Statistiques
+        state.stats.totalJumps++;
     } else if (player.jumpCount < maxJumps) {
         player.vy = -jumpForce * 0.9;
         player.jumpCount++;
         AudioSystem.play('jump');
+
+        // Statistiques
+        state.stats.totalJumps++;
 
         // Effet spécial pour le triple saut !
         if (player.jumpCount === 3 && state.powerups.superJump > 0) {
@@ -241,17 +276,33 @@ function updateJumpIndicator() {
 function startGame(difficulty) {
     AudioSystem.resume();
 
-    // Difficultés nettement différenciées
-    state.difficulty = difficulty === 'easy' ? 0.7 : difficulty === 'medium' ? 1.2 : 1.8;
+    // Sauvegarder le nom de la difficulté
+    state.difficultyName = difficulty;
 
-    // Vies selon difficulté
-    if (difficulty === 'easy') {
-        state.lives = 7; // Facile : beaucoup de vies !
+    // Difficultés nettement différenciées (ajout du mode TRÈS FACILE !)
+    if (difficulty === 'very_easy') {
+        state.difficulty = 0.4;  // Très facile : ennemis très très lents
+        state.lives = 10;        // 10 vies !
+        state.companion.enabled = true;
+        showCompanionTip('Salut ' + state.playerName + ' ! Je suis là pour t\'aider ! 🌟');
+    } else if (difficulty === 'easy') {
+        state.difficulty = 0.7;
+        state.lives = 7;
+        state.companion.enabled = true;
     } else if (difficulty === 'medium') {
-        state.lives = 4; // Moyen : vies standard
+        state.difficulty = 1.2;
+        state.lives = 4;
+        state.companion.enabled = false;
     } else {
-        state.lives = 2; // Dur : très peu de vies !
+        state.difficulty = 1.8;
+        state.lives = 2;
+        state.companion.enabled = false;
     }
+
+    // Incrémenter les stats
+    state.stats.gamesPlayed++;
+    state.stats.currentStreak = 0;
+    saveStats();
 
     state.coins = 0;
     state.totalCoins = 0;
@@ -299,6 +350,18 @@ function continueSavedGame() {
 function closeTutorial() {
     document.getElementById('tutorial').style.display = 'none';
 }
+
+function nextTutorialStep(step) {
+    // Cacher toutes les étapes
+    document.querySelectorAll('.tutorial-step').forEach(s => s.classList.remove('active'));
+    // Montrer l'étape suivante
+    const nextStep = document.getElementById(`tutorial-step-${step}`);
+    if (nextStep) {
+        nextStep.classList.add('active');
+        AudioSystem.play('coin');
+    }
+}
+window.nextTutorialStep = nextTutorialStep;
 
 // ===== INITIALISATION DU NIVEAU =====
 function initLevel(levelNum) {
@@ -1303,26 +1366,45 @@ function takeDamage(reason) {
     }
 
     state.lives--;
-    state.invincibilityTimer = state.difficulty <= 0.7 ? 120 : 90;
+    state.stats.totalDeaths++;
+    state.stats.currentStreak = 0; // Reset de la série
+    state.invincibilityTimer = state.difficulty <= 0.5 ? 150 : state.difficulty <= 0.7 ? 120 : 90; // Plus long pour très facile
+
     state.screenShake = 15;
-    
+
     player.vy = -10;
     player.vx = player.facingRight ? -8 : 8;
-    
+
     updateHud();
     AudioSystem.play('hurt');
     ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'damage', 12);
 
+    // Messages d'encouragement variés
     if (state.encouragementCooldown === 0) {
-        showMessage('💪 Courage !', "Tu peux y arriver !", 1200);
+        const encouragements = [
+            { title: '💪 Courage !', text: 'Tu peux y arriver !' },
+            { title: '🌟 Pas grave !', text: 'Réessaie, tu vas réussir !' },
+            { title: '🎯 Continue !', text: 'Tu progresses bien !' },
+            { title: '💖 Allez !', text: 'Je crois en toi !' }
+        ];
+        const msg = encouragements[Math.floor(Math.random() * encouragements.length)];
+        showMessage(msg.title, msg.text, 1200);
         state.encouragementCooldown = 240;
     }
-    
+
+    // Conseil du compagnon en mode très facile
+    if (state.companion.enabled && state.companion.lastTip < state.frameTick - 300) {
+        setTimeout(() => {
+            showCompanionTip(getRandomCompanionTip('death'));
+        }, 1500);
+        state.companion.lastTip = state.frameTick;
+    }
+
     // Vibration mobile
     if (navigator.vibrate) {
         navigator.vibrate(100);
     }
-    
+
     if (state.lives <= 0) {
         gameOver(reason || "Plus de vies !");
     }
@@ -1413,3 +1495,402 @@ function showMessage(title, text, duration) {
         setTimeout(() => notif.remove(), 500);
     }, duration);
 }
+
+// ===== SYSTÈME DE COMPAGNON VIRTUEL =====
+function showCompanionTip(message) {
+    if (!state.companion.enabled) return;
+
+    const bubble = document.getElementById('companion-bubble');
+    const icon = document.getElementById('companion-icon');
+    const text = document.getElementById('companion-text');
+
+    if (!bubble) return;
+
+    // Définir l'icône selon le type de compagnon
+    const companionIcons = {
+        'cat': '🐱',
+        'dog': '🐶',
+        'bird': '🐦',
+        'rabbit': '🐰'
+    };
+
+    icon.textContent = companionIcons[state.companion.type] || '🐱';
+    text.textContent = message;
+
+    bubble.style.display = 'block';
+
+    // Cacher après 4 secondes
+    setTimeout(() => {
+        bubble.style.display = 'none';
+    }, 4000);
+}
+
+// Messages d'encouragement variés
+const ENCOURAGEMENT_MESSAGES = [
+    { title: '💪 Super !', text: 'Tu progresses bien !' },
+    { title: '🌟 Bravo !', text: 'Continue comme ça !' },
+    { title: '🎯 Bien joué !', text: 'Tu es sur la bonne voie !' },
+    { title: '🚀 Génial !', text: 'Tu deviens un pro !' },
+    { title: '⭐ Fantastique !', text: 'Tu es incroyable !' },
+    { title: '🏆 Champion !', text: 'Rien ne peut t\'arrêter !' },
+    { title: '💎 Magnifique !', text: 'Tu es le meilleur !' },
+    { title: '🎉 Wouhou !', text: 'Tu assures grave !' }
+];
+
+const COMPANION_TIPS = {
+    'start': [
+        'Appuie sur ESPACE pour sauter !',
+        'Tu peux faire un double saut !',
+        'Utilise les flèches pour monter aux échelles !',
+        'Cherche la clé pour ouvrir la porte !'
+    ],
+    'danger': [
+        'Attention aux ennemis !',
+        'Fais attention devant toi !',
+        'Saute par-dessus les obstacles !',
+        'Tu peux éviter ce piège !'
+    ],
+    'coin': [
+        'Il y a des pièces par là !',
+        'N\'oublie pas de collecter les pièces !',
+        'Les pièces dorées valent plus !'
+    ],
+    'encouragement': [
+        'Tu y es presque !',
+        'Continue, tu vas y arriver !',
+        'Je crois en toi !',
+        'Tu es le meilleur !'
+    ],
+    'death': [
+        'Ce n\'est pas grave, réessaie !',
+        'Tu vas réussir cette fois !',
+        'Courage, tu peux le faire !',
+        'Allez, on recommence !'
+    ]
+};
+
+function getRandomCompanionTip(category) {
+    const tips = COMPANION_TIPS[category];
+    if (!tips || tips.length === 0) return '';
+    return tips[Math.floor(Math.random() * tips.length)];
+}
+
+function showRandomEncouragement() {
+    if (state.encouragementCooldown > 0) return;
+
+    const msg = ENCOURAGEMENT_MESSAGES[state.encouragementLevel % ENCOURAGEMENT_MESSAGES.length];
+    state.encouragementLevel++;
+    state.encouragementCooldown = 300; // Cooldown de 5 secondes
+
+    // Afficher le message
+    const popup = document.createElement('div');
+    popup.className = 'encouragement-popup';
+    popup.innerHTML = `
+        <div style="font-size: 40px;">${msg.title}</div>
+        <div style="font-size: 20px; margin-top: 10px;">${msg.text}</div>
+    `;
+    document.body.appendChild(popup);
+
+    AudioSystem.play('powerup');
+
+    setTimeout(() => {
+        popup.style.animation = 'fadeOut 0.5s';
+        setTimeout(() => popup.remove(), 500);
+    }, 2000);
+}
+
+// ===== SYSTÈME DE STATISTIQUES =====
+function saveStats() {
+    try {
+        localStorage.setItem('leo_stats', JSON.stringify(state.stats));
+    } catch(e) {}
+}
+
+function loadStats() {
+    try {
+        const saved = localStorage.getItem('leo_stats');
+        if (saved) {
+            const data = JSON.parse(saved);
+            state.stats = { ...state.stats, ...data };
+        }
+    } catch(e) {}
+}
+
+// ===== PERSONNALISATION =====
+function showCustomization() {
+    document.getElementById('customization-screen').style.display = 'flex';
+    updateCustomizationPreview();
+
+    // Marquer les boutons sélectionnés
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.color === state.playerColor);
+    });
+    document.querySelectorAll('.companion-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.companion === state.companion.type);
+    });
+}
+
+function closeCustomization() {
+    document.getElementById('customization-screen').style.display = 'none';
+    saveCustomization();
+}
+
+function updateCustomizationPreview() {
+    const colorNames = {
+        '#3498db': 'Bleu', '#e74c3c': 'Rouge', '#2ecc71': 'Vert',
+        '#9b59b6': 'Violet', '#f39c12': 'Orange', '#1abc9c': 'Turquoise',
+        '#e91e63': 'Rose', '#00bcd4': 'Cyan'
+    };
+    const companionIcons = { 'cat': '🐱', 'dog': '🐶', 'bird': '🐦', 'rabbit': '🐰' };
+
+    document.getElementById('preview-color').textContent = colorNames[state.playerColor] || 'Bleu';
+    document.getElementById('preview-companion').textContent =
+        (companionIcons[state.companion.type] || '🐱') + ' ' + state.companion.name;
+}
+
+function saveCustomization() {
+    try {
+        localStorage.setItem('leo_customization', JSON.stringify({
+            playerColor: state.playerColor,
+            companion: state.companion
+        }));
+    } catch(e) {}
+}
+
+function loadCustomization() {
+    try {
+        const saved = localStorage.getItem('leo_customization');
+        if (saved) {
+            const data = JSON.parse(saved);
+            state.playerColor = data.playerColor || '#3498db';
+            state.companion = { ...state.companion, ...data.companion };
+        }
+    } catch(e) {}
+}
+
+// ===== SYSTÈME DE BADGES AMÉLIORÉ =====
+const ALL_BADGES = [
+    { id: 'first_level', title: '🎮 Premier pas', desc: 'Termine le niveau 1', icon: '🎮' },
+    { id: 'perfect_level', title: '⭐ Perfection', desc: '3 étoiles sur un niveau', icon: '⭐' },
+    { id: 'coin_collector', title: '🪙 Collectionneur', desc: '50 pièces collectées', icon: '🪙' },
+    { id: 'halfway', title: '🏃 À mi-chemin', desc: 'Atteins le niveau 5', icon: '🏃' },
+    { id: 'boss_defeated', title: '⚔️ Vainqueur', desc: 'Bats le boss final', icon: '⚔️' },
+    { id: 'all_stars', title: '🌟 Maître du jeu', desc: 'Toutes les étoiles', icon: '🌟' },
+    { id: 'no_death', title: '🛡️ Invincible', desc: 'Niveau sans mourir', icon: '🛡️' },
+    { id: 'speed_runner', title: '⚡ Éclair', desc: 'Niveau en moins de 30s', icon: '⚡' },
+    { id: 'explorer', title: '🗺️ Explorateur', desc: 'Trouve un secret', icon: '🗺️' },
+    { id: 'coin_master', title: '💰 Riche', desc: '200 pièces totales', icon: '💰' },
+    { id: 'persistent', title: '💪 Persévérant', desc: '10 parties jouées', icon: '💪' },
+    { id: 'streak_3', title: '🔥 En feu', desc: '3 niveaux sans mourir', icon: '🔥' }
+];
+
+function showBadges() {
+    document.getElementById('badges-screen').style.display = 'flex';
+    renderBadges();
+}
+
+function closeBadges() {
+    document.getElementById('badges-screen').style.display = 'none';
+}
+
+function renderBadges() {
+    const grid = document.getElementById('badges-grid');
+    grid.innerHTML = '';
+
+    ALL_BADGES.forEach(badge => {
+        const isUnlocked = state.badges[badge.id];
+        const div = document.createElement('div');
+        div.className = `badge-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+        div.innerHTML = `
+            <div class="badge-icon">${badge.icon}</div>
+            <div class="badge-title">${badge.title}</div>
+            <div class="badge-desc">${isUnlocked ? badge.desc : '???'}</div>
+        `;
+        grid.appendChild(div);
+    });
+}
+
+function saveBadges() {
+    try {
+        localStorage.setItem('leo_badges', JSON.stringify(state.badges));
+    } catch(e) {}
+}
+
+function loadBadges() {
+    try {
+        const saved = localStorage.getItem('leo_badges');
+        if (saved) {
+            state.badges = JSON.parse(saved);
+        }
+    } catch(e) {}
+}
+
+// ===== STATISTIQUES SCREEN =====
+function showStats() {
+    document.getElementById('stats-screen').style.display = 'flex';
+    renderStats();
+}
+
+function closeStats() {
+    document.getElementById('stats-screen').style.display = 'none';
+}
+
+function renderStats() {
+    const container = document.getElementById('stats-container');
+    container.innerHTML = '';
+
+    const statsToShow = [
+        { icon: '🎮', value: state.stats.gamesPlayed, label: 'Parties jouées' },
+        { icon: '🪙', value: state.totalCoins, label: 'Pièces totales' },
+        { icon: '⭐', value: state.totalStars, label: 'Étoiles gagnées' },
+        { icon: '🏆', value: state.stats.perfectLevels, label: 'Niveaux parfaits' },
+        { icon: '🦘', value: state.stats.totalJumps, label: 'Sauts effectués' },
+        { icon: '💀', value: state.stats.totalDeaths, label: 'Nombre de morts' },
+        { icon: '🔥', value: state.stats.bestStreak, label: 'Meilleure série' },
+        { icon: '🏅', value: Object.keys(state.badges).length, label: 'Badges débloqués' }
+    ];
+
+    statsToShow.forEach(stat => {
+        const div = document.createElement('div');
+        div.className = 'stat-item';
+        div.innerHTML = `
+            <div class="stat-icon">${stat.icon}</div>
+            <div class="stat-value">${stat.value}</div>
+            <div class="stat-label">${stat.label}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// ===== MINI-JEU DE MATHS =====
+let currentMathAnswer = 0;
+let mathGameCallback = null;
+
+function showMathGame(callback) {
+    mathGameCallback = callback;
+
+    // Générer une question simple (addition ou soustraction)
+    const operations = ['+', '-'];
+    const operation = operations[Math.floor(Math.random() * operations.length)];
+
+    let num1, num2, answer;
+    if (operation === '+') {
+        num1 = Math.floor(Math.random() * 10) + 1; // 1-10
+        num2 = Math.floor(Math.random() * 10) + 1; // 1-10
+        answer = num1 + num2;
+    } else {
+        num1 = Math.floor(Math.random() * 10) + 5; // 5-14
+        num2 = Math.floor(Math.random() * Math.min(num1, 10)) + 1; // 1-10 mais < num1
+        answer = num1 - num2;
+    }
+
+    currentMathAnswer = answer;
+
+    // Afficher la question
+    document.getElementById('math-question').textContent = `${num1} ${operation} ${num2} = ?`;
+    document.getElementById('math-result').textContent = '';
+
+    // Générer les réponses (1 bonne + 3 fausses)
+    const answers = [answer];
+    while (answers.length < 4) {
+        const wrongAnswer = answer + Math.floor(Math.random() * 7) - 3; // ±3
+        if (wrongAnswer !== answer && wrongAnswer > 0 && !answers.includes(wrongAnswer)) {
+            answers.push(wrongAnswer);
+        }
+    }
+
+    // Mélanger les réponses
+    answers.sort(() => Math.random() - 0.5);
+
+    // Créer les boutons
+    const container = document.getElementById('math-answers');
+    container.innerHTML = '';
+
+    answers.forEach(ans => {
+        const btn = document.createElement('button');
+        btn.className = 'big-btn';
+        btn.style.background = '#3498db';
+        btn.style.minWidth = '80px';
+        btn.textContent = ans;
+        btn.onclick = () => checkMathAnswer(ans);
+        container.appendChild(btn);
+    });
+
+    document.getElementById('math-game').style.display = 'flex';
+}
+
+function checkMathAnswer(answer) {
+    const resultEl = document.getElementById('math-result');
+    const answersEl = document.getElementById('math-answers');
+
+    // Désactiver tous les boutons
+    answersEl.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+    if (answer === currentMathAnswer) {
+        // Bonne réponse !
+        resultEl.innerHTML = '✅ <span style="color: #27ae60;">BRAVO ! +5 pièces bonus !</span>';
+        state.coins += 5;
+        state.totalCoins += 5;
+        AudioSystem.play('powerup');
+        ParticleSystem.emit(window.innerWidth / 2, window.innerHeight / 2, 'coin', 20);
+
+        // Badge explorateur (secret) si première fois
+        if (!state.badges['explorer']) {
+            state.badges['explorer'] = true;
+            if (typeof saveBadges === 'function') saveBadges();
+            setTimeout(() => {
+                if (typeof showBadgeNotification === 'function') {
+                    showBadgeNotification({ title: '🗺️ Explorateur', desc: 'Quiz bonus trouvé !' });
+                }
+            }, 1500);
+        }
+    } else {
+        // Mauvaise réponse
+        resultEl.innerHTML = `❌ <span style="color: #e74c3c;">C'était ${currentMathAnswer} !</span>`;
+        AudioSystem.play('hurt');
+    }
+
+    // Fermer après 2 secondes
+    setTimeout(() => {
+        document.getElementById('math-game').style.display = 'none';
+        if (mathGameCallback) {
+            mathGameCallback();
+            mathGameCallback = null;
+        }
+    }, 2000);
+}
+
+function skipMathGame() {
+    document.getElementById('math-game').style.display = 'none';
+    if (mathGameCallback) {
+        mathGameCallback();
+        mathGameCallback = null;
+    }
+}
+
+// Déclencher le quiz math aléatoirement entre les niveaux (1 chance sur 3)
+function maybeShowMathGame(callback) {
+    // Ne montrer qu'en mode facile ou très facile
+    if (state.difficulty > 0.8) {
+        callback();
+        return;
+    }
+
+    // 1 chance sur 3
+    if (Math.random() < 0.33) {
+        showMathGame(callback);
+    } else {
+        callback();
+    }
+}
+
+// ===== EXPORTS GLOBAUX POUR LES NOUVELLES FONCTIONS =====
+window.showCustomization = showCustomization;
+window.closeCustomization = closeCustomization;
+window.showBadges = showBadges;
+window.closeBadges = closeBadges;
+window.showStats = showStats;
+window.closeStats = closeStats;
+window.skipMathGame = skipMathGame;
+window.showMathGame = showMathGame;
+window.maybeShowMathGame = maybeShowMathGame;

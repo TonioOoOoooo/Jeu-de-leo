@@ -7,9 +7,19 @@ function updateHud() {
     let hearts = "";
     for (let i = 0; i < state.lives; i++) hearts += "❤️";
     // Afficher les cœurs noirs perdus (max basé sur difficulté)
-    const maxLives = state.difficulty <= 0.7 ? 7 : state.difficulty <= 1.2 ? 4 : 2;
+    const maxLives = state.difficulty <= 0.5 ? 10 : state.difficulty <= 0.7 ? 7 : state.difficulty <= 1.2 ? 4 : 2;
     for (let i = state.lives; i < maxLives; i++) hearts += "🖤";
     document.getElementById('hearts').textContent = hearts;
+
+    // Afficher l'indicateur de série si > 1
+    const streakEl = document.getElementById('streak-indicator');
+    const streakCount = document.getElementById('streak-count');
+    if (streakEl && state.stats && state.stats.currentStreak >= 2) {
+        streakEl.style.display = 'block';
+        if (streakCount) streakCount.textContent = state.stats.currentStreak;
+    } else if (streakEl) {
+        streakEl.style.display = 'none';
+    }
 
     const keyDisplay = document.getElementById('key-display');
     if (state.hasKey) {
@@ -70,13 +80,41 @@ function levelWin() {
     state.levelStars[state.level] = Math.max(state.levelStars[state.level] || 0, stars);
     state.totalStars = Object.values(state.levelStars).reduce((a, b) => a + b, 0);
 
+    // === STATISTIQUES ===
+    state.stats.currentStreak++;
+    if (state.stats.currentStreak > state.stats.bestStreak) {
+        state.stats.bestStreak = state.stats.currentStreak;
+    }
+    if (stars === 3) {
+        state.stats.perfectLevels++;
+    }
+
+    // Badges de série
+    if (state.stats.currentStreak >= 3 && !state.badges['streak_3']) {
+        state.badges['streak_3'] = true;
+        setTimeout(() => showBadgeNotification({ title: '🔥 En feu !', desc: '3 niveaux sans mourir !' }), 2000);
+    }
+
     // Mettre à jour l'affichage des étoiles
     updateStarsDisplay();
 
     // Vérifier les badges
     checkBadges();
 
+    // Sauvegarder les stats
+    if (typeof saveStats === 'function') saveStats();
+    if (typeof saveBadges === 'function') saveBadges();
     saveGame();
+
+    // Message du compagnon si activé
+    if (state.companion && state.companion.enabled) {
+        setTimeout(() => {
+            if (typeof showCompanionTip === 'function') {
+                const tips = ['Bravo ' + (state.playerName || 'Léo') + ' ! 🎉', 'Tu es génial ! 🌟', 'Super travail ! 💪'];
+                showCompanionTip(tips[Math.floor(Math.random() * tips.length)]);
+            }
+        }, 1000);
+    }
 
     const isFinalLevel = state.level >= CONFIG.TOTAL_LEVELS;
 
@@ -154,21 +192,30 @@ function gameOver(reason) {
 
 function nextLevelAction() {
     document.getElementById('message-box').style.display = 'none';
-    
+
     if (state.level >= CONFIG.TOTAL_LEVELS || state.current === GameState.GAME_OVER) {
         showHallOfFame();
         return;
     }
-    
-    // Transition vers niveau suivant
-    showTransition(state.level + 1, () => {
-        state.level++;
-        initLevel(state.level);
-        updateProgressBar();
-        state.current = GameState.PLAYING;
-        state.lastTime = 0;
-        state.accumulator = 0;
-    });
+
+    // Quiz bonus (aléatoire en mode facile) avant la transition
+    const proceedToNextLevel = () => {
+        showTransition(state.level + 1, () => {
+            state.level++;
+            initLevel(state.level);
+            updateProgressBar();
+            state.current = GameState.PLAYING;
+            state.lastTime = 0;
+            state.accumulator = 0;
+        });
+    };
+
+    // Utiliser le mini-jeu math si disponible
+    if (typeof maybeShowMathGame === 'function') {
+        maybeShowMathGame(proceedToNextLevel);
+    } else {
+        proceedToNextLevel();
+    }
 }
 
 function getScoreMultiplier() {
@@ -362,7 +409,7 @@ function checkBadges() {
     const newBadges = [];
 
     // Badge : Premier niveau
-    if (state.level === 1 && !state.badges['first_level']) {
+    if (state.level >= 1 && !state.badges['first_level']) {
         state.badges['first_level'] = true;
         newBadges.push({ title: '🎮 Premier pas', desc: 'Niveau 1 terminé !' });
     }
@@ -377,6 +424,12 @@ function checkBadges() {
     if (state.totalCoins >= 50 && !state.badges['coin_collector']) {
         state.badges['coin_collector'] = true;
         newBadges.push({ title: '🪙 Collectionneur', desc: '50 pièces collectées !' });
+    }
+
+    // Badge : 200 pièces
+    if (state.totalCoins >= 200 && !state.badges['coin_master']) {
+        state.badges['coin_master'] = true;
+        newBadges.push({ title: '💰 Riche !', desc: '200 pièces totales !' });
     }
 
     // Badge : Niveau 5 atteint
@@ -397,6 +450,24 @@ function checkBadges() {
         newBadges.push({ title: '🌟 Maître du jeu', desc: 'Toutes les étoiles !' });
     }
 
+    // Badge : Niveau sans mourir (si currentStreak > 0 après le premier niveau)
+    if (state.stats && state.stats.currentStreak >= 1 && state.level > 1 && !state.badges['no_death']) {
+        state.badges['no_death'] = true;
+        newBadges.push({ title: '🛡️ Invincible', desc: 'Niveau sans mourir !' });
+    }
+
+    // Badge : Speed runner (niveau en moins de 30 secondes)
+    if (state.levelTime < 30000 && !state.badges['speed_runner']) {
+        state.badges['speed_runner'] = true;
+        newBadges.push({ title: '⚡ Éclair', desc: 'Niveau en moins de 30s !' });
+    }
+
+    // Badge : Persévérant (10 parties)
+    if (state.stats && state.stats.gamesPlayed >= 10 && !state.badges['persistent']) {
+        state.badges['persistent'] = true;
+        newBadges.push({ title: '💪 Persévérant', desc: '10 parties jouées !' });
+    }
+
     // Afficher les nouveaux badges
     if (newBadges.length > 0) {
         setTimeout(() => {
@@ -405,6 +476,9 @@ function checkBadges() {
             }
         }, 1500);
     }
+
+    // Sauvegarder les badges
+    if (typeof saveBadges === 'function') saveBadges();
 }
 
 function showBadgeNotification(badge) {
