@@ -714,6 +714,13 @@ const LEVELS = {
             // Power-up étoile d'invincibilité pour traverser les dangers
             level.powerups.push({ x: currentX / 2, y: wallY - 90, w: 35, h: 35, type: 'star' });
 
+            // Tours d'archers qui lancent des flèches !
+            level.archers = [
+                { x: currentX * 0.3, y: wallY - 180, w: 50, h: 80 },
+                { x: currentX * 0.6, y: wallY - 180, w: 50, h: 80 },
+                { x: currentX * 0.85, y: wallY - 180, w: 50, h: 80 }
+            ];
+
             return level;
         }
     },
