@@ -284,7 +284,6 @@ function startGame(difficulty) {
         state.difficulty = 0.4;  // Très facile : ennemis très très lents
         state.lives = 10;        // 10 vies !
         state.companion.enabled = true;
-        showCompanionTip('Salut ' + state.playerName + ' ! Je suis là pour t\'aider ! 🌟');
     } else if (difficulty === 'easy') {
         state.difficulty = 0.7;
         state.lives = 7;
@@ -297,6 +296,14 @@ function startGame(difficulty) {
         state.difficulty = 1.8;
         state.lives = 2;
         state.companion.enabled = false;
+    }
+
+    // Afficher le compagnon avec un délai (après la fermeture de l'écran de démarrage)
+    if (state.companion.enabled) {
+        setTimeout(() => {
+            const playerName = state.playerName || 'Léo';
+            showCompanionTip('Salut ' + playerName + ' ! Je suis là pour t\'aider ! 🌟');
+        }, 1500);
     }
 
     // Incrémenter les stats
@@ -491,15 +498,32 @@ function update() {
         updateBoss();
     }
     
-    // Projectiles du niveau 7
-    if (state.level === 7 && state.frameTick % 90 === 0) {
-        currentLevelData.projectiles.push({
-            x: canvas.width + 100,
-            y: player.y + 10,
-            w: 40, h: 10,
-            speed: -6 * state.difficulty,
-            type: 'arrow'
-        });
+    // Projectiles du niveau 7 - tirés par les archers !
+    if (state.level === 7 && currentLevelData.archers && state.frameTick % 120 === 0) {
+        // Chaque archer tire à son tour
+        const archerIndex = Math.floor((state.frameTick / 120) % currentLevelData.archers.length);
+        const archer = currentLevelData.archers[archerIndex];
+        if (archer) {
+            // Tirer une flèche vers le joueur
+            const dx = player.x - archer.x;
+            const dy = player.y - archer.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const speed = 5 * state.difficulty;
+
+            currentLevelData.projectiles.push({
+                x: archer.x + archer.w / 2,
+                y: archer.y + archer.h / 2,
+                w: 40, h: 8,
+                vx: (dx / dist) * speed,
+                vy: (dy / dist) * speed,
+                type: 'arrow',
+                fromArcher: archerIndex
+            });
+
+            // Animation de tir
+            archer.shooting = true;
+            setTimeout(() => { archer.shooting = false; }, 300);
+        }
     }
     
     updateProjectiles();

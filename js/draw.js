@@ -100,7 +100,12 @@ function draw() {
     
     // Dangers
     drawHazards();
-    
+
+    // Archers (niveau 7)
+    if (currentLevelData.archers) {
+        drawArchers();
+    }
+
     // Ennemis
     drawEnemies();
     
@@ -1179,6 +1184,70 @@ function drawHazards() {
     }
 }
 
+// === TOURS D'ARCHERS (Niveau 7) ===
+function drawArchers() {
+    if (!currentLevelData.archers) return;
+
+    for (let i = 0; i < currentLevelData.archers.length; i++) {
+        const a = currentLevelData.archers[i];
+
+        // Tour de pierre
+        ctx.fillStyle = "#4a4a4a";
+        ctx.fillRect(a.x, a.y, a.w, a.h);
+
+        // Créneaux
+        ctx.fillStyle = "#3a3a3a";
+        for (let j = 0; j < 3; j++) {
+            ctx.fillRect(a.x + 5 + j * 18, a.y - 15, 12, 15);
+        }
+
+        // Fenêtre de tir
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(a.x + a.w/2 - 8, a.y + 20, 16, 25);
+
+        // Archer dans la tour
+        const archerX = a.x + a.w/2;
+        const archerY = a.y + 30;
+
+        // Tête de l'archer
+        ctx.fillStyle = "#e0c8a8";
+        ctx.beginPath();
+        ctx.arc(archerX, archerY - 5, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Capuche
+        ctx.fillStyle = "#8B0000";
+        ctx.beginPath();
+        ctx.arc(archerX, archerY - 8, 10, Math.PI, 0);
+        ctx.fill();
+
+        // Arc de l'archer (visible dans la fenêtre)
+        ctx.strokeStyle = "#8B4513";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(archerX + 12, archerY + 5, 12, -Math.PI/2.5, Math.PI/2.5);
+        ctx.stroke();
+
+        // Effet de tir
+        if (a.shooting) {
+            ctx.fillStyle = "rgba(255, 200, 0, 0.5)";
+            ctx.beginPath();
+            ctx.arc(archerX + 25, archerY + 5, 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Drapeau sur la tour
+        ctx.fillStyle = "#8B0000";
+        ctx.fillRect(a.x + a.w - 5, a.y - 40, 2, 30);
+        ctx.beginPath();
+        ctx.moveTo(a.x + a.w - 3, a.y - 40);
+        ctx.lineTo(a.x + a.w + 15, a.y - 32);
+        ctx.lineTo(a.x + a.w - 3, a.y - 24);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
 function drawEnemies() {
     for (const e of currentLevelData.enemies) {
         switch (e.type) {
@@ -1506,25 +1575,56 @@ function drawEnemies() {
                 ctx.fillRect(e.x + e.w/2 - 8, e.y + 5, 4, 6);
                 ctx.fillRect(e.x + e.w/2 + 4, e.y + 5, 4, 6);
 
-                // Bras avec arc
+                // Bras avec arc - direction selon e.dir
                 ctx.fillStyle = "#d0d0d0";
                 ctx.fillRect(e.x + 5, e.y + 22, 8, 20);
                 ctx.fillRect(e.x + e.w - 13, e.y + 22, 8, 20);
 
-                // Arc
+                // Arc - orienté selon la direction du squelette
+                const bowDir = e.dir || 1; // 1 = droite, -1 = gauche
+                const bowX = bowDir > 0 ? e.x + e.w + 5 : e.x - 20;
+                const bowAngleStart = bowDir > 0 ? Math.PI * 2/3 : -Math.PI/3;
+                const bowAngleEnd = bowDir > 0 ? Math.PI * 4/3 : Math.PI/3;
+
                 ctx.strokeStyle = "#8B4513";
                 ctx.lineWidth = 3;
                 ctx.beginPath();
-                ctx.arc(e.x - 10, e.y + 30, 15, -Math.PI/3, Math.PI/3);
+                ctx.arc(bowX, e.y + 30, 15, bowAngleStart, bowAngleEnd);
                 ctx.stroke();
 
                 // Corde de l'arc
                 ctx.strokeStyle = "#fff";
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(e.x - 10 - 13, e.y + 22);
-                ctx.lineTo(e.x - 10 - 13, e.y + 38);
+                const cordX = bowDir > 0 ? bowX + 13 : bowX - 13;
+                ctx.moveTo(cordX, e.y + 22);
+                ctx.lineTo(cordX, e.y + 38);
                 ctx.stroke();
+
+                // Flèche
+                ctx.strokeStyle = "#8B4513";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const arrowStartX = bowDir > 0 ? e.x + e.w/2 : e.x + e.w/2;
+                const arrowEndX = bowDir > 0 ? bowX + 20 : bowX - 20;
+                ctx.moveTo(arrowStartX, e.y + 30);
+                ctx.lineTo(arrowEndX, e.y + 30);
+                ctx.stroke();
+
+                // Pointe de flèche
+                ctx.fillStyle = "#555";
+                ctx.beginPath();
+                if (bowDir > 0) {
+                    ctx.moveTo(arrowEndX, e.y + 30);
+                    ctx.lineTo(arrowEndX - 8, e.y + 26);
+                    ctx.lineTo(arrowEndX - 8, e.y + 34);
+                } else {
+                    ctx.moveTo(arrowEndX, e.y + 30);
+                    ctx.lineTo(arrowEndX + 8, e.y + 26);
+                    ctx.lineTo(arrowEndX + 8, e.y + 34);
+                }
+                ctx.closePath();
+                ctx.fill();
 
                 // Jambes
                 ctx.fillStyle = "#e0e0e0";
@@ -1791,58 +1891,58 @@ function drawProjectiles() {
     for (const p of currentLevelData.projectiles) {
         switch (p.type) {
             case 'arrow':
-                // Flèche médiévale améliorée !
+                // Flèche médiévale - orientée selon la direction !
                 ctx.save();
+
+                // Calculer l'angle de la flèche selon la direction
+                const arrowAngle = p.vx !== undefined ? Math.atan2(p.vy, p.vx) : (p.speed < 0 ? Math.PI : 0);
+
+                // Translater et tourner
+                ctx.translate(p.x + p.w/2, p.y + p.h/2);
+                ctx.rotate(arrowAngle);
+
+                const halfW = p.w / 2;
+                const halfH = p.h / 2;
 
                 // Corps de la flèche (bois)
                 ctx.fillStyle = "#8B4513";
-                ctx.fillRect(p.x + 8, p.y + p.h/2 - 2, p.w - 8, 4);
+                ctx.fillRect(-halfW + 8, -2, p.w - 16, 4);
 
                 // Pointe de la flèche (métal brillant)
                 ctx.fillStyle = "#d0d0d0";
                 ctx.beginPath();
-                ctx.moveTo(p.x, p.y + p.h / 2);
-                ctx.lineTo(p.x + 12, p.y);
-                ctx.lineTo(p.x + 12, p.y + p.h);
+                ctx.moveTo(halfW, 0);
+                ctx.lineTo(halfW - 12, -halfH);
+                ctx.lineTo(halfW - 12, halfH);
                 ctx.closePath();
                 ctx.fill();
 
                 // Reflet sur la pointe
                 ctx.fillStyle = "#fff";
                 ctx.beginPath();
-                ctx.moveTo(p.x + 2, p.y + p.h / 2);
-                ctx.lineTo(p.x + 8, p.y + 2);
-                ctx.lineTo(p.x + 8, p.y + p.h / 2 - 1);
+                ctx.moveTo(halfW - 2, 0);
+                ctx.lineTo(halfW - 8, -halfH + 2);
+                ctx.lineTo(halfW - 8, -1);
                 ctx.closePath();
                 ctx.fill();
 
                 // Empennage (plumes rouges)
                 ctx.fillStyle = "#e74c3c";
                 ctx.beginPath();
-                ctx.moveTo(p.x + p.w, p.y + p.h / 2);
-                ctx.lineTo(p.x + p.w - 8, p.y);
-                ctx.lineTo(p.x + p.w - 8, p.y + p.h);
+                ctx.moveTo(-halfW, 0);
+                ctx.lineTo(-halfW + 8, -halfH);
+                ctx.lineTo(-halfW + 8, halfH);
                 ctx.closePath();
                 ctx.fill();
 
                 // Deuxième plume (jaune)
                 ctx.fillStyle = "#f1c40f";
                 ctx.beginPath();
-                ctx.moveTo(p.x + p.w - 3, p.y + p.h / 2);
-                ctx.lineTo(p.x + p.w - 10, p.y + 2);
-                ctx.lineTo(p.x + p.w - 10, p.y + p.h - 2);
+                ctx.moveTo(-halfW + 3, 0);
+                ctx.lineTo(-halfW + 10, -halfH + 2);
+                ctx.lineTo(-halfW + 10, halfH - 2);
                 ctx.closePath();
                 ctx.fill();
-
-                // Traînée de mouvement
-                if (Math.abs(p.speed) > 4) {
-                    ctx.strokeStyle = "rgba(139, 69, 19, 0.3)";
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(p.x + p.w, p.y + p.h/2);
-                    ctx.lineTo(p.x + p.w + 10, p.y + p.h/2);
-                    ctx.stroke();
-                }
 
                 ctx.restore();
                 break;
