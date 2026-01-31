@@ -45,6 +45,10 @@
                 <span>⏱️ Timer</span>
                 <div class="toggle-switch" id="timer-toggle" onclick="toggleTimer()"></div>
             </div>
+            <div class="option-toggle" id="fullscreen-option">
+                <span>📺 Écran</span>
+                <button class="option-button" id="fullscreen-button" onclick="toggleFullscreen()">📺 Plein écran</button>
+            </div>
         </div>
         
         <div class="options" style="margin-top: 20px;">
@@ -170,6 +174,7 @@
             <span id="stars-display">⭐ 0</span>
             <span id="hearts">❤️❤️❤️</span>
             <span id="key-display">🗝️ CLÉ !</span>
+            <button id="menu-button" onclick="togglePause()" title="Menu (Échap)">⏸️ MENU</button>
         </div>
         
         <div id="timer-display">⏱️ 00:00</div>

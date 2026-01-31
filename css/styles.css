@@ -65,6 +65,41 @@ canvas {
     animation: pulse 0.5s infinite alternate;
 }
 
+/* ===== MENU BUTTON (visible during gameplay) ===== */
+#menu-button {
+    background: rgba(155, 89, 182, 0.9);
+    color: white;
+    border: 3px solid white;
+    border-radius: 15px;
+    padding: 8px 15px;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.2s, background 0.2s;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+#menu-button:hover {
+    background: rgba(142, 68, 173, 1);
+    transform: scale(1.05);
+}
+
+#menu-button:active {
+    transform: scale(0.95);
+}
+
+/* ===== FULLSCREEN BUTTON ===== */
+#fullscreen-option {
+    display: none;
+}
+
+@media (min-width: 800px) and (pointer: fine) {
+    #fullscreen-option {
+        display: flex;
+    }
+}
+
 #coins-display {
     font-size: 24px;
     color: gold;

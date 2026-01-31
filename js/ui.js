@@ -358,14 +358,23 @@ function togglePause() {
 }
 
 function resumeGame() {
+    // Reset les touches pour éviter les mouvements bloqués
+    if (typeof resetKeys === 'function') resetKeys();
+
     state.current = GameState.PLAYING;
     document.getElementById('pause-screen').style.display = 'none';
     state.lastTime = 0;
 }
 
 function restartLevel() {
+    // Reset les touches pour éviter les mouvements bloqués
+    if (typeof resetKeys === 'function') resetKeys();
+
     document.getElementById('pause-screen').style.display = 'none';
-    state.lives = 3;
+
+    // Réinitialiser les vies selon la difficulté
+    const maxLives = state.difficulty <= 0.5 ? 10 : state.difficulty <= 0.7 ? 7 : state.difficulty <= 1.2 ? 4 : 2;
+    state.lives = maxLives;
     state.coins = 0;
     updateHud();
     initLevel(state.level);
@@ -374,8 +383,12 @@ function restartLevel() {
 }
 
 function quitToMenu() {
+    // Reset les touches pour éviter les mouvements bloqués
+    if (typeof resetKeys === 'function') resetKeys();
+
     document.getElementById('pause-screen').style.display = 'none';
     state.current = GameState.MENU;
+    state.level = 1; // Retour au niveau 1
     document.getElementById('start-screen').style.display = 'flex';
     if (state.animationId) cancelAnimationFrame(state.animationId);
 }

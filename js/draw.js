@@ -1581,47 +1581,56 @@ function drawEnemies() {
                 ctx.fillRect(e.x + e.w - 13, e.y + 22, 8, 20);
 
                 // Arc - orienté selon la direction du squelette
-                const bowDir = e.dir || 1; // 1 = droite, -1 = gauche
-                const bowX = bowDir > 0 ? e.x + e.w + 5 : e.x - 20;
-                const bowAngleStart = bowDir > 0 ? Math.PI * 2/3 : -Math.PI/3;
-                const bowAngleEnd = bowDir > 0 ? Math.PI * 4/3 : Math.PI/3;
+                // e.dir: 1 = va vers la droite, -1 = va vers la gauche
+                // L'arc doit pointer dans la direction du mouvement
+                const bowDir = e.dir || 1;
+                const bowX = bowDir > 0 ? e.x + e.w + 8 : e.x - 8;
 
                 ctx.strokeStyle = "#8B4513";
                 ctx.lineWidth = 3;
                 ctx.beginPath();
-                ctx.arc(bowX, e.y + 30, 15, bowAngleStart, bowAngleEnd);
+                // Arc tourné vers la direction du mouvement
+                if (bowDir > 0) {
+                    // Face à droite: arc ouvert vers la droite
+                    ctx.arc(bowX, e.y + 30, 15, -Math.PI/2.5, Math.PI/2.5);
+                } else {
+                    // Face à gauche: arc ouvert vers la gauche
+                    ctx.arc(bowX, e.y + 30, 15, Math.PI - Math.PI/2.5, Math.PI + Math.PI/2.5);
+                }
                 ctx.stroke();
 
-                // Corde de l'arc
+                // Corde de l'arc (ligne droite qui ferme l'arc)
                 ctx.strokeStyle = "#fff";
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                const cordX = bowDir > 0 ? bowX + 13 : bowX - 13;
-                ctx.moveTo(cordX, e.y + 22);
-                ctx.lineTo(cordX, e.y + 38);
+                const cordX = bowDir > 0 ? bowX - 12 : bowX + 12;
+                ctx.moveTo(cordX, e.y + 20);
+                ctx.lineTo(cordX, e.y + 40);
                 ctx.stroke();
 
-                // Flèche
+                // Flèche tenue par le squelette
                 ctx.strokeStyle = "#8B4513";
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                const arrowStartX = bowDir > 0 ? e.x + e.w/2 : e.x + e.w/2;
-                const arrowEndX = bowDir > 0 ? bowX + 20 : bowX - 20;
+                const arrowStartX = e.x + e.w/2;
+                const arrowEndX = bowDir > 0 ? bowX + 18 : bowX - 18;
                 ctx.moveTo(arrowStartX, e.y + 30);
                 ctx.lineTo(arrowEndX, e.y + 30);
                 ctx.stroke();
 
-                // Pointe de flèche
+                // Pointe de flèche (triangle)
                 ctx.fillStyle = "#555";
                 ctx.beginPath();
                 if (bowDir > 0) {
-                    ctx.moveTo(arrowEndX, e.y + 30);
-                    ctx.lineTo(arrowEndX - 8, e.y + 26);
-                    ctx.lineTo(arrowEndX - 8, e.y + 34);
+                    // Pointe vers la droite
+                    ctx.moveTo(arrowEndX + 8, e.y + 30);
+                    ctx.lineTo(arrowEndX, e.y + 26);
+                    ctx.lineTo(arrowEndX, e.y + 34);
                 } else {
-                    ctx.moveTo(arrowEndX, e.y + 30);
-                    ctx.lineTo(arrowEndX + 8, e.y + 26);
-                    ctx.lineTo(arrowEndX + 8, e.y + 34);
+                    // Pointe vers la gauche
+                    ctx.moveTo(arrowEndX - 8, e.y + 30);
+                    ctx.lineTo(arrowEndX, e.y + 26);
+                    ctx.lineTo(arrowEndX, e.y + 34);
                 }
                 ctx.closePath();
                 ctx.fill();
