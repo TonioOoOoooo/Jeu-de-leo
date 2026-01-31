@@ -11,6 +11,7 @@ const VisualCache = {
     level2: null,
     level7: null,
     level8: null,
+    level9: null,
     initialized: false
 };
 
@@ -2926,6 +2927,580 @@ function drawEnhancedShyGuy(ctx, e) {
     ctx.restore();
 }
 
+// ===== NIVEAU 9 : TEMPLE DES BOMBES (ÉGYPTE) =====
+function initLevel9Visuals(w, h) {
+    if (VisualCache.level9) return VisualCache.level9;
+
+    const visuals = {
+        stars: [],
+        shootingStars: [],
+        sandDunes: [],
+        obelisks: [],
+        hieroglyphs: [],
+        torches: [],
+        dustParticles: []
+    };
+
+    // Étoiles dans le ciel nocturne
+    for (let i = 0; i < 150; i++) {
+        visuals.stars.push({
+            x: seededRandom(i * 211) * w * 3,
+            y: seededRandom(i * 223) * h * 0.5,
+            size: 1 + seededRandom(i * 227) * 2.5,
+            twinkleOffset: seededRandom(i * 229) * Math.PI * 2,
+            twinkleSpeed: 0.02 + seededRandom(i * 233) * 0.04,
+            color: seededRandom(i * 239) > 0.8 ? '#FFD700' : '#FFFFFF'
+        });
+    }
+
+    // Étoiles filantes occasionnelles
+    for (let i = 0; i < 3; i++) {
+        visuals.shootingStars.push({
+            x: seededRandom(i * 241) * w * 2,
+            y: seededRandom(i * 251) * h * 0.3,
+            length: 80 + seededRandom(i * 257) * 60,
+            speed: 8 + seededRandom(i * 263) * 6,
+            active: false,
+            timer: seededRandom(i * 269) * 500
+        });
+    }
+
+    // Dunes de sable en arrière-plan
+    for (let i = 0; i < 5; i++) {
+        visuals.sandDunes.push({
+            x: seededRandom(i * 271) * w * 2,
+            width: 300 + seededRandom(i * 277) * 400,
+            height: 60 + seededRandom(i * 281) * 80,
+            layer: i % 3
+        });
+    }
+
+    // Obélisques mystérieux
+    visuals.obelisks.push({ x: 150, height: 180, width: 25 });
+    visuals.obelisks.push({ x: 850, height: 200, width: 28 });
+    visuals.obelisks.push({ x: 1400, height: 160, width: 22 });
+
+    // Torches sur les côtés
+    for (let i = 0; i < 6; i++) {
+        visuals.torches.push({
+            x: 100 + i * 300 + seededRandom(i * 283) * 50,
+            y: h * 0.65,
+            flickerOffset: seededRandom(i * 293) * Math.PI * 2
+        });
+    }
+
+    // Particules de poussière/sable
+    for (let i = 0; i < 30; i++) {
+        visuals.dustParticles.push({
+            x: seededRandom(i * 307) * w * 3,
+            y: h * 0.5 + seededRandom(i * 311) * h * 0.4,
+            size: 1 + seededRandom(i * 313) * 3,
+            speed: 0.3 + seededRandom(i * 317) * 0.5,
+            opacity: 0.2 + seededRandom(i * 331) * 0.3
+        });
+    }
+
+    VisualCache.level9 = visuals;
+    return visuals;
+}
+
+function drawLevel9Background(ctx, w, h, camX) {
+    const visuals = initLevel9Visuals(w, h);
+
+    // Dégradé du ciel nocturne égyptien
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, h);
+    skyGradient.addColorStop(0, '#0a0a1a');      // Noir profond
+    skyGradient.addColorStop(0.2, '#0d1b2a');    // Bleu nuit
+    skyGradient.addColorStop(0.5, '#1b263b');    // Bleu marine
+    skyGradient.addColorStop(0.7, '#2d3a4a');    // Bleu gris
+    skyGradient.addColorStop(1, '#4a3728');      // Brun sable (horizon)
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, w, h);
+
+    // Lune croissante dorée (style égyptien)
+    drawEgyptianMoon(ctx, w - 150, 100);
+
+    // Étoiles scintillantes
+    for (const star of visuals.stars) {
+        const twinkle = Math.sin(state.frameTick * star.twinkleSpeed + star.twinkleOffset);
+        const alpha = 0.5 + twinkle * 0.5;
+        const size = star.size * (0.8 + twinkle * 0.2);
+
+        ctx.fillStyle = star.color === '#FFD700'
+            ? `rgba(255, 215, 0, ${alpha})`
+            : `rgba(255, 255, 255, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(star.x - camX * 0.02, star.y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Étoiles filantes
+    for (const ss of visuals.shootingStars) {
+        updateShootingStar(ss, w);
+        if (ss.active) {
+            drawShootingStar(ctx, ss, camX);
+        }
+    }
+
+    // Dunes de sable en arrière-plan
+    for (const dune of visuals.sandDunes) {
+        const parallax = 0.1 + dune.layer * 0.1;
+        drawSandDune(ctx, dune.x - camX * parallax, h * 0.7 - dune.layer * 30, dune.width, dune.height, dune.layer);
+    }
+
+    // Grandes pyramides majestueuses
+    drawMajesticPyramid(ctx, 100 - camX * 0.15, h * 0.4, 280, true);
+    drawMajesticPyramid(ctx, w - 200 - camX * 0.15, h * 0.45, 220, false);
+    drawMajesticPyramid(ctx, 500 - camX * 0.12, h * 0.5, 180, false);
+
+    // Obélisques mystérieux
+    for (const ob of visuals.obelisks) {
+        drawObelisk(ctx, ob.x - camX * 0.2, h * 0.65, ob.width, ob.height);
+    }
+
+    // Torches avec flammes
+    for (const torch of visuals.torches) {
+        drawEgyptianTorch(ctx, torch.x - camX * 0.4, torch.y, torch.flickerOffset);
+    }
+
+    // Particules de poussière/sable
+    ctx.globalAlpha = 0.4;
+    for (const dust of visuals.dustParticles) {
+        ctx.fillStyle = `rgba(210, 180, 140, ${dust.opacity})`;
+        ctx.beginPath();
+        ctx.arc(dust.x - camX * 0.3, dust.y, dust.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawLevel9Foreground(ctx, w, h, camX) {
+    const visuals = initLevel9Visuals(w, h);
+
+    // Particules de sable qui flottent au premier plan
+    const time = state.frameTick * 0.02;
+    for (let i = 0; i < 15; i++) {
+        const x = (seededRandom(i * 337) * w * 2 + time * 30) % (w * 2);
+        const y = h * 0.3 + Math.sin(time + i) * 50 + seededRandom(i * 347) * h * 0.5;
+        const size = 2 + seededRandom(i * 353) * 3;
+
+        ctx.fillStyle = `rgba(210, 180, 140, ${0.3 + Math.sin(time + i) * 0.2})`;
+        ctx.beginPath();
+        ctx.arc(x - camX * 0.8, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Lune égyptienne dorée avec croissant
+function drawEgyptianMoon(ctx, x, y) {
+    const time = state.frameTick * 0.01;
+    const pulse = Math.sin(time) * 3;
+
+    // Halo doré mystique
+    const haloGradient = ctx.createRadialGradient(x, y, 0, x, y, 100 + pulse);
+    haloGradient.addColorStop(0, 'rgba(255, 215, 0, 0.3)');
+    haloGradient.addColorStop(0.5, 'rgba(255, 200, 100, 0.15)');
+    haloGradient.addColorStop(1, 'rgba(255, 180, 50, 0)');
+    ctx.fillStyle = haloGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, 100 + pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps de la lune (croissant)
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(x, y, 45, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Partie sombre pour créer le croissant
+    ctx.fillStyle = '#0d1b2a';
+    ctx.beginPath();
+    ctx.arc(x + 20, y - 5, 38, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflet brillant
+    ctx.fillStyle = 'rgba(255, 255, 200, 0.5)';
+    ctx.beginPath();
+    ctx.arc(x - 15, y - 15, 8, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// Étoile filante
+function updateShootingStar(ss, w) {
+    ss.timer--;
+    if (ss.timer <= 0 && !ss.active) {
+        ss.active = true;
+        ss.x = Math.random() * w;
+        ss.y = Math.random() * 150;
+    }
+    if (ss.active) {
+        ss.x += ss.speed;
+        ss.y += ss.speed * 0.5;
+        if (ss.x > w * 2 || ss.y > 400) {
+            ss.active = false;
+            ss.timer = 300 + Math.random() * 400;
+        }
+    }
+}
+
+function drawShootingStar(ctx, ss, camX) {
+    const gradient = ctx.createLinearGradient(
+        ss.x - camX * 0.02, ss.y,
+        ss.x - ss.length - camX * 0.02, ss.y - ss.length * 0.5
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    gradient.addColorStop(0.3, 'rgba(255, 255, 200, 0.6)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ss.x - camX * 0.02, ss.y);
+    ctx.lineTo(ss.x - ss.length - camX * 0.02, ss.y - ss.length * 0.5);
+    ctx.stroke();
+}
+
+// Dune de sable
+function drawSandDune(ctx, x, y, width, height, layer) {
+    const colors = [
+        ['#8B7355', '#A0926B'],  // Couche arrière (plus sombre)
+        ['#C4A77D', '#D4B896'],  // Couche milieu
+        ['#DEB887', '#E8CFA0']   // Couche avant (plus clair)
+    ];
+    const [baseColor, highlightColor] = colors[layer] || colors[0];
+
+    const gradient = ctx.createLinearGradient(x, y - height, x, y + 20);
+    gradient.addColorStop(0, highlightColor);
+    gradient.addColorStop(1, baseColor);
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(x - width/2, y + 20);
+    ctx.quadraticCurveTo(x, y - height, x + width/2, y + 20);
+    ctx.fill();
+}
+
+// Pyramide majestueuse
+function drawMajesticPyramid(ctx, x, y, size, isMain) {
+    // Ombre de la pyramide
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(x, y + size * 0.1);
+    ctx.lineTo(x + size * 0.6, y + size * 0.5);
+    ctx.lineTo(x + size * 1.2, y + size * 0.5);
+    ctx.lineTo(x + size * 0.5, y + size * 0.1);
+    ctx.fill();
+
+    // Face gauche (dans l'ombre)
+    const darkGradient = ctx.createLinearGradient(x - size/2, y, x, y - size);
+    darkGradient.addColorStop(0, '#8B7355');
+    darkGradient.addColorStop(0.5, '#7A6548');
+    darkGradient.addColorStop(1, '#5D4E37');
+    ctx.fillStyle = darkGradient;
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x - size/2, y);
+    ctx.lineTo(x, y);
+    ctx.fill();
+
+    // Face droite (éclairée par la lune)
+    const lightGradient = ctx.createLinearGradient(x, y - size, x + size/2, y);
+    lightGradient.addColorStop(0, '#D4B896');
+    lightGradient.addColorStop(0.3, '#C4A77D');
+    lightGradient.addColorStop(1, '#A08060');
+    ctx.fillStyle = lightGradient;
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x + size/2, y);
+    ctx.lineTo(x, y);
+    ctx.fill();
+
+    // Détails des blocs (lignes horizontales)
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 8; i++) {
+        const lineY = y - size + (size / 8) * i;
+        const leftX = x - (size/2) * (1 - i/8);
+        const rightX = x + (size/2) * (1 - i/8);
+
+        ctx.beginPath();
+        ctx.moveTo(leftX, lineY);
+        ctx.lineTo(x, lineY);
+        ctx.lineTo(rightX, lineY);
+        ctx.stroke();
+    }
+
+    // Sommet doré si c'est la pyramide principale
+    if (isMain) {
+        const topSize = size * 0.08;
+        const glow = Math.sin(state.frameTick * 0.05) * 0.3 + 0.7;
+
+        ctx.fillStyle = `rgba(255, 215, 0, ${glow})`;
+        ctx.beginPath();
+        ctx.moveTo(x, y - size - topSize);
+        ctx.lineTo(x - topSize, y - size + topSize);
+        ctx.lineTo(x + topSize, y - size + topSize);
+        ctx.closePath();
+        ctx.fill();
+
+        // Halo autour du sommet
+        ctx.fillStyle = `rgba(255, 215, 0, ${glow * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(x, y - size, topSize * 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Obélisque égyptien
+function drawObelisk(ctx, x, y, width, height) {
+    // Corps de l'obélisque
+    const gradient = ctx.createLinearGradient(x - width/2, y, x + width/2, y);
+    gradient.addColorStop(0, '#5D4E37');
+    gradient.addColorStop(0.3, '#8B7355');
+    gradient.addColorStop(0.7, '#7A6548');
+    gradient.addColorStop(1, '#4A3C2A');
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(x, y - height);
+    ctx.lineTo(x - width/2, y - height + 20);
+    ctx.lineTo(x - width/2 + 3, y);
+    ctx.lineTo(x + width/2 - 3, y);
+    ctx.lineTo(x + width/2, y - height + 20);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sommet pyramidal
+    ctx.fillStyle = '#C4A77D';
+    ctx.beginPath();
+    ctx.moveTo(x, y - height - 15);
+    ctx.lineTo(x - width/2, y - height);
+    ctx.lineTo(x + width/2, y - height);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hiéroglyphes simulés
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    for (let i = 0; i < 4; i++) {
+        const hy = y - height + 40 + i * 35;
+        ctx.fillRect(x - width/4, hy, width/2, 8);
+        ctx.fillRect(x - width/6, hy + 12, width/3, 6);
+    }
+}
+
+// Torche égyptienne
+function drawEgyptianTorch(ctx, x, y, flickerOffset) {
+    const time = state.frameTick * 0.1;
+    const flicker = Math.sin(time + flickerOffset) * 0.3 + 0.7;
+
+    // Support de la torche
+    ctx.fillStyle = '#4A3C2A';
+    ctx.fillRect(x - 4, y, 8, 40);
+
+    // Bol de la torche
+    ctx.fillStyle = '#8B7355';
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y);
+    ctx.lineTo(x - 8, y - 15);
+    ctx.lineTo(x + 8, y - 15);
+    ctx.lineTo(x + 12, y);
+    ctx.fill();
+
+    // Lueur de la flamme
+    const glowGradient = ctx.createRadialGradient(x, y - 25, 0, x, y - 25, 40);
+    glowGradient.addColorStop(0, `rgba(255, 150, 50, ${0.4 * flicker})`);
+    glowGradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(x, y - 25, 40, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flamme
+    ctx.fillStyle = '#FF6600';
+    ctx.beginPath();
+    ctx.moveTo(x, y - 45 - flicker * 10);
+    ctx.quadraticCurveTo(x - 10, y - 30, x - 6, y - 15);
+    ctx.lineTo(x + 6, y - 15);
+    ctx.quadraticCurveTo(x + 10, y - 30, x, y - 45 - flicker * 10);
+    ctx.fill();
+
+    // Coeur de la flamme
+    ctx.fillStyle = '#FFCC00';
+    ctx.beginPath();
+    ctx.moveTo(x, y - 40 - flicker * 8);
+    ctx.quadraticCurveTo(x - 5, y - 28, x - 3, y - 18);
+    ctx.lineTo(x + 3, y - 18);
+    ctx.quadraticCurveTo(x + 5, y - 28, x, y - 40 - flicker * 8);
+    ctx.fill();
+}
+
+// ===== SPRITE AMÉLIORÉ : SPHINX (ennemi volant du niveau 9) =====
+function drawEnhancedSphinx(ctx, e) {
+    const time = state.frameTick;
+    const hover = Math.sin(time * 0.08) * 4;
+    const wingFlap = Math.sin(time * 0.3) * 20;
+
+    ctx.save();
+    ctx.translate(e.x + e.w/2, e.y + e.h/2 + hover);
+
+    const dir = e.dir || 1;
+    ctx.scale(dir, 1);
+
+    // Ombre au sol
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(0, e.h/2 + 20 - hover, e.w * 0.4, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ailes (derrière le corps)
+    ctx.fillStyle = '#C4A77D';
+
+    // Aile gauche
+    ctx.save();
+    ctx.rotate((-30 + wingFlap) * Math.PI / 180);
+    ctx.beginPath();
+    ctx.moveTo(-5, 0);
+    ctx.quadraticCurveTo(-35, -20, -45, 5);
+    ctx.quadraticCurveTo(-30, 10, -5, 5);
+    ctx.fill();
+    // Détails de l'aile
+    ctx.strokeStyle = '#8B7355';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-10, 2);
+    ctx.lineTo(-35, -5);
+    ctx.moveTo(-15, 3);
+    ctx.lineTo(-40, 5);
+    ctx.stroke();
+    ctx.restore();
+
+    // Aile droite
+    ctx.save();
+    ctx.rotate((30 - wingFlap) * Math.PI / 180);
+    ctx.beginPath();
+    ctx.moveTo(5, 0);
+    ctx.quadraticCurveTo(35, -20, 45, 5);
+    ctx.quadraticCurveTo(30, 10, 5, 5);
+    ctx.fill();
+    ctx.strokeStyle = '#8B7355';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(10, 2);
+    ctx.lineTo(35, -5);
+    ctx.moveTo(15, 3);
+    ctx.lineTo(40, 5);
+    ctx.stroke();
+    ctx.restore();
+
+    // Corps du sphinx (lion stylisé)
+    const bodyGradient = ctx.createLinearGradient(-15, -10, 15, 15);
+    bodyGradient.addColorStop(0, '#DEB887');
+    bodyGradient.addColorStop(0.5, '#C4A77D');
+    bodyGradient.addColorStop(1, '#A08060');
+    ctx.fillStyle = bodyGradient;
+    ctx.beginPath();
+    ctx.ellipse(0, 5, 18, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pattes avant
+    ctx.fillStyle = '#C4A77D';
+    ctx.fillRect(-12, 10, 6, 12);
+    ctx.fillRect(6, 10, 6, 12);
+
+    // Queue
+    ctx.strokeStyle = '#A08060';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(15, 5);
+    ctx.quadraticCurveTo(25, 0, 22, -8);
+    ctx.stroke();
+    // Touffe de la queue
+    ctx.fillStyle = '#8B7355';
+    ctx.beginPath();
+    ctx.arc(22, -10, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tête humaine du sphinx
+    const headGradient = ctx.createRadialGradient(-2, -12, 0, -2, -12, 15);
+    headGradient.addColorStop(0, '#DEB887');
+    headGradient.addColorStop(1, '#C4A77D');
+    ctx.fillStyle = headGradient;
+    ctx.beginPath();
+    ctx.arc(0, -12, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Coiffe égyptienne (némès)
+    ctx.fillStyle = '#4169E1';
+    ctx.beginPath();
+    ctx.moveTo(-12, -15);
+    ctx.lineTo(-15, 0);
+    ctx.lineTo(-8, -5);
+    ctx.lineTo(0, -22);
+    ctx.lineTo(8, -5);
+    ctx.lineTo(15, 0);
+    ctx.lineTo(12, -15);
+    ctx.closePath();
+    ctx.fill();
+
+    // Bandes de la coiffe
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(-10, -18, 20, 3);
+    ctx.fillRect(-12, -8, 4, 10);
+    ctx.fillRect(8, -8, 4, 10);
+
+    // Visage
+    // Yeux
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(-5, -13, 3, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(5, -13, 3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pupilles (suivent le joueur légèrement)
+    ctx.fillStyle = '#4A0080';
+    ctx.beginPath();
+    ctx.arc(-5 + dir, -13, 2, 0, Math.PI * 2);
+    ctx.arc(5 + dir, -13, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Yeux qui brillent
+    const eyeGlow = Math.sin(time * 0.1) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(255, 215, 0, ${eyeGlow * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(-5, -13, 4, 0, Math.PI * 2);
+    ctx.arc(5, -13, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Nez
+    ctx.strokeStyle = '#A08060';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, -12);
+    ctx.lineTo(0, -8);
+    ctx.stroke();
+
+    // Bouche sérieuse
+    ctx.strokeStyle = '#8B7355';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-4, -5);
+    ctx.lineTo(4, -5);
+    ctx.stroke();
+
+    // Barbe cérémonielle
+    ctx.fillStyle = '#4169E1';
+    ctx.beginPath();
+    ctx.moveTo(-2, -4);
+    ctx.lineTo(-3, 5);
+    ctx.lineTo(3, 5);
+    ctx.lineTo(2, -4);
+    ctx.fill();
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(-2, -3, 4, 2);
+
+    ctx.restore();
+}
+
 function drawEnhancedLevelBackground(ctx, w, h, camX) {
     if (state.level === 1) {
         drawLevel1Background(ctx, w, h, camX);
@@ -2935,6 +3510,8 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel7Background(ctx, w, h, camX);
     } else if (state.level === 8) {
         drawLevel8Background(ctx, w, h, camX);
+    } else if (state.level === 9) {
+        drawLevel9Background(ctx, w, h, camX);
     }
 }
 
@@ -2947,6 +3524,8 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel7Foreground(ctx, w, h, camX);
     } else if (state.level === 8) {
         drawLevel8Foreground(ctx, w, h, camX);
+    } else if (state.level === 9) {
+        drawLevel9Foreground(ctx, w, h, camX);
     }
 }
 
@@ -2999,6 +3578,7 @@ function resetVisualCache() {
     VisualCache.level2 = null;
     VisualCache.level7 = null;
     VisualCache.level8 = null;
+    VisualCache.level9 = null;
 }
 
 // Export des fonctions
@@ -3014,5 +3594,6 @@ window.drawEnhancedMushroomPlatform = drawEnhancedMushroomPlatform;
 window.drawEnhancedMovingPlatform = drawEnhancedMovingPlatform;
 window.drawEnhancedKnight = drawEnhancedKnight;
 window.drawEnhancedShyGuy = drawEnhancedShyGuy;
+window.drawEnhancedSphinx = drawEnhancedSphinx;
 window.updateVisualElements = updateVisualElements;
 window.resetVisualCache = resetVisualCache;
