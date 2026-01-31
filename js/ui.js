@@ -393,6 +393,17 @@ function quitToMenu() {
     if (state.animationId) cancelAnimationFrame(state.animationId);
 }
 
+// ===== SETTINGS PANEL =====
+function openSettings() {
+    document.getElementById('settings-panel').classList.add('open');
+    document.getElementById('settings-overlay').classList.add('open');
+}
+
+function closeSettings() {
+    document.getElementById('settings-panel').classList.remove('open');
+    document.getElementById('settings-overlay').classList.remove('open');
+}
+
 // ===== OPTIONS =====
 function toggleSound() {
     state.soundEnabled = !state.soundEnabled;
@@ -401,7 +412,6 @@ function toggleSound() {
     if (toggle) {
         toggle.classList.toggle('active', state.soundEnabled);
     }
-    updateSoundButton();
 }
 
 function toggleTimer() {
@@ -410,11 +420,19 @@ function toggleTimer() {
     document.getElementById('timer-display').style.display = state.timerEnabled ? 'block' : 'none';
 }
 
-function updateSoundButton() {
-    const button = document.getElementById('sound-button');
-    if (!button) return;
-    button.textContent = state.soundEnabled ? '🔊 Son: ON' : '🔇 Son: OFF';
-    button.classList.toggle('off', !state.soundEnabled);
+function toggleFullscreen() {
+    const toggle = document.getElementById('fullscreen-toggle');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+            if (toggle) toggle.classList.add('active');
+        }).catch(err => {
+            console.log('Fullscreen error:', err);
+        });
+    } else {
+        document.exitFullscreen().then(() => {
+            if (toggle) toggle.classList.remove('active');
+        });
+    }
 }
 
 // ===== SYSTÈME DE BADGES =====
@@ -563,5 +581,8 @@ window.restartLevel = restartLevel;
 window.quitToMenu = quitToMenu;
 window.toggleSound = toggleSound;
 window.toggleTimer = toggleTimer;
+window.toggleFullscreen = toggleFullscreen;
+window.openSettings = openSettings;
+window.closeSettings = closeSettings;
 window.submitHallOfFame = submitHallOfFame;
 window.returnToMenu = returnToMenu;
