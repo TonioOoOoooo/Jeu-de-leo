@@ -42,8 +42,11 @@ function draw() {
         return;
     }
     
-    // Grille cahier pour niveaux 1-2
-    if (state.level <= 2) {
+    // Arrière-plan amélioré pour niveaux 1-2
+    if (state.level <= 2 && typeof drawEnhancedLevelBackground === 'function') {
+        const camX = Math.min(0, (canvas.width * 0.3) - player.x);
+        drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
+    } else if (state.level <= 2) {
         drawNotebookGrid();
     }
     
@@ -122,7 +125,13 @@ function draw() {
     
     // Joueur
     player.draw(ctx);
-    
+
+    // Éléments de premier plan (papillons, oiseaux) pour niveaux 1-2
+    if (state.level <= 2 && typeof drawEnhancedLevelForeground === 'function') {
+        const camX = Math.min(0, (canvas.width * 0.3) - player.x);
+        drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
+    }
+
     // Particules
     ParticleSystem.draw(ctx);
     
@@ -396,14 +405,19 @@ function drawPlatforms() {
                 break;
                 
             case 'moving':
-                ctx.fillStyle = "#3498db";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.strokeStyle = "#2980b9";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = "white";
-                ctx.fillRect(p.x + 5, p.y + 5, 5, 5);
-                ctx.fillRect(p.x + p.w - 10, p.y + 5, 5, 5);
+                // Plateforme mobile améliorée pour niveaux 1-2
+                if (state.level <= 2 && typeof drawEnhancedMovingPlatform === 'function') {
+                    drawEnhancedMovingPlatform(ctx, p);
+                } else {
+                    ctx.fillStyle = "#3498db";
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "#2980b9";
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(p.x, p.y, p.w, p.h);
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(p.x + 5, p.y + 5, 5, 5);
+                    ctx.fillRect(p.x + p.w - 10, p.y + 5, 5, 5);
+                }
                 break;
                 
             case 'pipe':
@@ -763,17 +777,22 @@ function drawPlatforms() {
                 break;
                 
             default:
-                ctx.fillStyle = state.level === 3 ? "#5d4037" : "#2c3e50";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.strokeStyle = state.level === 3 ? "#8d6e63" : "#27ae60";
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                for (let i = 0; i < p.w; i += 10) {
-                    ctx.lineTo(p.x + i + 5, p.y - 5);
-                    ctx.lineTo(p.x + i + 10, p.y);
+                // Plateformes améliorées pour niveaux 1-2
+                if (state.level <= 2 && typeof drawEnhancedGrassPlatform === 'function') {
+                    drawEnhancedGrassPlatform(ctx, p);
+                } else {
+                    ctx.fillStyle = state.level === 3 ? "#5d4037" : "#2c3e50";
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = state.level === 3 ? "#8d6e63" : "#27ae60";
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    for (let i = 0; i < p.w; i += 10) {
+                        ctx.lineTo(p.x + i + 5, p.y - 5);
+                        ctx.lineTo(p.x + i + 10, p.y);
+                    }
+                    ctx.stroke();
                 }
-                ctx.stroke();
         }
     }
 }
@@ -1252,78 +1271,81 @@ function drawEnemies() {
     for (const e of currentLevelData.enemies) {
         switch (e.type) {
             case 'zombie':
-                // Corps
-                ctx.fillStyle = "#2ecc71";
-                ctx.fillRect(e.x, e.y, e.w, e.h);
-                // Tête
-                ctx.fillRect(e.x - 5, e.y - 20, e.w + 10, 30);
-                // Yeux
-                ctx.fillStyle = "white";
-                ctx.beginPath();
-                ctx.arc(e.x + 12, e.y - 5, 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(e.x + 32, e.y - 5, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = "#333";
-                ctx.beginPath();
-                ctx.arc(e.x + 12, e.y - 5, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(e.x + 32, e.y - 5, 2, 0, Math.PI * 2);
-                ctx.fill();
-                // Texte
-                ctx.fillStyle = "#333";
-                ctx.font = "bold 16px 'Patrick Hand'";
-                ctx.fillText("REEE!", e.x, e.y - 30);
-                // Pieds animés
-                ctx.fillStyle = "#27ae60";
-                if (state.frameTick % 20 < 10) {
-                    ctx.fillRect(e.x + 5, e.y + e.h, 10, 10);
+                // Utiliser le sprite amélioré pour les niveaux 1-2
+                if (state.level <= 2 && typeof drawEnhancedZombie === 'function') {
+                    drawEnhancedZombie(ctx, e);
                 } else {
-                    ctx.fillRect(e.x + e.w - 15, e.y + e.h, 10, 10);
+                    // Fallback: sprite basique
+                    ctx.fillStyle = "#2ecc71";
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    ctx.fillRect(e.x - 5, e.y - 20, e.w + 10, 30);
+                    ctx.fillStyle = "white";
+                    ctx.beginPath();
+                    ctx.arc(e.x + 12, e.y - 5, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(e.x + 32, e.y - 5, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = "#333";
+                    ctx.beginPath();
+                    ctx.arc(e.x + 12, e.y - 5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(e.x + 32, e.y - 5, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = "#333";
+                    ctx.font = "bold 16px 'Patrick Hand'";
+                    ctx.fillText("REEE!", e.x, e.y - 30);
+                    ctx.fillStyle = "#27ae60";
+                    if (state.frameTick % 20 < 10) {
+                        ctx.fillRect(e.x + 5, e.y + e.h, 10, 10);
+                    } else {
+                        ctx.fillRect(e.x + e.w - 15, e.y + e.h, 10, 10);
+                    }
                 }
                 break;
-                
+
             case 'chest_monster':
-                // Coffre
-                ctx.fillStyle = "#8d6e63";
-                ctx.fillRect(e.x, e.y, e.w, e.h);
-                ctx.strokeStyle = "#333";
-                ctx.lineWidth = 2;
-                ctx.strokeRect(e.x, e.y, e.w, e.h);
-                // Dents
-                ctx.fillStyle = "white";
-                ctx.beginPath();
-                ctx.moveTo(e.x, e.y + 20);
-                for (let i = 0; i < e.w; i += 10) {
-                    ctx.lineTo(e.x + i + 5, e.y + 30);
-                    ctx.lineTo(e.x + i + 10, e.y + 20);
+                // Utiliser le sprite amélioré pour les niveaux 1-2
+                if (state.level <= 2 && typeof drawEnhancedChestMonster === 'function') {
+                    drawEnhancedChestMonster(ctx, e);
+                } else {
+                    // Fallback: sprite basique
+                    ctx.fillStyle = "#8d6e63";
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    ctx.strokeStyle = "#333";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(e.x, e.y, e.w, e.h);
+                    ctx.fillStyle = "white";
+                    ctx.beginPath();
+                    ctx.moveTo(e.x, e.y + 20);
+                    for (let i = 0; i < e.w; i += 10) {
+                        ctx.lineTo(e.x + i + 5, e.y + 30);
+                        ctx.lineTo(e.x + i + 10, e.y + 20);
+                    }
+                    ctx.fill();
+                    ctx.fillStyle = "#e74c3c";
+                    ctx.beginPath();
+                    ctx.arc(e.x + 15, e.y + 10, 5, 0, Math.PI * 2);
+                    ctx.arc(e.x + e.w - 15, e.y + 10, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = "#e74c3c";
+                    ctx.lineWidth = 3;
+                    const tx = e.x + e.w + 10;
+                    const ty = e.y + e.h;
+                    ctx.beginPath();
+                    ctx.moveTo(tx, ty);
+                    ctx.lineTo(tx, ty - 50);
+                    ctx.moveTo(tx - 10, ty - 50);
+                    ctx.lineTo(tx + 10, ty - 50);
+                    ctx.moveTo(tx - 10, ty - 50);
+                    ctx.lineTo(tx - 10, ty - 65);
+                    ctx.moveTo(tx, ty - 50);
+                    ctx.lineTo(tx, ty - 70);
+                    ctx.moveTo(tx + 10, ty - 50);
+                    ctx.lineTo(tx + 10, ty - 65);
+                    ctx.stroke();
                 }
-                ctx.fill();
-                // Yeux
-                ctx.fillStyle = "#e74c3c";
-                ctx.beginPath();
-                ctx.arc(e.x + 15, e.y + 10, 5, 0, Math.PI * 2);
-                ctx.arc(e.x + e.w - 15, e.y + 10, 5, 0, Math.PI * 2);
-                ctx.fill();
-                // Trident
-                ctx.strokeStyle = "#e74c3c";
-                ctx.lineWidth = 3;
-                const tx = e.x + e.w + 10;
-                const ty = e.y + e.h;
-                ctx.beginPath();
-                ctx.moveTo(tx, ty);
-                ctx.lineTo(tx, ty - 50);
-                ctx.moveTo(tx - 10, ty - 50);
-                ctx.lineTo(tx + 10, ty - 50);
-                ctx.moveTo(tx - 10, ty - 50);
-                ctx.lineTo(tx - 10, ty - 65);
-                ctx.moveTo(tx, ty - 50);
-                ctx.lineTo(tx, ty - 70);
-                ctx.moveTo(tx + 10, ty - 50);
-                ctx.lineTo(tx + 10, ty - 65);
-                ctx.stroke();
                 break;
                 
             case 'shy_guy':

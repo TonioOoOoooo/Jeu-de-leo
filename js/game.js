@@ -494,6 +494,11 @@ function update() {
     if (state.secretHintCooldown > 0) state.secretHintCooldown--;
     if (state.encouragementCooldown > 0) state.encouragementCooldown--;
 
+    // Mise à jour des éléments visuels (nuages, etc.)
+    if (typeof updateVisualElements === 'function') {
+        updateVisualElements();
+    }
+
     // Mise à jour des power-ups (sauf bouclier qui ne se consomme que sur coup)
     // BOUCLIER : permanent jusqu'à prendre un coup !
     if (state.powerups.superJump > 0) state.powerups.superJump--;
