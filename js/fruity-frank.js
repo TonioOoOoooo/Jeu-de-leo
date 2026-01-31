@@ -36,6 +36,8 @@ const FRANK_CONFIG = {
         BANANA_DARK: '#CCAA00',
         STRAWBERRY_RED: '#FF3366',
         STRAWBERRY_DARK: '#CC0033',
+        ORANGE: '#FF8800',
+        ORANGE_DARK: '#CC6600',
         WHITE: '#FFFFFF',
         STEM_GREEN: '#00AA00',
         STEM_BROWN: '#884422'
@@ -51,7 +53,8 @@ const TILE = {
     CHERRY: 4,          // Cerise à collecter
     STRAWBERRY: 5,      // Fraise à collecter
     BANANA: 6,          // Banane à collecter
-    NEST: 7             // Nid des monstres
+    NEST: 7,            // Nid des monstres
+    ORANGE: 8           // Orange à collecter
 };
 
 // ===== ÉTAT DU JEU FRUITY FRANK =====
@@ -97,24 +100,25 @@ const frankState = {
 };
 
 // ===== NIVEAU PRÉDÉFINI (Design style Amstrad CPC) =====
+// Légende: W=Mur, D=Terre, .=Vide, A=Pomme, C=Cerise, S=Fraise, B=Banane, O=Orange, N=Nid, F=Frank spawn
+// IMPORTANT: Les pommes (A) doivent TOUJOURS être au-dessus de la terre (D) pour ne pas tomber au départ!
 const FRUITY_FRANK_LEVEL = [
     "WWWWWWWWWWWWWWWWWWWW",
-    "W......C.....C.....W",
-    "W.DD.DDDDDD.DDDD.D.W",
-    "W.DD.D....D.D..D.D.W",
-    "W.DD.D.AA.D.D..D.D.W",
-    "W....D.AA.D....D...W",
-    "W.DDDD....DDDDDD.DDW",
-    "WS...D..N...D....S.W",
-    "W.DDDD......DDDD.DDW",
-    "W....D.AA.D....D...W",
-    "W.DD.D.AA.D.D..D.D.W",
-    "W.DD.D....D.D..D.D.W",
-    "W.DD.DDDDDD.DDDD.D.W",
-    "WF.....B.....B....FW",
+    "WC..S..B..C..B..S.CW",
+    "WDDDDDDDDDDDDDDDDDDW",
+    "W.A.DDD.A..A.DDD.A.W",
+    "WDDDDDDDDDDDDDDDDDOW",
+    "WS.DDDC....CDDDD.S.W",
+    "WDDDDD......DDDDDDDW",
+    "WO.DDD..N..DDD.O.DDW",
+    "WDDDDD......DDDDDDDW",
+    "WS.DDDC....CDDDD.S.W",
+    "WDDDDDDDDDDDDDDDDDOW",
+    "W.A.DDD.A..A.DDD.A.W",
+    "WDDDDDDDDDDDDDDDDDDW",
+    "WC..S..B.F.B..S..C.W",
     "WWWWWWWWWWWWWWWWWWWW"
 ];
-// Légende: W=Mur, D=Terre, .=Vide, A=Pomme, C=Cerise, S=Fraise, B=Banane, N=Nid, F=Frank spawn
 
 // ===== INITIALISATION =====
 function initFruityFrankGrid() {
@@ -171,6 +175,10 @@ function initFruityFrankGrid() {
                     break;
                 case 'B':
                     frankState.grid[y][x] = TILE.BANANA;
+                    frankState.fruitsTotal++;
+                    break;
+                case 'O':
+                    frankState.grid[y][x] = TILE.ORANGE;
                     frankState.fruitsTotal++;
                     break;
                 case 'N':
@@ -273,18 +281,18 @@ function updateFrankMovement() {
         let nextX = frank.gridX;
         let nextY = frank.gridY;
 
-        // Lecture des touches
-        if (keys.up && canFrankMove(frank.gridX, frank.gridY - 1)) {
+        // Lecture des touches (avec possibilité de pousser les pommes)
+        if (keys.up && canFrankMoveOrPush(frank.gridX, frank.gridY - 1, 0, -1)) {
             nextY--;
             frank.direction = 'up';
-        } else if (keys.down && canFrankMove(frank.gridX, frank.gridY + 1)) {
+        } else if (keys.down && canFrankMoveOrPush(frank.gridX, frank.gridY + 1, 0, 1)) {
             nextY++;
             frank.direction = 'down';
-        } else if (keys.left && canFrankMove(frank.gridX - 1, frank.gridY)) {
+        } else if (keys.left && canFrankMoveOrPush(frank.gridX - 1, frank.gridY, -1, 0)) {
             nextX--;
             frank.direction = 'left';
             frank.facingRight = false;
-        } else if (keys.right && canFrankMove(frank.gridX + 1, frank.gridY)) {
+        } else if (keys.right && canFrankMoveOrPush(frank.gridX + 1, frank.gridY, 1, 0)) {
             nextX++;
             frank.direction = 'right';
             frank.facingRight = true;
@@ -326,16 +334,19 @@ function updateFrankMovement() {
                 frankState.grid[frank.gridY][frank.gridX] = TILE.EMPTY;
                 frankState.score += 5;
                 if (typeof AudioSystem !== 'undefined') AudioSystem.play('coin');
-            } else if (tile === TILE.CHERRY || tile === TILE.STRAWBERRY || tile === TILE.BANANA) {
+            } else if (tile === TILE.CHERRY || tile === TILE.STRAWBERRY || tile === TILE.BANANA || tile === TILE.ORANGE) {
                 // Collecter fruit
                 frankState.grid[frank.gridY][frank.gridX] = TILE.EMPTY;
                 frankState.fruitsCollected++;
                 frankState.score += 100;
                 if (typeof AudioSystem !== 'undefined') AudioSystem.play('powerup');
-                if (typeof ParticleSystem !== 'undefined') {
+                if (typeof ParticleSystem !== 'undefined' && typeof canvas !== 'undefined') {
+                    // Calculer l'offset écran pour les particules
+                    const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
+                    const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
                     ParticleSystem.emit(
-                        frank.pixelX + tileSize / 2,
-                        frank.pixelY + tileSize / 2,
+                        offsetX + frank.pixelX + tileSize / 2,
+                        offsetY + frank.pixelY + tileSize / 2,
                         'coin', 15
                     );
                 }
@@ -353,9 +364,74 @@ function canFrankMove(gridX, gridY) {
 
     const tile = frankState.grid[gridY][gridX];
 
-    // Frank peut traverser: EMPTY, DIRT, CHERRY, STRAWBERRY, BANANA
+    // Frank peut traverser: EMPTY, DIRT, CHERRY, STRAWBERRY, BANANA, ORANGE
     // Frank NE PEUT PAS traverser: WALL, APPLE, NEST
     return tile !== TILE.WALL && tile !== TILE.APPLE && tile !== TILE.NEST;
+}
+
+// ===== FRANK PEUT SE DÉPLACER OU POUSSER UNE POMME? =====
+function canFrankMoveOrPush(gridX, gridY, dirX, dirY) {
+    // D'abord vérifier si le mouvement simple est possible
+    if (canFrankMove(gridX, gridY)) {
+        return true;
+    }
+
+    // Si c'est une pomme, vérifier si on peut la pousser
+    if (gridX >= 0 && gridX < FRANK_CONFIG.GRID_WIDTH &&
+        gridY >= 0 && gridY < FRANK_CONFIG.GRID_HEIGHT) {
+
+        const tile = frankState.grid[gridY][gridX];
+
+        if (tile === TILE.APPLE) {
+            // Position derrière la pomme
+            const behindX = gridX + dirX;
+            const behindY = gridY + dirY;
+
+            // Vérifier si l'espace derrière est libre (vide seulement, pas terre)
+            if (behindX >= 0 && behindX < FRANK_CONFIG.GRID_WIDTH &&
+                behindY >= 0 && behindY < FRANK_CONFIG.GRID_HEIGHT) {
+
+                const tileBehind = frankState.grid[behindY][behindX];
+
+                // On peut pousser si l'espace derrière est vide
+                if (tileBehind === TILE.EMPTY) {
+                    // Pousser la pomme!
+                    pushApple(gridX, gridY, behindX, behindY);
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+// ===== POUSSER UNE POMME =====
+function pushApple(fromX, fromY, toX, toY) {
+    // Trouver la pomme dans la liste
+    const apple = frankState.apples.find(a => a.gridX === fromX && a.gridY === fromY && !a.falling);
+
+    if (apple) {
+        // Déplacer la pomme
+        frankState.grid[fromY][fromX] = TILE.EMPTY;
+        apple.gridX = toX;
+        apple.gridY = toY;
+        apple.pixelY = toY * FRANK_CONFIG.TILE_SIZE;
+        frankState.grid[toY][toX] = TILE.APPLE;
+
+        if (typeof AudioSystem !== 'undefined') AudioSystem.play('jump');
+
+        // Vérifier si la pomme doit tomber après avoir été poussée
+        const belowY = toY + 1;
+        if (belowY < FRANK_CONFIG.GRID_HEIGHT) {
+            const tileBelow = frankState.grid[belowY][toX];
+            if (tileBelow === TILE.EMPTY) {
+                // La pomme va tomber!
+                apple.shaking = true;
+                apple.shakeTimer = 15; // Tremblement court avant chute
+            }
+        }
+    }
 }
 
 // ===== PHYSIQUE DES POMMES =====
@@ -403,10 +479,12 @@ function updateApples() {
                         frankState.monsters.splice(j, 1);
                         frankState.score += 200;
                         if (typeof AudioSystem !== 'undefined') AudioSystem.play('boss_hit');
-                        if (typeof ParticleSystem !== 'undefined') {
+                        if (typeof ParticleSystem !== 'undefined' && typeof canvas !== 'undefined') {
+                            const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
+                            const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
                             ParticleSystem.emit(
-                                monster.pixelX + tileSize / 2,
-                                monster.pixelY + tileSize / 2,
+                                offsetX + monster.pixelX + tileSize / 2,
+                                offsetY + monster.pixelY + tileSize / 2,
                                 'damage', 20
                             );
                         }
@@ -540,10 +618,12 @@ function frankDeath() {
 
     frankState.frank.dead = true;
     if (typeof AudioSystem !== 'undefined') AudioSystem.play('hurt');
-    if (typeof ParticleSystem !== 'undefined') {
+    if (typeof ParticleSystem !== 'undefined' && typeof canvas !== 'undefined') {
+        const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
+        const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
         ParticleSystem.emit(
-            frankState.frank.pixelX + FRANK_CONFIG.TILE_SIZE / 2,
-            frankState.frank.pixelY + FRANK_CONFIG.TILE_SIZE / 2,
+            offsetX + frankState.frank.pixelX + FRANK_CONFIG.TILE_SIZE / 2,
+            offsetY + frankState.frank.pixelY + FRANK_CONFIG.TILE_SIZE / 2,
             'damage', 30
         );
     }
@@ -599,6 +679,10 @@ function drawFruityFrank(ctx, offsetX, offsetY) {
 
                 case TILE.BANANA:
                     drawBanana(ctx, px, py, tileSize);
+                    break;
+
+                case TILE.ORANGE:
+                    drawOrange(ctx, px, py, tileSize);
                     break;
 
                 case TILE.NEST:
@@ -852,6 +936,48 @@ function drawBanana(ctx, px, py, size) {
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.beginPath();
     ctx.ellipse(cx - 2, cy - 4, 5, 2, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ===== DESSIN: ORANGE =====
+function drawOrange(ctx, px, py, size) {
+    const colors = FRANK_CONFIG.COLORS;
+    const cx = px + size / 2;
+    const cy = py + size / 2;
+
+    // Corps de l'orange
+    ctx.fillStyle = colors.ORANGE;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ombre
+    ctx.fillStyle = colors.ORANGE_DARK;
+    ctx.beginPath();
+    ctx.arc(cx + 2, cy + 3, 9, 0, Math.PI);
+    ctx.fill();
+
+    // Texture (petits points)
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const dotX = cx + Math.cos(angle) * 6;
+        const dotY = cy + Math.sin(angle) * 6;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 1, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Feuille
+    ctx.fillStyle = colors.STEM_GREEN;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - 10, 4, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflet
+    ctx.fillStyle = colors.WHITE;
+    ctx.beginPath();
+    ctx.arc(cx - 4, cy - 3, 3, 0, Math.PI * 2);
     ctx.fill();
 }
 
