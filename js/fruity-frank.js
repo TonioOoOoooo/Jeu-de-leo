@@ -83,6 +83,10 @@ const frankState = {
     // Monstres violets
     monsters: [],
 
+    // Pépin (projectile) - UN SEUL à la fois comme dans le jeu original
+    seed: null,
+    seedCooldown: 0,
+
     // Score et progression
     score: 0,
     fruitsCollected: 0,
@@ -125,6 +129,8 @@ function initFruityFrankGrid() {
     frankState.grid = [];
     frankState.apples = [];
     frankState.monsters = [];
+    frankState.seed = null;
+    frankState.seedCooldown = 0;
     frankState.spawnTimer = 0;
     frankState.frameTick = 0;
     frankState.score = 0;
@@ -244,11 +250,19 @@ function updateFruityFrank() {
         frankState.frank.mouthOpen = !frankState.frank.mouthOpen;
     }
 
+    // Cooldown du pépin
+    if (frankState.seedCooldown > 0) {
+        frankState.seedCooldown--;
+    }
+
     // Mouvement de Frank
     updateFrankMovement();
 
     // Physique des pommes
     updateApples();
+
+    // Update du pépin (projectile)
+    updateSeed();
 
     // Update des monstres
     updateMonsters();
@@ -526,6 +540,108 @@ function updateApples() {
     }
 }
 
+// ===== SYSTÈME DE PÉPIN (PROJECTILE) =====
+function shootSeed() {
+    // Ne peut pas tirer si un pépin est déjà actif ou en cooldown
+    if (frankState.seed !== null || frankState.seedCooldown > 0) {
+        return;
+    }
+
+    const frank = frankState.frank;
+    const tileSize = FRANK_CONFIG.TILE_SIZE;
+
+    // Créer le pépin dans la direction où Frank regarde
+    let vx = 0, vy = 0;
+    const speed = 6;
+
+    switch (frank.direction) {
+        case 'up': vy = -speed; break;
+        case 'down': vy = speed; break;
+        case 'left': vx = -speed; break;
+        case 'right': vx = speed; break;
+    }
+
+    frankState.seed = {
+        x: frank.pixelX + tileSize / 2,
+        y: frank.pixelY + tileSize / 2,
+        vx: vx,
+        vy: vy
+    };
+
+    if (typeof AudioSystem !== 'undefined') AudioSystem.play('jump');
+}
+
+function updateSeed() {
+    if (!frankState.seed) return;
+
+    const seed = frankState.seed;
+    const tileSize = FRANK_CONFIG.TILE_SIZE;
+
+    // Déplacer le pépin
+    seed.x += seed.vx;
+    seed.y += seed.vy;
+
+    // Position dans la grille
+    const gridX = Math.floor(seed.x / tileSize);
+    const gridY = Math.floor(seed.y / tileSize);
+
+    // Vérifier les limites
+    if (gridX < 0 || gridX >= FRANK_CONFIG.GRID_WIDTH ||
+        gridY < 0 || gridY >= FRANK_CONFIG.GRID_HEIGHT) {
+        // Pépin sorti de l'écran
+        frankState.seed = null;
+        frankState.seedCooldown = 60; // 1 seconde de cooldown
+        return;
+    }
+
+    // Vérifier collision avec mur ou terre
+    const tile = frankState.grid[gridY][gridX];
+    if (tile === TILE.WALL || tile === TILE.DIRT) {
+        // Pépin touche un obstacle
+        frankState.seed = null;
+        frankState.seedCooldown = 60;
+        return;
+    }
+
+    // Vérifier collision avec le nid (pépin perdu)
+    if (tile === TILE.NEST) {
+        frankState.seed = null;
+        frankState.seedCooldown = 90; // Plus long cooldown si perdu dans le nid
+        return;
+    }
+
+    // Vérifier collision avec monstres
+    for (let i = frankState.monsters.length - 1; i >= 0; i--) {
+        const monster = frankState.monsters[i];
+        const mx = monster.pixelX + tileSize / 2;
+        const my = monster.pixelY + tileSize / 2;
+
+        const dist = Math.sqrt((seed.x - mx) ** 2 + (seed.y - my) ** 2);
+
+        if (dist < tileSize * 0.6) {
+            // Touché! Tuer le monstre
+            frankState.monsters.splice(i, 1);
+            frankState.score += 100; // Points pour tir
+
+            if (typeof AudioSystem !== 'undefined') AudioSystem.play('boss_hit');
+            if (typeof ParticleSystem !== 'undefined' && typeof canvas !== 'undefined') {
+                const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
+                const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
+                ParticleSystem.emit(
+                    offsetX + monster.pixelX + tileSize / 2,
+                    offsetY + monster.pixelY + tileSize / 2,
+                    'damage', 20
+                );
+            }
+
+            // Pépin disparaît après avoir touché
+            frankState.seed = null;
+            frankState.seedCooldown = 60;
+            return;
+        }
+    }
+}
+
 // ===== MONSTRES =====
 function updateMonsters() {
     const tileSize = FRANK_CONFIG.TILE_SIZE;
@@ -711,6 +827,11 @@ function drawFruityFrank(ctx, offsetX, offsetY) {
         const px = offsetX + monster.pixelX;
         const py = offsetY + monster.pixelY;
         drawMonster(ctx, px, py, tileSize, monster.animFrame, monster.canDig);
+    }
+
+    // Dessiner le pépin (projectile)
+    if (frankState.seed) {
+        drawSeed(ctx, offsetX + frankState.seed.x, offsetY + frankState.seed.y);
     }
 
     // Dessiner Frank
@@ -1116,6 +1237,38 @@ function drawMonster(ctx, px, py, size, animFrame, canDig) {
     ctx.fillRect(cx + 1, cy + 4 + bounce, 2, 3);
 }
 
+// ===== DESSIN: PÉPIN (Projectile) =====
+function drawSeed(ctx, x, y) {
+    const colors = FRANK_CONFIG.COLORS;
+
+    // Pépin marron avec effet de rotation
+    const rotation = frankState.frameTick * 0.3;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+
+    // Corps du pépin (ovale marron)
+    ctx.fillStyle = colors.STEM_BROWN;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 6, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflet
+    ctx.fillStyle = colors.WHITE;
+    ctx.beginPath();
+    ctx.ellipse(-2, -1, 2, 1, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // Effet de traînée
+    ctx.fillStyle = 'rgba(136, 68, 34, 0.3)';
+    ctx.beginPath();
+    ctx.arc(x - frankState.seed.vx * 0.5, y - frankState.seed.vy * 0.5, 4, 0, Math.PI * 2);
+    ctx.fill();
+}
+
 // ===== DESSIN: FRANK (Personnage jaune rond) =====
 function drawFrank(ctx, offsetX, offsetY, size) {
     const frank = frankState.frank;
@@ -1218,15 +1371,30 @@ function drawFruityFrankUI(ctx, offsetX, offsetY) {
         ctx.fillText(`VIES: ${state.lives}`, offsetX + 420, offsetY - 22);
     }
 
+    // Indicateur de pépin (prêt ou en cooldown)
+    const seedReady = frankState.seed === null && frankState.seedCooldown === 0;
+    ctx.fillStyle = seedReady ? '#00FF00' : '#FF0000';
+    ctx.beginPath();
+    ctx.arc(offsetX + FRANK_CONFIG.GRID_WIDTH * tileSize - 30, offsetY - 30, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = colors.WHITE;
+    ctx.font = 'bold 10px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TIR', offsetX + FRANK_CONFIG.GRID_WIDTH * tileSize - 30, offsetY - 15);
+
     // Instructions
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.font = '12px "Courier New", monospace';
     ctx.textAlign = 'right';
-    ctx.fillText('Fleches: Deplacer | Collecter tous les fruits!',
-        offsetX + FRANK_CONFIG.GRID_WIDTH * tileSize - 10, offsetY - 22);
+    ctx.fillText('Fleches: Deplacer | ESPACE: Tirer',
+        offsetX + FRANK_CONFIG.GRID_WIDTH * tileSize - 60, offsetY - 22);
 }
 
 // ===== GESTION DES TOUCHES =====
 function handleFruityFrankInput(e, pressed) {
-    // Géré par le système de touches global (keys.up, keys.down, etc.)
+    // Barre d'espace pour tirer le pépin
+    if (pressed && (e.key === ' ' || e.code === 'Space')) {
+        shootSeed();
+        e.preventDefault();
+    }
 }
