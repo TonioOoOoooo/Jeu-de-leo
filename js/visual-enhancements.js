@@ -1063,6 +1063,12 @@ function drawEnhancedChestMonster(ctx, e) {
 
 // ===== PLATEFORMES AMÉLIORÉES =====
 
+// Fonction pseudo-aléatoire déterministe basée sur une seed
+function seededRandom(seed) {
+    const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+    return x - Math.floor(x);
+}
+
 function drawEnhancedGrassPlatform(ctx, p) {
     // Sol avec dégradé de terre
     const dirtGradient = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
@@ -1089,23 +1095,28 @@ function drawEnhancedGrassPlatform(ctx, p) {
     ctx.arc(p.x + p.w, p.y + 9, 9, -Math.PI * 0.5, Math.PI * 0.5);
     ctx.fill();
 
-    // Touffes d'herbe détaillées
-    ctx.fillStyle = '#388E3C';
+    // Touffes d'herbe détaillées (positions fixes basées sur l'index)
     const grassBladeCount = Math.floor(p.w / 15);
     for (let i = 0; i < grassBladeCount; i++) {
-        const gx = p.x + 5 + i * 15 + Math.random() * 5;
-        const sway = Math.sin(state.frameTick * 0.03 + i * 0.5) * 3;
+        // Position fixe basée sur l'index et la position de la plateforme
+        const seed = p.x + p.y + i * 17;
+        const randomOffset = seededRandom(seed) * 5;
+        const gx = p.x + 5 + i * 15 + randomOffset;
+
+        // Animation douce du balancement (très lent)
+        const sway = Math.sin(state.frameTick * 0.015 + i * 0.5) * 2;
 
         // Plusieurs brins par touffe
         for (let j = 0; j < 3; j++) {
             const offset = (j - 1) * 3;
+            const bladeHeight = 12 + seededRandom(seed + j * 7) * 6;
             ctx.beginPath();
             ctx.moveTo(gx + offset, p.y);
             ctx.quadraticCurveTo(
                 gx + offset + sway,
                 p.y - 8,
-                gx + offset + sway * 1.5,
-                p.y - 12 - Math.random() * 6
+                gx + offset + sway * 1.2,
+                p.y - bladeHeight
             );
             ctx.lineWidth = 2;
             ctx.strokeStyle = j === 1 ? '#4CAF50' : '#388E3C';
@@ -1113,12 +1124,15 @@ function drawEnhancedGrassPlatform(ctx, p) {
         }
     }
 
-    // Petites fleurs occasionnelles
-    for (let i = 0; i < p.w / 80; i++) {
-        const fx = p.x + 30 + i * 80 + Math.random() * 40;
+    // Petites fleurs occasionnelles (positions et couleurs fixes)
+    const flowerCount = Math.floor(p.w / 80);
+    const flowerColors = ['#FFEB3B', '#E91E63', '#9C27B0', '#FF5722'];
+    for (let i = 0; i < flowerCount; i++) {
+        const seed = p.x * 3 + p.y * 7 + i * 31;
+        const fx = p.x + 30 + i * 80 + seededRandom(seed) * 40;
         const fy = p.y - 5;
-        const flowerColors = ['#FFEB3B', '#E91E63', '#9C27B0', '#FF5722'];
-        const color = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+        const colorIndex = Math.floor(seededRandom(seed + 100) * flowerColors.length);
+        const color = flowerColors[colorIndex];
 
         // Tige
         ctx.strokeStyle = '#388E3C';
@@ -1147,13 +1161,18 @@ function drawEnhancedGrassPlatform(ctx, p) {
         ctx.fill();
     }
 
-    // Détails de la terre (cailloux, racines)
+    // Détails de la terre (cailloux - positions fixes)
     ctx.fillStyle = '#8D6E63';
-    for (let i = 0; i < p.w / 50; i++) {
-        const rx = p.x + 20 + i * 50 + Math.random() * 30;
-        const ry = p.y + 25 + Math.random() * 20;
+    const rockCount = Math.floor(p.w / 50);
+    for (let i = 0; i < rockCount; i++) {
+        const seed = p.x * 5 + p.y * 11 + i * 41;
+        const rx = p.x + 20 + i * 50 + seededRandom(seed) * 30;
+        const ry = p.y + 25 + seededRandom(seed + 1) * 20;
+        const rw = 4 + seededRandom(seed + 2) * 4;
+        const rh = 3 + seededRandom(seed + 3) * 3;
+        const rotation = seededRandom(seed + 4) * Math.PI;
         ctx.beginPath();
-        ctx.ellipse(rx, ry, 4 + Math.random() * 4, 3 + Math.random() * 3, Math.random(), 0, Math.PI * 2);
+        ctx.ellipse(rx, ry, rw, rh, rotation, 0, Math.PI * 2);
         ctx.fill();
     }
 
