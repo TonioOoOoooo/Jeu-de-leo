@@ -400,7 +400,14 @@ function initLevel(levelNum) {
     currentLevelData = levelDef.setup(canvas.width, canvas.height);
     
     // Reset joueur
-    player.reset(levelDef.playerStart.x, levelDef.playerStart.y);
+    let startX = levelDef.playerStart.x;
+    let startY = levelDef.playerStart.y;
+    if (levelNum === 1 && currentLevelData.platforms && currentLevelData.platforms.length > 0) {
+        const spawnPlatform = currentLevelData.platforms[0];
+        startY = spawnPlatform.y - player.h - 2;
+        startX = Math.max(spawnPlatform.x + 20, startX);
+    }
+    player.reset(startX, startY);
     
     // Reset état niveau
     state.hasKey = false;
