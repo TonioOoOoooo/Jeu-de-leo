@@ -42,8 +42,8 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour niveaux 1-4
-    if (state.level <= 4 && typeof drawEnhancedLevelBackground === 'function') {
+    // Arrière-plan amélioré pour niveaux 1-6
+    if (state.level <= 6 && typeof drawEnhancedLevelBackground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
     } else if (state.level <= 4) {
@@ -126,8 +126,8 @@ function draw() {
     // Joueur
     player.draw(ctx);
 
-    // Éléments de premier plan (papillons, oiseaux) pour niveaux 1-4
-    if (state.level <= 4 && typeof drawEnhancedLevelForeground === 'function') {
+    // Éléments de premier plan (papillons, oiseaux) pour niveaux 1-6
+    if (state.level <= 6 && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
@@ -275,7 +275,7 @@ function drawPortals() {
 
             // Effet de tourbillon
             const time = state.frameTick * 0.05;
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 6; i++) {
                 const angle = time + (i * Math.PI / 4);
                 const radius = (p.w / 2) * (0.3 + Math.sin(time * 2 + i) * 0.2);
                 const x = p.x + p.w/2 + Math.cos(angle) * radius;
@@ -327,7 +327,12 @@ function drawPortals() {
             ctx.stroke();
 
             ctx.fillStyle = p.color;
-            ctx.globalAlpha = 0.3 + Math.sin(state.frameTick * 0.1) * 0.1;
+            // Style Portal (ovale plein)
+            if (state.level === 6) {
+                ctx.globalAlpha = 0.8;
+            } else {
+                ctx.globalAlpha = 0.3 + Math.sin(state.frameTick * 0.1) * 0.1;
+            }
             ctx.fill();
             ctx.globalAlpha = 1;
         }
@@ -474,9 +479,9 @@ function drawPlatforms() {
                 
             case 'grass_block':
                 ctx.fillStyle = "#8B4513";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'grass');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.fillStyle = "#32CD32";
-                ctx.fillRect(p.x, p.y, p.w, 15);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -484,7 +489,8 @@ function drawPlatforms() {
                 
             case 'dirt_block':
                 ctx.fillStyle = "#5d4037";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'dirt');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 1;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -492,7 +498,8 @@ function drawPlatforms() {
                 
             case 'stone':
                 ctx.fillStyle = "#757575";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'stone');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -500,7 +507,8 @@ function drawPlatforms() {
                 
             case 'wood':
                 ctx.fillStyle = "#5D4037";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'wood');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -508,7 +516,8 @@ function drawPlatforms() {
                 
             case 'leaves':
                 ctx.fillStyle = "#228B22";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'leaves');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -516,7 +525,8 @@ function drawPlatforms() {
                 
             case 'netherrack':
                 ctx.fillStyle = "#800000";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'netherrack');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -524,15 +534,21 @@ function drawPlatforms() {
                 
             case 'metal':
                 ctx.fillStyle = "#7f8c8d";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.strokeStyle = "#95a5a6";
-                ctx.lineWidth = 2;
-                ctx.strokeRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = "#333";
-                ctx.beginPath();
-                ctx.arc(p.x + 8, p.y + 8, 3, 0, Math.PI * 2);
-                ctx.arc(p.x + p.w - 8, p.y + 8, 3, 0, Math.PI * 2);
-                ctx.fill();
+                // Niveau 6 : Style Portal
+                if (state.level === 6 && typeof drawPortalPlatform === 'function') {
+                    drawPortalPlatform(ctx, p.x, p.y, p.w, p.h);
+                } else {
+                    // Standard metal
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "#95a5a6";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(p.x, p.y, p.w, p.h);
+                    ctx.fillStyle = "#333";
+                    ctx.beginPath();
+                    ctx.arc(p.x + 8, p.y + 8, 3, 0, Math.PI * 2);
+                    ctx.arc(p.x + p.w - 8, p.y + 8, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 break;
                 
             case 'castle_wall':
@@ -780,13 +796,21 @@ function drawPlatforms() {
                 // Plateformes améliorées pour niveaux 1-2
                 if (state.level <= 2 && typeof drawEnhancedGrassPlatform === 'function') {
                     drawEnhancedGrassPlatform(ctx, p);
+                } else if (state.level === 3 && typeof drawEnhancedStonePlatform === 'function') {
+                    drawEnhancedStonePlatform(ctx, p);
+                } else if (state.level === 4 && typeof drawEnhancedMushroomPlatform === 'function') {
+                    drawEnhancedMushroomPlatform(ctx, p);
                 } else {
+                    // Fallback
                     ctx.fillStyle = state.level === 3 ? "#5d4037" : "#2c3e50";
+                    if (p.type === 'stone' || p.type === 'wood') ctx.fillStyle = "#5d4037"; // Fix pour blocs non gérés
+                    
                     ctx.fillRect(p.x, p.y, p.w, p.h);
                     ctx.strokeStyle = state.level === 3 ? "#8d6e63" : "#27ae60";
                     ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x + p.w, p.y);
                     for (let i = 0; i < p.w; i += 10) {
                         ctx.lineTo(p.x + i + 5, p.y - 5);
                         ctx.lineTo(p.x + i + 10, p.y);
@@ -1586,10 +1610,13 @@ function drawEnemies() {
             case 'skeleton':
                 if (state.level <= 4 && typeof drawEnhancedSkeleton === 'function') {
                     drawEnhancedSkeleton(ctx, e);
+                } else if (state.level === 5 && typeof drawMinecraftSkeleton === 'function') {
+                    // Squelette style Minecraft pour le niveau 5
+                    drawMinecraftSkeleton(ctx, e);
                 } else {
-                    // Fallback basic (code removed for clarity as we use enhanced version)
-                    ctx.fillStyle = "#ccc";
-                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    // Fallback cartoon si autre
+                    if (typeof drawEnhancedSkeleton === 'function') drawEnhancedSkeleton(ctx, e);
+                    else ctx.fillRect(e.x, e.y, e.w, e.h);
                 }
                 break;
 

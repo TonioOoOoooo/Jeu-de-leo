@@ -11,6 +11,8 @@ const VisualCache = {
     level2: null,
     level3: null,
     level4: null,
+    level5: null,
+    level6: null,
     initialized: false
 };
 
@@ -342,6 +344,61 @@ function initLevel4Visuals(w, h) {
     }
 
     VisualCache.level4 = visuals;
+    return visuals;
+}
+
+// ===== NIVEAU 5 : MINECRAFT =====
+function initLevel5Visuals(w, h) {
+    if (VisualCache.level5) return VisualCache.level5;
+
+    const visuals = {
+        clouds: [],
+        bgParticles: [] // Cendres pour le Nether
+    };
+
+    // Nuages cubiques
+    for (let i = 0; i < 8; i++) {
+        visuals.clouds.push({
+            x: Math.random() * w * 3,
+            y: 50 + Math.random() * 100,
+            w: 100 + Math.random() * 100,
+            h: 30 + Math.random() * 20,
+            speed: 0.1 + Math.random() * 0.1
+        });
+    }
+
+    // Particules de cendres (Nether)
+    for (let i = 0; i < 50; i++) {
+        visuals.bgParticles.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            size: Math.random() * 4 + 1,
+            speedY: -0.5 - Math.random() * 1,
+            color: Math.random() > 0.5 ? '#800000' : '#550000'
+        });
+    }
+
+    VisualCache.level5 = visuals;
+    return visuals;
+}
+
+// ===== NIVEAU 6 : PORTAL LABS =====
+function initLevel6Visuals(w, h) {
+    if (VisualCache.level6) return VisualCache.level6;
+
+    const visuals = {
+        bgPanels: []
+    };
+
+    // Panneaux muraux modulaires en fond
+    const panelSize = 100;
+    for (let x = 0; x < w * 2; x += panelSize) {
+        for (let y = 0; y < h; y += panelSize) {
+            visuals.bgPanels.push({ x, y, size: panelSize - 2 });
+        }
+    }
+
+    VisualCache.level6 = visuals;
     return visuals;
 }
 
@@ -1028,6 +1085,81 @@ function drawLevel4Foreground(ctx, w, h, camX) {
     }
 }
 
+// ===== FONCTIONS DE DESSIN NIVEAU 5 (MINECRAFT) =====
+function drawLevel5Background(ctx, w, h, camX) {
+    const visuals = initLevel5Visuals(w, h);
+
+    if (state.inSubLevel) {
+        // NETHER : Fond rouge sombre et brumeux
+        ctx.fillStyle = "#2A0505"; // Rouge très sombre fond
+        ctx.fillRect(0, 0, w, h);
+
+        // Brume de lave lointaine
+        const grad = ctx.createLinearGradient(0, h - 200, 0, h);
+        grad.addColorStop(0, "rgba(255, 69, 0, 0)");
+        grad.addColorStop(1, "rgba(255, 69, 0, 0.3)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Particules de cendres qui montent
+        for (const p of visuals.bgParticles) {
+            const y = (p.y + state.frameTick * p.speedY) % h;
+            const drawY = y < 0 ? y + h : y;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, drawY, p.size, p.size);
+        }
+    } else {
+        // OVERWORLD : Ciel bleu Minecraft
+        ctx.fillStyle = "#87CEEB";
+        ctx.fillRect(0, 0, w, h);
+
+        // Soleil carré
+        ctx.fillStyle = "#FFF";
+        ctx.fillRect(w - 150, 50, 80, 80);
+
+        // Nuages cubiques
+        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        for (const c of visuals.clouds) {
+            const x = (c.x + state.frameTick * c.speed) % (w * 2) - camX * 0.1;
+            // Dessiner un nuage "pixelisé"
+            ctx.fillRect(x, c.y, c.w, c.h);
+        }
+    }
+}
+
+function drawLevel5Foreground(ctx, w, h, camX) {
+    // Pas de premier plan spécifique pour Minecraft, le style est épuré
+}
+
+// ===== FONCTIONS DE DESSIN NIVEAU 6 (PORTAL) =====
+function drawLevel6Background(ctx, w, h, camX) {
+    const visuals = initLevel6Visuals(w, h);
+
+    // Fond gris technique sombre
+    ctx.fillStyle = "#1b1b1b";
+    ctx.fillRect(0, 0, w, h);
+
+    // Panneaux modulaires en arrière-plan (parallaxe très lent)
+    ctx.fillStyle = "#222";
+    for (const p of visuals.bgPanels) {
+        const x = p.x - camX * 0.05;
+        if (x > -100 && x < w + 100) {
+            ctx.fillRect(x, p.y, p.size, p.size);
+            // Petit point de fixation
+            ctx.fillStyle = "#111";
+            ctx.fillRect(x + p.size/2 - 2, p.y + p.size/2 - 2, 4, 4);
+            ctx.fillStyle = "#222";
+        }
+    }
+    
+    // Vignettage pour ambiance
+    const grad = ctx.createRadialGradient(w/2, h/2, h*0.3, w/2, h/2, h);
+    grad.addColorStop(0, "rgba(0,0,0,0)");
+    grad.addColorStop(1, "rgba(0,0,0,0.6)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+}
+
 function drawFloatingIsland(ctx, x, y, width, hasTree) {
     // Dessous rocheux de l'île
     const rockGradient = ctx.createLinearGradient(x, y, x, y + width);
@@ -1458,6 +1590,70 @@ function drawEnhancedSkeleton(ctx, e) {
     ctx.restore();
 }
 
+// Squelette Cubique style Minecraft
+function drawMinecraftSkeleton(ctx, e) {
+    const walk = Math.sin(state.frameTick * 0.2) * 5;
+    const dir = e.dir || 1;
+
+    ctx.save();
+    ctx.translate(e.x + e.w/2, e.y);
+    if (dir === -1) ctx.scale(-1, 1);
+
+    // Couleur os
+    const boneColor = "#DDD";
+    const darkBone = "#AAA";
+
+    // Jambe droite
+    ctx.fillStyle = boneColor;
+    ctx.fillRect(2, 32, 6, 28 + walk);
+    
+    // Jambe gauche
+    ctx.fillRect(-8, 32, 6, 28 - walk);
+
+    // Corps (côtes)
+    ctx.fillRect(-10, 12, 20, 20);
+    ctx.fillStyle = "#555"; // Vide entre les côtes
+    ctx.fillRect(-6, 16, 12, 2);
+    ctx.fillRect(-6, 22, 12, 2);
+
+    // Tête carrée
+    ctx.fillStyle = boneColor;
+    ctx.fillRect(-12, -10, 24, 22);
+    
+    // Visage pixelisé
+    ctx.fillStyle = "#222";
+    ctx.fillRect(-8, -4, 6, 6); // Oeil G
+    ctx.fillRect(2, -4, 6, 6);  // Oeil D
+    ctx.fillRect(-6, 6, 12, 4); // Bouche
+
+    // Bras et Arc
+    ctx.fillStyle = boneColor;
+    
+    // Bras qui tient l'arc (devant)
+    ctx.save();
+    ctx.translate(10, 16);
+    ctx.rotate(-0.5); // Bras levé
+    ctx.fillRect(-3, 0, 6, 24);
+    
+    // Arc
+    ctx.translate(0, 20);
+    ctx.strokeStyle = "#5D4037"; // Bois
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 20, -1, 4);
+    ctx.stroke();
+    ctx.strokeStyle = "#FFF"; // Corde
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(-1)*20, Math.sin(-1)*20);
+    ctx.lineTo(Math.cos(4)*20, Math.sin(4)*20);
+    ctx.stroke();
+
+    ctx.restore();
+
+    ctx.restore();
+}
+
 // ===== PLATEFORMES AMÉLIORÉES =====
 
 // Fonction pseudo-aléatoire déterministe basée sur une seed
@@ -1579,6 +1775,125 @@ function drawEnhancedGrassPlatform(ctx, p) {
     ctx.strokeRect(p.x, p.y, p.w, p.h);
 }
 
+function drawEnhancedStonePlatform(ctx, p) {
+    // Sol de donjon en pierre (Niveau 3)
+    const cx = p.x;
+    const cy = p.y;
+    const cw = p.w;
+    const ch = p.h;
+
+    // Fond gris foncé pierre
+    ctx.fillStyle = "#4a4a4a";
+    ctx.fillRect(cx, cy, cw, ch);
+
+    // Briques irrégulières
+    const brickH = 20;
+    const brickW = 40;
+    
+    for (let y = 0; y < ch; y += brickH) {
+        const offset = (y / brickH) % 2 === 0 ? 0 : brickW / 2;
+        for (let x = -offset; x < cw; x += brickW) {
+            // Couleur de brique légèrement variable
+            const noise = seededRandom(cx + x + cy + y) * 20;
+            const colVal = 60 + noise;
+            ctx.fillStyle = `rgb(${colVal}, ${colVal}, ${colVal})`;
+            
+            // Dessiner brique avec marge pour le joint
+            const bx = Math.max(cx, cx + x);
+            const bw = Math.min(brickW - 2, cx + cw - bx);
+            
+            if (bw > 0) {
+                ctx.fillRect(bx, cy + y, bw, brickH - 2);
+                
+                // Highlight (bord haut)
+                ctx.fillStyle = "rgba(255,255,255,0.1)";
+                ctx.fillRect(bx, cy + y, bw, 2);
+                
+                // Shadow (bord bas)
+                ctx.fillStyle = "rgba(0,0,0,0.3)";
+                ctx.fillRect(bx, cy + y + brickH - 4, bw, 2);
+            }
+        }
+    }
+
+    // Bordure
+    ctx.strokeStyle = "#222";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx, cy, cw, ch);
+}
+
+function drawEnhancedMushroomPlatform(ctx, p) {
+    // Sol organique champignon (Niveau 4)
+    
+    // Corps spongieux
+    const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+    grad.addColorStop(0, "#e67e22"); // Orange
+    grad.addColorStop(1, "#d35400"); // Foncé
+    ctx.fillStyle = grad;
+    
+    // Forme arrondie sur les bords
+    ctx.beginPath();
+    ctx.roundRect(p.x, p.y, p.w, p.h, 10);
+    ctx.fill();
+
+    // Mousse verte sur le dessus
+    ctx.fillStyle = "#2ecc71";
+    ctx.beginPath();
+    ctx.roundRect(p.x - 2, p.y - 5, p.w + 4, 15, 10);
+    ctx.fill();
+
+    // Pois / Spores sur le côté
+    ctx.fillStyle = "rgba(255,255,255,0.3)";
+    for (let i = 0; i < p.w / 30; i++) {
+        const rx = seededRandom(p.x + i) * p.w;
+        const ry = seededRandom(p.y + i) * p.h;
+        ctx.beginPath();
+        ctx.arc(p.x + rx, p.y + 10 + ry * 0.8, 3 + seededRandom(i)*3, 0, Math.PI*2);
+        ctx.fill();
+    }
+}
+
+function drawMinecraftBlock(ctx, x, y, w, h, type) {
+    // Dessine une texture pixelisée style Minecraft
+    const size = 40; // Taille standard d'un bloc visuel
+    
+    // Couleurs palettes
+    const palettes = {
+        'grass': { main: '#7CFC00', side: '#5D4037', top: '#32CD32' },
+        'dirt': { main: '#5D4037', noise: '#3E2723' },
+        'stone': { main: '#757575', noise: '#616161' },
+        'netherrack': { main: '#800000', noise: '#500000' },
+        'wood': { main: '#5D4037', noise: '#4E342E' },
+        'leaves': { main: '#228B22', noise: '#006400' }
+    };
+
+    const pal = palettes[type] || palettes['dirt'];
+
+    // Fond
+    ctx.fillStyle = pal.main;
+    ctx.fillRect(x, y, w, h);
+
+    // Bruit pixelisé (simplifié)
+    ctx.fillStyle = pal.noise || "rgba(0,0,0,0.1)";
+    const pixelSize = 4;
+    
+    for (let py = 0; py < h; py += pixelSize) {
+        for (let px = 0; px < w; px += pixelSize) {
+            if (seededRandom(x + px + y + py) > 0.7) {
+                ctx.fillRect(x + px, y + py, pixelSize, pixelSize);
+            }
+        }
+    }
+
+    // Herbe sur le dessus pour Grass
+    if (type === 'grass') {
+        ctx.fillStyle = pal.top;
+        ctx.fillRect(x, y, w, 10);
+        // Bords qui dépassent un peu
+        for(let i=0; i<w; i+=8) ctx.fillRect(x+i, y+10, 4, 4);
+    }
+}
+
 function drawEnhancedMovingPlatform(ctx, p) {
     const time = state.frameTick;
     const glow = 0.5 + Math.sin(time * 0.1) * 0.3;
@@ -1641,6 +1956,29 @@ function drawEnhancedMovingPlatform(ctx, p) {
     ctx.fill();
 }
 
+function drawPortalPlatform(ctx, x, y, w, h) {
+    // Style Portal : Blanc propre avec bords noirs
+    ctx.fillStyle = "#E0E0E0";
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 4);
+    ctx.fill();
+
+    // Bordure noire fine
+    ctx.strokeStyle = "#222";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Ligne centrale technique
+    ctx.fillStyle = "#CCC";
+    ctx.fillRect(x + 10, y + h/2 - 2, w - 20, 4);
+
+    // Témoins lumineux aux coins
+    const lightColor = (state.frameTick % 60 < 30) ? "#00FFFF" : "#FF9900"; // Bleu/Orange
+    ctx.fillStyle = lightColor;
+    ctx.fillRect(x + 5, y + 5, 6, 6);
+    ctx.fillRect(x + w - 11, y + 5, 6, 6);
+}
+
 // ===== FONCTION PRINCIPALE D'INTÉGRATION =====
 
 function drawEnhancedLevelBackground(ctx, w, h, camX) {
@@ -1652,6 +1990,10 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel3Background(ctx, w, h, camX);
     } else if (state.level === 4) {
         drawLevel4Background(ctx, w, h, camX);
+    } else if (state.level === 5) {
+        drawLevel5Background(ctx, w, h, camX);
+    } else if (state.level === 6) {
+        drawLevel6Background(ctx, w, h, camX);
     }
 }
 
@@ -1664,6 +2006,10 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel3Foreground(ctx, w, h, camX);
     } else if (state.level === 4) {
         drawLevel4Foreground(ctx, w, h, camX);
+    } else if (state.level === 5) {
+        drawLevel5Foreground(ctx, w, h, camX);
+    } else if (state.level === 6) {
+        // Pas de foreground spécifique pour le moment
     }
 }
 
@@ -1717,6 +2063,8 @@ function resetVisualCache() {
     VisualCache.level2 = null;
     VisualCache.level3 = null;
     VisualCache.level4 = null;
+    VisualCache.level5 = null;
+    VisualCache.level6 = null;
 }
 
 // Export des fonctions
@@ -1724,8 +2072,13 @@ window.drawEnhancedLevelBackground = drawEnhancedLevelBackground;
 window.drawEnhancedLevelForeground = drawEnhancedLevelForeground;
 window.drawEnhancedZombie = drawEnhancedZombie;
 window.drawEnhancedChestMonster = drawEnhancedChestMonster;
+window.drawMinecraftSkeleton = drawMinecraftSkeleton; // Export squelette Minecraft
 window.drawEnhancedSkeleton = drawEnhancedSkeleton;
 window.drawEnhancedGrassPlatform = drawEnhancedGrassPlatform;
+window.drawEnhancedStonePlatform = drawEnhancedStonePlatform;
+window.drawEnhancedMushroomPlatform = drawEnhancedMushroomPlatform;
 window.drawEnhancedMovingPlatform = drawEnhancedMovingPlatform;
+window.drawMinecraftBlock = drawMinecraftBlock;
+window.drawPortalPlatform = drawPortalPlatform;
 window.updateVisualElements = updateVisualElements;
 window.resetVisualCache = resetVisualCache;
