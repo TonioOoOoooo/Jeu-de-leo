@@ -674,6 +674,33 @@ function updatePlayer() {
 }
 
 // ===== SYSTÈME DE CHECKPOINTS =====
+function isPositionSafe(x, y) {
+    // Vérifie si une position est sécurisée (pas au-dessus du vide)
+    if (!currentLevelData || !currentLevelData.hazards) return true;
+
+    // Vérifier s'il y a une plateforme en dessous
+    let hasPlatformBelow = false;
+    for (const p of currentLevelData.platforms) {
+        // Plateforme en dessous du joueur (dans les 200 pixels)
+        if (x + player.w > p.x && x < p.x + p.w && y + player.h <= p.y && y + player.h + 200 > p.y) {
+            hasPlatformBelow = true;
+            break;
+        }
+    }
+
+    // Vérifier s'il y a un vide/lave directement en dessous
+    for (const h of currentLevelData.hazards) {
+        if (h.type === 'void' || h.type === 'lava_floor') {
+            // Si le checkpoint est au-dessus du vide sans plateforme en dessous, c'est dangereux
+            if (x + player.w > h.x && x < h.x + h.w && y < h.y && !hasPlatformBelow) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 function updateCheckpoint() {
     // Sauvegarder automatiquement la position du joueur tous les X pixels
     // Pour éviter de recommencer au tout début quand on meurt !
@@ -688,8 +715,14 @@ function updateCheckpoint() {
         return;
     }
 
-    // Si le joueur a progressé d'au moins checkpointDistance pixels vers la droite
-    if (player.x > state.lastCheckpoint.x + state.checkpointDistance) {
+    // Conditions pour sauvegarder un checkpoint :
+    // 1. Le joueur a progressé vers la droite
+    // 2. Le joueur est au sol (pas en l'air)
+    // 3. La position est sécurisée (pas au-dessus du vide)
+    if (player.x > state.lastCheckpoint.x + state.checkpointDistance &&
+        player.grounded &&
+        isPositionSafe(player.x, player.y)) {
+
         // Sauvegarder nouveau checkpoint (invisible pour le joueur)
         state.lastCheckpoint = {
             x: player.x,
@@ -1435,17 +1468,22 @@ function takeDamage(reason) {
 }
 
 function respawnPlayer() {
-    // Utiliser le checkpoint si disponible, sinon position de départ
-    // Cela évite de recommencer au tout début du niveau !
+    // Utiliser le checkpoint si disponible ET sécurisé, sinon position de départ
     let spawnPos;
-    if (state.lastCheckpoint) {
+    const levelStart = LEVELS[state.level].playerStart;
+
+    // Vérifier si le checkpoint est valide et sécurisé
+    if (state.lastCheckpoint && isPositionSafe(state.lastCheckpoint.x, state.lastCheckpoint.y)) {
         spawnPos = state.lastCheckpoint;
-        // Message pour indiquer qu'on respawn au checkpoint
         showMessage('🔄 CHECKPOINT', 'Tu reprends près d\'ici !', 1500);
     } else {
-        spawnPos = LEVELS[state.level].playerStart;
+        // Checkpoint invalide ou dangereux, retour au début du niveau
+        spawnPos = levelStart;
+        state.lastCheckpoint = { x: levelStart.x, y: levelStart.y }; // Reset le checkpoint
+        showMessage('🔄 DÉBUT', 'On recommence au début !', 1500);
     }
 
+    // Reset complet du joueur
     player.x = spawnPos.x;
     player.y = spawnPos.y;
     player.vx = 0;
@@ -1454,7 +1492,12 @@ function respawnPlayer() {
     player.climbing = false;
     player.jumpCount = 0;
     player.currentPlatform = null;
-    state.invincibilityTimer = state.difficulty <= 0.7 ? 150 : 120; // Plus long pour laisser le temps de se remettre
+
+    // Reset les touches pour éviter les mouvements bloqués
+    resetKeys();
+
+    // Invincibilité plus longue pour laisser le temps de se remettre
+    state.invincibilityTimer = state.difficulty <= 0.5 ? 180 : state.difficulty <= 0.7 ? 150 : 120;
 
     // Particules au respawn
     ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 20);
@@ -1908,6 +1951,48 @@ function maybeShowMathGame(callback) {
     }
 }
 
+// ===== PLEIN ÉCRAN =====
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        // Entrer en plein écran
+        document.documentElement.requestFullscreen().then(() => {
+            document.getElementById('fullscreen-button').textContent = '📺 Quitter plein écran';
+        }).catch(err => {
+            console.log('Erreur plein écran:', err);
+        });
+    } else {
+        // Quitter le plein écran
+        document.exitFullscreen().then(() => {
+            document.getElementById('fullscreen-button').textContent = '📺 Plein écran';
+        });
+    }
+}
+
+// ===== RESET DES TOUCHES (corrige le bug de touches bloquées) =====
+function resetKeys() {
+    keys.left = false;
+    keys.right = false;
+    keys.up = false;
+    keys.down = false;
+    keys.jump = false;
+}
+
+// Appeler resetKeys quand la fenêtre perd le focus (empêche les touches bloquées)
+window.addEventListener('blur', resetKeys);
+window.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        resetKeys();
+    }
+});
+
+// Reset les touches quand on clique sur le canvas (au cas où)
+document.addEventListener('mousedown', () => {
+    // Ne pas reset si on est en train de jouer activement
+    if (state.current !== GameState.PLAYING) {
+        resetKeys();
+    }
+});
+
 // ===== EXPORTS GLOBAUX POUR LES NOUVELLES FONCTIONS =====
 window.showCustomization = showCustomization;
 window.closeCustomization = closeCustomization;
@@ -1918,3 +2003,5 @@ window.closeStats = closeStats;
 window.skipMathGame = skipMathGame;
 window.showMathGame = showMathGame;
 window.maybeShowMathGame = maybeShowMathGame;
+window.toggleFullscreen = toggleFullscreen;
+window.resetKeys = resetKeys;
