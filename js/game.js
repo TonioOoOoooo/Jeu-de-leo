@@ -1580,7 +1580,13 @@ function showCompanionTip(message) {
         'cat': '🐱',
         'dog': '🐶',
         'bird': '🐦',
-        'rabbit': '🐰'
+        'rabbit': '🐰',
+        'dragon': '🐉',
+        'unicorn': '🦄',
+        'bear': '🐻',
+        'fox': '🦊',
+        'panda': '🐼',
+        'lion': '🦁'
     };
 
     icon.textContent = companionIcons[state.companion.type] || '🐱';
@@ -1710,7 +1716,7 @@ function updateCustomizationPreview() {
         '#9b59b6': 'Violet', '#f39c12': 'Orange', '#1abc9c': 'Turquoise',
         '#e91e63': 'Rose', '#00bcd4': 'Cyan'
     };
-    const companionIcons = { 'cat': '🐱', 'dog': '🐶', 'bird': '🐦', 'rabbit': '🐰' };
+    const companionIcons = { 'cat': '🐱', 'dog': '🐶', 'bird': '🐦', 'rabbit': '🐰', 'dragon': '🐉', 'unicorn': '🦄', 'bear': '🐻', 'fox': '🦊', 'panda': '🐼', 'lion': '🦁' };
 
     document.getElementById('preview-color').textContent = colorNames[state.playerColor] || 'Bleu';
     document.getElementById('preview-companion').textContent =
