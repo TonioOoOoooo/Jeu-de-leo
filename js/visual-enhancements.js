@@ -9,9 +9,11 @@
 const VisualCache = {
     level1: null,
     level2: null,
+    level6: null,
     level7: null,
     level8: null,
     level9: null,
+    level10: null,
     initialized: false
 };
 
@@ -1157,6 +1159,10 @@ function drawLevel6Background(ctx, w, h, camX) {
     grad.addColorStop(1, "rgba(0,0,0,0.6)");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
+}
+
+function drawLevel6Foreground(ctx, w, h, camX) {
+    // Pas d'éléments de premier plan dédiés pour le niveau 6
 }
 
 function drawFloatingIsland(ctx, x, y, width, hasTree) {
@@ -3502,31 +3508,29 @@ function drawEnhancedSphinx(ctx, e) {
 }
 
 function drawEnhancedLevelBackground(ctx, w, h, camX) {
-    if (state.level === 1) {
-        drawLevel1Background(ctx, w, h, camX);
-    } else if (state.level === 2) {
-        drawLevel2Background(ctx, w, h, camX);
-    } else if (state.level === 7) {
-        drawLevel7Background(ctx, w, h, camX);
-    } else if (state.level === 8) {
-        drawLevel8Background(ctx, w, h, camX);
-    } else if (state.level === 9) {
-        drawLevel9Background(ctx, w, h, camX);
-    }
+    if (state.level === 1) drawLevel1Background(ctx, w, h, camX);
+    else if (state.level === 2) drawLevel2Background(ctx, w, h, camX);
+    else if (state.level === 3) drawLevel3Background(ctx, w, h, camX);
+    else if (state.level === 4) drawLevel4Background(ctx, w, h, camX);
+    else if (state.level === 5) drawLevel5Background(ctx, w, h, camX);
+    else if (state.level === 6) drawLevel6Background(ctx, w, h, camX);
+    else if (state.level === 7) drawLevel7Background(ctx, w, h, camX);
+    else if (state.level === 8) drawLevel8Background(ctx, w, h, camX);
+    else if (state.level === 9) drawLevel9Background(ctx, w, h, camX);
+    else if (state.level === 10) drawLevel10Background(ctx, w, h, camX);
 }
 
 function drawEnhancedLevelForeground(ctx, w, h, camX) {
-    if (state.level === 1) {
-        drawLevel1Foreground(ctx, w, h, camX);
-    } else if (state.level === 2) {
-        drawLevel2Foreground(ctx, w, h, camX);
-    } else if (state.level === 7) {
-        drawLevel7Foreground(ctx, w, h, camX);
-    } else if (state.level === 8) {
-        drawLevel8Foreground(ctx, w, h, camX);
-    } else if (state.level === 9) {
-        drawLevel9Foreground(ctx, w, h, camX);
-    }
+    if (state.level === 1) drawLevel1Foreground(ctx, w, h, camX);
+    else if (state.level === 2) drawLevel2Foreground(ctx, w, h, camX);
+    else if (state.level === 3) drawLevel3Foreground(ctx, w, h, camX);
+    else if (state.level === 4) drawLevel4Foreground(ctx, w, h, camX);
+    else if (state.level === 5) drawLevel5Foreground(ctx, w, h, camX);
+    else if (state.level === 6) drawLevel6Foreground(ctx, w, h, camX);
+    else if (state.level === 7) drawLevel7Foreground(ctx, w, h, camX);
+    else if (state.level === 8) drawLevel8Foreground(ctx, w, h, camX);
+    else if (state.level === 9) drawLevel9Foreground(ctx, w, h, camX);
+    else if (state.level === 10) drawLevel10Foreground(ctx, w, h, camX);
 }
 
 // Mettre à jour les éléments visuels animés
@@ -3576,9 +3580,324 @@ function updateVisualElements() {
 function resetVisualCache() {
     VisualCache.level1 = null;
     VisualCache.level2 = null;
+    VisualCache.level6 = null;
     VisualCache.level7 = null;
     VisualCache.level8 = null;
     VisualCache.level9 = null;
+    VisualCache.level10 = null;
+}
+
+// ===== NIVEAU 10 : ZONE FINALE (CYBER-SPACE) =====
+function initLevel10Visuals(w, h) {
+    if (VisualCache.level10) return VisualCache.level10;
+
+    const visuals = {
+        gridLines: [],
+        staticDebris: []
+    };
+
+    // Grille Cybernétique (Style Synthwave / Tron)
+    // Lignes verticales
+    for (let x = 0; x < w * 4; x += 150) {
+        visuals.gridLines.push({ x: x, type: 'vertical' });
+    }
+    // Lignes horizontales (perspective)
+    for (let i = 0; i < 15; i++) {
+        // Espacement exponentiel pour effet de profondeur 3D
+        visuals.gridLines.push({ y: h - (i * i * 3), type: 'horizontal' });
+    }
+
+    // Débris numériques flottants
+    for (let i = 0; i < 30; i++) {
+        visuals.staticDebris.push({
+            x: Math.random() * w * 4,
+            y: Math.random() * h,
+            w: 5 + Math.random() * 20,
+            h: 5 + Math.random() * 20,
+            color: Math.random() > 0.5 ? '#00FFFF' : '#FF00FF', // Cyan et Magenta
+            speed: 0.1 + Math.random() * 0.4,
+            pulse: Math.random() * Math.PI * 2
+        });
+    }
+
+    VisualCache.level10 = visuals;
+    return visuals;
+}
+
+// ===== FONCTIONS DE DESSIN NIVEAU 10 (FINAL) =====
+function drawLevel10Background(ctx, w, h, camX) {
+    const visuals = initLevel10Visuals(w, h);
+
+    // Fond Espace Profond
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#050010'); // Noir violet
+    grad.addColorStop(0.5, '#100025');
+    grad.addColorStop(1, '#250040'); // Violet profond bas
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Grille défilante (Parallax)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 0, 255, 0.3)'; // Neon Rose
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#FF00FF';
+
+    // Lignes verticales qui défilent avec la caméra
+    visuals.gridLines.filter((l) => l.type === 'vertical').forEach((l) => {
+        const x = (l.x - camX * 0.2) % (w * 2);
+        if (x > -10 && x < w + 10) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+            ctx.stroke();
+        }
+    });
+
+    // Lignes horizontales (fixes par rapport à l'écran pour l'effet sol infini)
+    visuals.gridLines.filter((l) => l.type === 'horizontal').forEach((l) => {
+        if (l.y > 0 && l.y < h) {
+            ctx.beginPath();
+            ctx.moveTo(0, l.y);
+            ctx.lineTo(w, l.y);
+            ctx.stroke();
+        }
+    });
+    ctx.restore();
+
+    // Débris numériques
+    for (const d of visuals.staticDebris) {
+        const x = (d.x - camX * 0.4) % (w * 2);
+        if (x > -50 && x < w + 50) {
+            const pulse = 0.5 + Math.sin(state.frameTick * 0.1 + d.pulse) * 0.5;
+            ctx.fillStyle = d.color;
+            ctx.globalAlpha = 0.4 * pulse;
+            ctx.fillRect(x, d.y, d.w, d.h);
+            ctx.globalAlpha = 1;
+        }
+    }
+}
+
+function drawLevel10Foreground(ctx, w, h, camX) {
+    // Effet d'interférences / Glitch occasionnel pour l'ambiance finale
+    if (Math.random() < 0.02) {
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.03)';
+        ctx.fillRect(0, Math.random() * h, w, 5 + Math.random() * 20);
+    }
+}
+
+// === PLATEFORMES NIVEAU 10 (NEON TECH) ===
+function drawEnhancedSonicGround(ctx, p) {
+    // Bloc noir avec grille néon bleue
+    ctx.fillStyle = '#0a0a1a';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+
+    // Bordure néon
+    ctx.strokeStyle = '#00FFFF';
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#00FFFF';
+    ctx.strokeRect(p.x, p.y, p.w, p.h);
+
+    // Grille interne
+    ctx.globalAlpha = 0.2;
+    for (let i = 0; i < p.w; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(p.x + i, p.y);
+        ctx.lineTo(p.x + i, p.y + p.h);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+
+    // Bordure supérieure lumineuse solide
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(p.x, p.y, p.w, 3);
+}
+
+function drawEnhancedSonicPlatform(ctx, p) {
+    // Plateforme flottante futuriste
+    const pulse = Math.sin(state.frameTick * 0.1) * 0.5 + 0.5;
+
+    ctx.fillStyle = 'rgba(0, 0, 50, 0.9)';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+
+    ctx.strokeStyle = `rgba(255, 0, 255, ${0.6 + pulse * 0.4})`;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(p.x, p.y, p.w, p.h);
+
+    // Coeur énergétique central
+    ctx.fillStyle = `rgba(255, 0, 255, ${pulse})`;
+    ctx.shadowColor = '#FF00FF';
+    ctx.shadowBlur = 15;
+    ctx.fillRect(p.x + 10, p.y + p.h / 2 - 3, p.w - 20, 6);
+    ctx.shadowBlur = 0;
+}
+
+function drawEnhancedBossArena(ctx, p) {
+    // Sol de l'arène finale
+    const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+    grad.addColorStop(0, '#200040');
+    grad.addColorStop(1, '#050010');
+    ctx.fillStyle = grad;
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+
+    // Ligne de démarcation
+    ctx.fillStyle = '#FF00FF';
+    ctx.fillRect(p.x, p.y, p.w, 4);
+
+    // Motifs hexagonaux (simulés)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < p.w; i += 60) {
+        ctx.strokeRect(p.x + i, p.y, 60, p.h);
+    }
+}
+
+function drawEnhancedBossPlatform(ctx, p) {
+    // Plateforme de boss (rouge danger)
+    ctx.fillStyle = '#330000';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+
+    // Bordure rouge clignotante
+    const flash = Math.floor(state.frameTick / 15) % 2 === 0;
+    ctx.strokeStyle = flash ? '#FF0000' : '#880000';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(p.x, p.y, p.w, p.h);
+
+    // Bandes d'avertissement
+    ctx.fillStyle = '#FF0000';
+    for (let i = 0; i < p.w; i += 20) {
+        ctx.fillRect(p.x + i, p.y + p.h - 8, 10, 8);
+    }
+}
+
+// === BOSS FINAL : THE IRON OVERLORD ===
+function drawEnhancedBoss(ctx, boss) {
+    const time = state.frameTick;
+    // Flottement menaçant
+    const hover = Math.sin(time * 0.05) * 10;
+    const x = boss.x + boss.w / 2;
+    const y = boss.y + boss.h / 2 + hover;
+    const dir = boss.dir || -1;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(dir, 1); // Pour regarder dans la bonne direction
+
+    // Aura de puissance (Change selon la phase/PV)
+    const isAngry = boss.phase >= 2;
+    const isFurious = boss.phase === 3;
+
+    const pulse = 1.2 + Math.sin(time * 0.2) * 0.1;
+    let auraColor = 'rgba(100, 0, 255, 0.2)'; // Phase 1: Violet
+    if (isAngry) auraColor = 'rgba(255, 200, 0, 0.3)'; // Phase 2: Jaune
+    if (isFurious) auraColor = 'rgba(255, 0, 0, 0.5)'; // Phase 3: Rouge
+
+    ctx.fillStyle = auraColor;
+    ctx.beginPath();
+    ctx.arc(0, 0, 75 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // -- CHÂSSIS DU ROBOT --
+
+    // Réacteur bas
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.moveTo(-30, 30);
+    ctx.lineTo(30, 30);
+    ctx.lineTo(15, 70);
+    ctx.lineTo(-15, 70);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Flamme du réacteur
+    ctx.fillStyle = isFurious ? '#FF0000' : '#00FFFF';
+    ctx.beginPath();
+    ctx.moveTo(-10, 70);
+    ctx.lineTo(10, 70);
+    ctx.lineTo(0, 70 + 30 + Math.random() * 20);
+    ctx.fill();
+
+    // Epaules blindées
+    ctx.fillStyle = '#444';
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-50, -20);
+    ctx.lineTo(-85, -45);
+    ctx.lineTo(-85, 10);
+    ctx.lineTo(-45, 25);
+    ctx.fill();
+    ctx.stroke(); // G
+    ctx.beginPath();
+    ctx.moveTo(50, -20);
+    ctx.lineTo(85, -45);
+    ctx.lineTo(85, 10);
+    ctx.lineTo(45, 25);
+    ctx.fill();
+    ctx.stroke(); // D
+
+    // Cockpit sphérique
+    const cockpitGrad = ctx.createLinearGradient(-30, -30, 30, 30);
+    cockpitGrad.addColorStop(0, '#88CCFF');
+    cockpitGrad.addColorStop(1, '#004488');
+    ctx.fillStyle = cockpitGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 45, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflet vitre
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 40, 3.5, 5);
+    ctx.stroke();
+
+    // -- PILOTE (SILHOUETTE) --
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(0, 5, 18, Math.PI, 0);
+    ctx.fill(); // Corps
+    ctx.beginPath();
+    ctx.arc(0, -5, 12, 0, Math.PI * 2);
+    ctx.fill(); // Tête
+    // Yeux rouges brillants du pilote
+    ctx.fillStyle = '#F00';
+    ctx.fillRect(-5, -8, 4, 3);
+    ctx.fillRect(3, -8, 4, 3);
+
+    // Canons latéraux
+    ctx.fillStyle = '#666';
+    const recoil = boss.attackTimer % 100 < 10 ? -10 : 0; // Recul quand il tire
+    ctx.fillRect(45 + recoil, 5, 40, 15); // Canon D
+
+    ctx.restore();
+
+    // -- BARRE DE VIE DU BOSS (Flottante au-dessus) --
+    const hpW = 120;
+    const hpX = x - hpW / 2;
+    const hpY = y - 90;
+
+    // Cadre
+    ctx.fillStyle = '#000';
+    ctx.fillRect(hpX - 4, hpY - 4, hpW + 8, 18);
+    // Fond rouge (dégâts)
+    ctx.fillStyle = '#550000';
+    ctx.fillRect(hpX, hpY, hpW, 10);
+    // Barre de vie actuelle
+    const hpPercent = Math.max(0, boss.hp / boss.maxHp);
+    const hpColor = hpPercent > 0.5 ? '#00FF00' : hpPercent > 0.2 ? '#FFFF00' : '#FF0000';
+    ctx.fillStyle = hpColor;
+    ctx.fillRect(hpX, hpY, hpW * hpPercent, 10);
+
+    // Texte
+    ctx.fillStyle = '#FFF';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('IRON OVERLORD', x, hpY - 8);
+    ctx.textAlign = 'left';
 }
 
 // Export des fonctions
@@ -3595,5 +3914,10 @@ window.drawEnhancedMovingPlatform = drawEnhancedMovingPlatform;
 window.drawEnhancedKnight = drawEnhancedKnight;
 window.drawEnhancedShyGuy = drawEnhancedShyGuy;
 window.drawEnhancedSphinx = drawEnhancedSphinx;
+window.drawEnhancedSonicGround = drawEnhancedSonicGround;
+window.drawEnhancedSonicPlatform = drawEnhancedSonicPlatform;
+window.drawEnhancedBossArena = drawEnhancedBossArena;
+window.drawEnhancedBossPlatform = drawEnhancedBossPlatform;
+window.drawEnhancedBoss = drawEnhancedBoss;
 window.updateVisualElements = updateVisualElements;
 window.resetVisualCache = resetVisualCache;
