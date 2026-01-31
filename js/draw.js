@@ -42,8 +42,8 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour niveaux 1-2, 7-8
-    const enhancedLevels = [1, 2, 7, 8];
+    // Arrière-plan amélioré pour niveaux 1-2, 7-9
+    const enhancedLevels = [1, 2, 7, 8, 9];
     if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
@@ -131,8 +131,8 @@ function draw() {
     // Joueur
     player.draw(ctx);
 
-    // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles) pour niveaux améliorés
-    if ([1, 2, 7, 8].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
+    // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable) pour niveaux améliorés
+    if ([1, 2, 7, 8, 9].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     } else if (state.level <= 6 && typeof drawEnhancedLevelForeground === 'function') {
@@ -1432,101 +1432,82 @@ function drawEnemies() {
                 break;
 
             case 'sphinx':
-                // Sphinx volant égyptien pour le niveau BombJack
-                const float = Math.sin(state.frameTick * 0.1 + e.x * 0.01) * 8;
-                const wingFlap = Math.sin(state.frameTick * 0.3) * 10;
+                // Utiliser le sprite amélioré pour le niveau 9
+                if (state.level === 9 && typeof drawEnhancedSphinx === 'function') {
+                    drawEnhancedSphinx(ctx, e);
+                } else {
+                    // Fallback: sprite basique
+                    const float = Math.sin(state.frameTick * 0.1 + e.x * 0.01) * 8;
+                    const wingFlap = Math.sin(state.frameTick * 0.3) * 10;
 
-                // Ombre au sol
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-                ctx.beginPath();
-                ctx.ellipse(e.x + e.w/2, e.y + e.h + float + 15, e.w/2 - 5, 8, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Corps doré
-                ctx.fillStyle = '#d4a574';
-                ctx.beginPath();
-                ctx.ellipse(e.x + e.w/2, e.y + e.h/2 + float, e.w/2 - 2, e.h/2 - 2, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Bordure dorée
-                ctx.strokeStyle = '#b8845c';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Tête de pharaon
-                ctx.fillStyle = '#c8956d';
-                ctx.fillRect(e.x + e.w/2 - 8, e.y + float, 16, 18);
-
-                // Némès (coiffe rayée)
-                ctx.fillStyle = '#3498db';
-                ctx.beginPath();
-                ctx.moveTo(e.x + e.w/2 - 12, e.y + 3 + float);
-                ctx.lineTo(e.x + e.w/2 + 12, e.y + 3 + float);
-                ctx.lineTo(e.x + e.w/2 + 15, e.y + 14 + float);
-                ctx.lineTo(e.x + e.w/2 - 15, e.y + 14 + float);
-                ctx.closePath();
-                ctx.fill();
-
-                // Rayures dorées
-                ctx.strokeStyle = '#f1c40f';
-                ctx.lineWidth = 1;
-                for (let i = 0; i < 3; i++) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
                     ctx.beginPath();
-                    ctx.moveTo(e.x + e.w/2 - 12 + i*2, e.y + 5 + i*3 + float);
-                    ctx.lineTo(e.x + e.w/2 + 12 - i*2, e.y + 5 + i*3 + float);
+                    ctx.ellipse(e.x + e.w/2, e.y + e.h + float + 15, e.w/2 - 5, 8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#d4a574';
+                    ctx.beginPath();
+                    ctx.ellipse(e.x + e.w/2, e.y + e.h/2 + float, e.w/2 - 2, e.h/2 - 2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#b8845c';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#c8956d';
+                    ctx.fillRect(e.x + e.w/2 - 8, e.y + float, 16, 18);
+
+                    ctx.fillStyle = '#3498db';
+                    ctx.beginPath();
+                    ctx.moveTo(e.x + e.w/2 - 12, e.y + 3 + float);
+                    ctx.lineTo(e.x + e.w/2 + 12, e.y + 3 + float);
+                    ctx.lineTo(e.x + e.w/2 + 15, e.y + 14 + float);
+                    ctx.lineTo(e.x + e.w/2 - 15, e.y + 14 + float);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#f1c40f';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < 3; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(e.x + e.w/2 - 12 + i*2, e.y + 5 + i*3 + float);
+                        ctx.lineTo(e.x + e.w/2 + 12 - i*2, e.y + 5 + i*3 + float);
+                        ctx.stroke();
+                    }
+
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.fillRect(e.x + e.w/2 - 6, e.y + 10 + float, 3, 4);
+                    ctx.fillRect(e.x + e.w/2 + 3, e.y + 10 + float, 3, 4);
+
+                    ctx.fillStyle = '#f4d03f';
+                    ctx.strokeStyle = '#f1c40f';
+                    ctx.lineWidth = 2;
+
+                    ctx.beginPath();
+                    ctx.moveTo(e.x + e.w/2 - 5, e.y + e.h/2 + float);
+                    ctx.quadraticCurveTo(e.x + e.w/2 - 18, e.y + e.h/2 + float - 10 - wingFlap, e.x + e.w/2 - 20, e.y + e.h/2 + float + 5);
+                    ctx.quadraticCurveTo(e.x + e.w/2 - 15, e.y + e.h/2 + float + 10, e.x + e.w/2 - 5, e.y + e.h/2 + float + 8);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(e.x + e.w/2 + 5, e.y + e.h/2 + float);
+                    ctx.quadraticCurveTo(e.x + e.w/2 + 18, e.y + e.h/2 + float - 10 - wingFlap, e.x + e.w/2 + 20, e.y + e.h/2 + float + 5);
+                    ctx.quadraticCurveTo(e.x + e.w/2 + 15, e.y + e.h/2 + float + 10, e.x + e.w/2 + 5, e.y + e.h/2 + float + 8);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.strokeStyle = '#f1c40f';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(e.x + e.w/2, e.y + e.h/2 + float - 5, 3, 0, Math.PI * 2);
+                    ctx.moveTo(e.x + e.w/2, e.y + e.h/2 + float - 2);
+                    ctx.lineTo(e.x + e.w/2, e.y + e.h/2 + float + 5);
+                    ctx.moveTo(e.x + e.w/2 - 4, e.y + e.h/2 + float);
+                    ctx.lineTo(e.x + e.w/2 + 4, e.y + e.h/2 + float);
                     ctx.stroke();
                 }
-
-                // Yeux mystérieux
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(e.x + e.w/2 - 6, e.y + 10 + float, 3, 4);
-                ctx.fillRect(e.x + e.w/2 + 3, e.y + 10 + float, 3, 4);
-
-                // Ailes battantes dorées
-                ctx.fillStyle = '#f4d03f';
-                ctx.strokeStyle = '#f1c40f';
-                ctx.lineWidth = 2;
-
-                // Aile gauche
-                ctx.beginPath();
-                ctx.moveTo(e.x + e.w/2 - 5, e.y + e.h/2 + float);
-                ctx.quadraticCurveTo(
-                    e.x + e.w/2 - 18, e.y + e.h/2 + float - 10 - wingFlap,
-                    e.x + e.w/2 - 20, e.y + e.h/2 + float + 5
-                );
-                ctx.quadraticCurveTo(
-                    e.x + e.w/2 - 15, e.y + e.h/2 + float + 10,
-                    e.x + e.w/2 - 5, e.y + e.h/2 + float + 8
-                );
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Aile droite
-                ctx.beginPath();
-                ctx.moveTo(e.x + e.w/2 + 5, e.y + e.h/2 + float);
-                ctx.quadraticCurveTo(
-                    e.x + e.w/2 + 18, e.y + e.h/2 + float - 10 - wingFlap,
-                    e.x + e.w/2 + 20, e.y + e.h/2 + float + 5
-                );
-                ctx.quadraticCurveTo(
-                    e.x + e.w/2 + 15, e.y + e.h/2 + float + 10,
-                    e.x + e.w/2 + 5, e.y + e.h/2 + float + 8
-                );
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Petit ankh (symbole égyptien) sur le corps
-                ctx.strokeStyle = '#f1c40f';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(e.x + e.w/2, e.y + e.h/2 + float - 5, 3, 0, Math.PI * 2);
-                ctx.moveTo(e.x + e.w/2, e.y + e.h/2 + float - 2);
-                ctx.lineTo(e.x + e.w/2, e.y + e.h/2 + float + 5);
-                ctx.moveTo(e.x + e.w/2 - 4, e.y + e.h/2 + float);
-                ctx.lineTo(e.x + e.w/2 + 4, e.y + e.h/2 + float);
-                ctx.stroke();
                 break;
 
             case 'creeper':
