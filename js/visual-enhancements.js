@@ -9,6 +9,7 @@
 const VisualCache = {
     level1: null,
     level2: null,
+    level6: null,
     level7: null,
     level8: null,
     level9: null,
@@ -1158,6 +1159,10 @@ function drawLevel6Background(ctx, w, h, camX) {
     grad.addColorStop(1, "rgba(0,0,0,0.6)");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
+}
+
+function drawLevel6Foreground(ctx, w, h, camX) {
+    // Pas d'éléments de premier plan dédiés pour le niveau 6
 }
 
 function drawFloatingIsland(ctx, x, y, width, hasTree) {
@@ -3575,6 +3580,7 @@ function updateVisualElements() {
 function resetVisualCache() {
     VisualCache.level1 = null;
     VisualCache.level2 = null;
+    VisualCache.level6 = null;
     VisualCache.level7 = null;
     VisualCache.level8 = null;
     VisualCache.level9 = null;
