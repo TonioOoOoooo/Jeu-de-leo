@@ -9,6 +9,8 @@
 const VisualCache = {
     level1: null,
     level2: null,
+    level3: null,
+    level4: null,
     initialized: false
 };
 
@@ -210,6 +212,179 @@ function initLevel2Visuals(w, h) {
     }
 
     VisualCache.level2 = visuals;
+    return visuals;
+}
+
+// ===== NIVEAU 3 : LE DONJON MAUDIT =====
+function initLevel3Visuals(w, h) {
+    if (VisualCache.level3) return VisualCache.level3;
+
+    const visuals = {
+        arches: [],
+        torches: [],
+        chains: [],
+        fogBands: [],
+        embers: [],
+        stainedWindows: []
+    };
+
+    // Grandes arches gothiques en arrière-plan
+    for (let i = 0; i < 8; i++) {
+        visuals.arches.push({
+            x: i * 320 + Math.random() * 120,
+            y: h * 0.25 + Math.random() * 40,
+            width: 160 + Math.random() * 60,
+            height: 220 + Math.random() * 60,
+            depth: 0.15 + Math.random() * 0.2
+        });
+    }
+
+    // Fenêtres colorées avec lueur
+    for (let i = 0; i < 6; i++) {
+        visuals.stainedWindows.push({
+            x: i * 420 + 120,
+            y: h * 0.18 + Math.random() * 40,
+            width: 60 + Math.random() * 20,
+            height: 120 + Math.random() * 30,
+            hue: 200 + Math.random() * 80,
+            glowOffset: Math.random() * Math.PI * 2
+        });
+    }
+
+    // Torches murales
+    for (let i = 0; i < 10; i++) {
+        visuals.torches.push({
+            x: i * 240 + 80,
+            y: h * 0.45 + Math.random() * 120,
+            flicker: Math.random() * Math.PI * 2
+        });
+    }
+
+    // Chaînes suspendues
+    for (let i = 0; i < 6; i++) {
+        visuals.chains.push({
+            x: i * 360 + 200,
+            y: 40 + Math.random() * 60,
+            length: 120 + Math.random() * 120,
+            swayOffset: Math.random() * Math.PI * 2
+        });
+    }
+
+    // Brumes basses
+    for (let i = 0; i < 6; i++) {
+        visuals.fogBands.push({
+            x: Math.random() * w * 3,
+            y: h * 0.65 + i * 18,
+            width: 260 + Math.random() * 160,
+            speed: 0.08 + Math.random() * 0.08,
+            opacity: 0.15 + Math.random() * 0.15
+        });
+    }
+
+    // Braises flottantes
+    for (let i = 0; i < 18; i++) {
+        visuals.embers.push({
+            x: Math.random() * w * 3,
+            y: h * 0.4 + Math.random() * h * 0.5,
+            size: 2 + Math.random() * 3,
+            speed: 0.2 + Math.random() * 0.4,
+            drift: Math.random() * 0.6 - 0.3
+        });
+    }
+
+    VisualCache.level3 = visuals;
+    return visuals;
+}
+
+// ===== NIVEAU 4 : MONDE CHAMPIGNON =====
+function initLevel4Visuals(w, h) {
+    if (VisualCache.level4) return VisualCache.level4;
+
+    const visuals = {
+        hills: [],
+        mushrooms: [],
+        skyClouds: [],
+        fireflies: [],
+        caveCrystals: [],
+        caveFog: [],
+        caveStalactites: []
+    };
+
+    // Collines arrondies
+    for (let i = 0; i < 6; i++) {
+        visuals.hills.push({
+            x: i * 420 + Math.random() * 120,
+            y: h * 0.55 + Math.random() * 40,
+            width: 260 + Math.random() * 100,
+            height: 120 + Math.random() * 60,
+            shade: i % 2 === 0 ? '#6bc96b' : '#4fbf7a'
+        });
+    }
+
+    // Champignons géants décoratifs
+    for (let i = 0; i < 10; i++) {
+        visuals.mushrooms.push({
+            x: i * 260 + 140,
+            y: h * 0.62 + Math.random() * 40,
+            capRadius: 50 + Math.random() * 30,
+            stemHeight: 80 + Math.random() * 40,
+            capColor: ['#ff5f6d', '#ffa95f', '#ffcc4d', '#ff6be6'][Math.floor(Math.random() * 4)],
+            spotColor: 'rgba(255,255,255,0.9)'
+        });
+    }
+
+    // Nuages moelleux
+    for (let i = 0; i < 12; i++) {
+        visuals.skyClouds.push({
+            x: Math.random() * w * 3,
+            y: 40 + Math.random() * 180,
+            width: 120 + Math.random() * 120,
+            height: 40 + Math.random() * 40,
+            speed: 0.15 + Math.random() * 0.2,
+            opacity: 0.6 + Math.random() * 0.2
+        });
+    }
+
+    // Lucioles pour ambiance féerique
+    for (let i = 0; i < 20; i++) {
+        visuals.fireflies.push({
+            x: Math.random() * w * 3,
+            y: h * 0.35 + Math.random() * h * 0.4,
+            pulse: Math.random() * Math.PI * 2,
+            speed: 0.2 + Math.random() * 0.2
+        });
+    }
+
+    // Décor souterrain : cristaux et brume
+    for (let i = 0; i < 10; i++) {
+        visuals.caveCrystals.push({
+            x: i * 240 + 100,
+            y: h * 0.65 + Math.random() * 60,
+            size: 30 + Math.random() * 30,
+            hue: 190 + Math.random() * 80
+        });
+    }
+
+    for (let i = 0; i < 6; i++) {
+        visuals.caveFog.push({
+            x: Math.random() * w * 3,
+            y: h * 0.7 + i * 20,
+            width: 280 + Math.random() * 140,
+            speed: 0.1 + Math.random() * 0.1,
+            opacity: 0.18 + Math.random() * 0.12
+        });
+    }
+
+    for (let i = 0; i < 12; i++) {
+        visuals.caveStalactites.push({
+            x: i * 220 + 60,
+            y: 0,
+            height: 80 + Math.random() * 120,
+            width: 40 + Math.random() * 20
+        });
+    }
+
+    VisualCache.level4 = visuals;
     return visuals;
 }
 
@@ -708,6 +883,214 @@ function drawBigCloud(ctx, x, y, width, height, opacity, puffCount) {
     ctx.restore();
 }
 
+// ===== FONCTIONS DE DESSIN NIVEAU 3 =====
+
+function drawLevel3Background(ctx, w, h, camX) {
+    const visuals = initLevel3Visuals(w, h);
+
+    // Fond dégradé nocturne
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, '#0b0b1c');
+    gradient.addColorStop(0.5, '#17172f');
+    gradient.addColorStop(1, '#241732');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, w, h);
+
+    // Brume lointaine
+    for (const fog of visuals.fogBands) {
+        ctx.fillStyle = `rgba(110, 120, 160, ${fog.opacity})`;
+        ctx.beginPath();
+        ctx.ellipse(fog.x - camX * 0.2, fog.y, fog.width, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Arches en pierre
+    for (const arch of visuals.arches) {
+        const archX = arch.x - camX * arch.depth;
+        ctx.fillStyle = '#2b2b3f';
+        ctx.beginPath();
+        ctx.roundRect(archX, arch.y, arch.width, arch.height, 30);
+        ctx.fill();
+        ctx.clearRect(archX + 18, arch.y + 24, arch.width - 36, arch.height - 40);
+
+        ctx.fillStyle = 'rgba(20, 20, 40, 0.6)';
+        ctx.fillRect(archX + 18, arch.y + 24, arch.width - 36, arch.height - 40);
+    }
+
+    // Vitraux luisants
+    for (const win of visuals.stainedWindows) {
+        const glow = 0.4 + Math.sin(state.frameTick * 0.05 + win.glowOffset) * 0.2;
+        const x = win.x - camX * 0.25;
+        ctx.fillStyle = `hsla(${win.hue}, 80%, 70%, ${0.35 + glow})`;
+        ctx.beginPath();
+        ctx.roundRect(x, win.y, win.width, win.height, 20);
+        ctx.fill();
+        ctx.strokeStyle = `hsla(${win.hue}, 80%, 85%, ${0.4 + glow})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+}
+
+function drawLevel3Foreground(ctx, w, h, camX) {
+    const visuals = initLevel3Visuals(w, h);
+
+    // Chaînes
+    ctx.strokeStyle = 'rgba(180, 180, 200, 0.6)';
+    ctx.lineWidth = 3;
+    for (const chain of visuals.chains) {
+        const sway = Math.sin(state.frameTick * 0.02 + chain.swayOffset) * 4;
+        ctx.beginPath();
+        ctx.moveTo(chain.x - camX * 0.4, chain.y);
+        ctx.lineTo(chain.x - camX * 0.4 + sway, chain.y + chain.length);
+        ctx.stroke();
+    }
+
+    // Torches et lueur chaude
+    for (const torch of visuals.torches) {
+        const flicker = 0.6 + Math.sin(state.frameTick * 0.2 + torch.flicker) * 0.3;
+        const x = torch.x - camX * 0.35;
+        const y = torch.y;
+        ctx.fillStyle = '#3e2a20';
+        ctx.fillRect(x - 6, y + 15, 12, 30);
+        ctx.fillStyle = '#ffb347';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + 12, y + 10, x, y + 20);
+        ctx.quadraticCurveTo(x - 12, y + 10, x, y);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 150, 80, ${0.25 * flicker})`;
+        ctx.beginPath();
+        ctx.arc(x, y + 10, 40 * flicker, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Braises
+    for (const ember of visuals.embers) {
+        const emberX = ember.x - camX * 0.3;
+        ctx.fillStyle = 'rgba(255, 140, 80, 0.7)';
+        ctx.beginPath();
+        ctx.arc(emberX, ember.y, ember.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// ===== FONCTIONS DE DESSIN NIVEAU 4 =====
+
+function drawLevel4Background(ctx, w, h, camX) {
+    const visuals = initLevel4Visuals(w, h);
+
+    if (state.inSubLevel) {
+        const caveGradient = ctx.createLinearGradient(0, 0, 0, h);
+        caveGradient.addColorStop(0, '#0f1f2f');
+        caveGradient.addColorStop(0.5, '#162635');
+        caveGradient.addColorStop(1, '#1f2f3d');
+        ctx.fillStyle = caveGradient;
+        ctx.fillRect(0, 0, w, h);
+
+        // Stalactites
+        ctx.fillStyle = '#2b3b4b';
+        for (const stal of visuals.caveStalactites) {
+            const x = stal.x - camX * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x + stal.width / 2, stal.height);
+            ctx.lineTo(x + stal.width, 0);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Cristaux lumineux
+        for (const crystal of visuals.caveCrystals) {
+            const glow = 0.4 + Math.sin(state.frameTick * 0.06 + crystal.x) * 0.3;
+            const x = crystal.x - camX * 0.35;
+            ctx.fillStyle = `hsla(${crystal.hue}, 70%, 60%, ${0.5 + glow})`;
+            ctx.beginPath();
+            ctx.moveTo(x, crystal.y);
+            ctx.lineTo(x + crystal.size / 2, crystal.y - crystal.size);
+            ctx.lineTo(x + crystal.size, crystal.y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Brume souterraine
+        for (const fog of visuals.caveFog) {
+            ctx.fillStyle = `rgba(120, 140, 160, ${fog.opacity})`;
+            ctx.beginPath();
+            ctx.ellipse(fog.x - camX * 0.15, fog.y, fog.width, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        return;
+    }
+
+    // Monde extérieur lumineux
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, h);
+    skyGradient.addColorStop(0, '#7fd2ff');
+    skyGradient.addColorStop(0.6, '#8be2ff');
+    skyGradient.addColorStop(1, '#b7f4ff');
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, w, h);
+
+    // Collines
+    for (const hill of visuals.hills) {
+        const x = hill.x - camX * 0.2;
+        ctx.fillStyle = hill.shade;
+        ctx.beginPath();
+        ctx.ellipse(x, hill.y, hill.width, hill.height, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Nuages doux
+    for (const cloud of visuals.skyClouds) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${cloud.opacity})`;
+        ctx.beginPath();
+        ctx.roundRect(cloud.x - camX * 0.3, cloud.y, cloud.width, cloud.height, 30);
+        ctx.fill();
+    }
+}
+
+function drawLevel4Foreground(ctx, w, h, camX) {
+    const visuals = initLevel4Visuals(w, h);
+
+    if (state.inSubLevel) {
+        // Lueurs de cristaux en avant-plan
+        for (const crystal of visuals.caveCrystals) {
+            const glow = 0.2 + Math.sin(state.frameTick * 0.06 + crystal.x) * 0.2;
+            ctx.fillStyle = `hsla(${crystal.hue}, 80%, 80%, ${0.2 + glow})`;
+            ctx.beginPath();
+            ctx.arc(crystal.x - camX * 0.3, crystal.y - 20, crystal.size * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        return;
+    }
+
+    // Champignons géants en premier plan
+    for (const mush of visuals.mushrooms) {
+        const x = mush.x - camX * 0.4;
+        const stemY = mush.y;
+        ctx.fillStyle = '#f5e7d0';
+        ctx.fillRect(x - 12, stemY, 24, mush.stemHeight);
+        ctx.fillStyle = mush.capColor;
+        ctx.beginPath();
+        ctx.ellipse(x, stemY, mush.capRadius, mush.capRadius * 0.6, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = mush.spotColor;
+        for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.arc(x - mush.capRadius / 2 + i * (mush.capRadius / 2), stemY - 10, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Lucioles scintillantes
+    for (const fly of visuals.fireflies) {
+        const pulse = 0.4 + Math.sin(state.frameTick * 0.08 + fly.pulse) * 0.4;
+        ctx.fillStyle = `rgba(255, 255, 180, ${pulse})`;
+        ctx.beginPath();
+        ctx.arc(fly.x - camX * 0.25, fly.y, 3 + pulse * 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
 function drawFloatingIsland(ctx, x, y, width, hasTree) {
     // Dessous rocheux de l'île
     const rockGradient = ctx.createLinearGradient(x, y, x, y + width);
@@ -1061,6 +1444,94 @@ function drawEnhancedChestMonster(ctx, e) {
     ctx.restore();
 }
 
+function drawEnhancedSkeleton(ctx, e) {
+    const bob = Math.sin(state.frameTick * 0.08 + e.x) * 2;
+    const glow = 0.5 + Math.sin(state.frameTick * 0.2 + e.y) * 0.3;
+
+    // Aura froide
+    ctx.fillStyle = `rgba(120, 180, 255, ${0.15 + glow * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(e.x + e.w / 2, e.y + e.h / 2 + bob, e.w / 1.5, e.h / 1.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps osseux avec dégradé
+    const boneGradient = ctx.createLinearGradient(e.x, e.y, e.x, e.y + e.h);
+    boneGradient.addColorStop(0, '#f5f5f5');
+    boneGradient.addColorStop(1, '#d8d8d8');
+    ctx.fillStyle = boneGradient;
+    ctx.fillRect(e.x + e.w / 2 - 9, e.y + 18 + bob, 18, e.h - 24);
+
+    // Cage thoracique
+    ctx.strokeStyle = '#c2c2c2';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(e.x + e.w / 2 - 10, e.y + 28 + i * 10 + bob);
+        ctx.lineTo(e.x + e.w / 2 + 10, e.y + 28 + i * 10 + bob);
+        ctx.stroke();
+    }
+
+    // Tête
+    ctx.fillStyle = '#f2f2f2';
+    ctx.fillRect(e.x + e.w / 2 - 14, e.y + bob, 28, 22);
+    ctx.strokeStyle = '#b0b0b0';
+    ctx.strokeRect(e.x + e.w / 2 - 14, e.y + bob, 28, 22);
+
+    // Yeux luminescents
+    ctx.fillStyle = `rgba(120, 200, 255, ${0.7 + glow * 0.2})`;
+    ctx.fillRect(e.x + e.w / 2 - 8, e.y + 6 + bob, 5, 6);
+    ctx.fillRect(e.x + e.w / 2 + 3, e.y + 6 + bob, 5, 6);
+
+    // Bras
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(e.x + 4, e.y + 22 + bob, 8, 22);
+    ctx.fillRect(e.x + e.w - 12, e.y + 22 + bob, 8, 22);
+
+    // Arc stylisé
+    const bowDir = e.dir || 1;
+    const bowX = bowDir > 0 ? e.x + e.w + 10 : e.x - 10;
+    ctx.strokeStyle = '#b2743b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    if (bowDir > 0) {
+        ctx.arc(bowX, e.y + 30 + bob, 16, -Math.PI / 2.4, Math.PI / 2.4);
+    } else {
+        ctx.arc(bowX, e.y + 30 + bob, 16, Math.PI - Math.PI / 2.4, Math.PI + Math.PI / 2.4);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = '#e6e6e6';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    const cordX = bowDir > 0 ? bowX - 12 : bowX + 12;
+    ctx.moveTo(cordX, e.y + 18 + bob);
+    ctx.lineTo(cordX, e.y + 42 + bob);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const arrowStartX = e.x + e.w / 2;
+    const arrowEndX = bowDir > 0 ? bowX + 18 : bowX - 18;
+    ctx.moveTo(arrowStartX, e.y + 30 + bob);
+    ctx.lineTo(arrowEndX, e.y + 30 + bob);
+    ctx.stroke();
+
+    ctx.fillStyle = '#555';
+    ctx.beginPath();
+    if (bowDir > 0) {
+        ctx.moveTo(arrowEndX + 8, e.y + 30 + bob);
+        ctx.lineTo(arrowEndX, e.y + 26 + bob);
+        ctx.lineTo(arrowEndX, e.y + 34 + bob);
+    } else {
+        ctx.moveTo(arrowEndX - 8, e.y + 30 + bob);
+        ctx.lineTo(arrowEndX, e.y + 26 + bob);
+        ctx.lineTo(arrowEndX, e.y + 34 + bob);
+    }
+    ctx.closePath();
+    ctx.fill();
+}
+
 // ===== PLATEFORMES AMÉLIORÉES =====
 
 // Fonction pseudo-aléatoire déterministe basée sur une seed
@@ -1251,6 +1722,10 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel1Background(ctx, w, h, camX);
     } else if (state.level === 2) {
         drawLevel2Background(ctx, w, h, camX);
+    } else if (state.level === 3) {
+        drawLevel3Background(ctx, w, h, camX);
+    } else if (state.level === 4) {
+        drawLevel4Background(ctx, w, h, camX);
     }
 }
 
@@ -1259,6 +1734,10 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel1Foreground(ctx, w, h, camX);
     } else if (state.level === 2) {
         drawLevel2Foreground(ctx, w, h, camX);
+    } else if (state.level === 3) {
+        drawLevel3Foreground(ctx, w, h, camX);
+    } else if (state.level === 4) {
+        drawLevel4Foreground(ctx, w, h, camX);
     }
 }
 
@@ -1283,12 +1762,55 @@ function updateVisualElements() {
             }
         }
     }
+
+    if (VisualCache.level3) {
+        for (const fog of VisualCache.level3.fogBands) {
+            fog.x += fog.speed;
+            if (fog.x > canvas.width * 4) {
+                fog.x = -fog.width;
+            }
+        }
+
+        for (const ember of VisualCache.level3.embers) {
+            ember.y -= ember.speed;
+            ember.x += ember.drift;
+            if (ember.y < 0) {
+                ember.y = canvas.height + 40;
+                ember.x = Math.random() * canvas.width * 3;
+            }
+        }
+    }
+
+    if (VisualCache.level4) {
+        for (const cloud of VisualCache.level4.skyClouds) {
+            cloud.x += cloud.speed;
+            if (cloud.x > canvas.width * 4) {
+                cloud.x = -cloud.width;
+            }
+        }
+
+        for (const fly of VisualCache.level4.fireflies) {
+            fly.x += fly.speed;
+            if (fly.x > canvas.width * 4) {
+                fly.x = -20;
+            }
+        }
+
+        for (const fog of VisualCache.level4.caveFog) {
+            fog.x += fog.speed;
+            if (fog.x > canvas.width * 4) {
+                fog.x = -fog.width;
+            }
+        }
+    }
 }
 
 // Reset le cache quand on change de niveau
 function resetVisualCache() {
     VisualCache.level1 = null;
     VisualCache.level2 = null;
+    VisualCache.level3 = null;
+    VisualCache.level4 = null;
 }
 
 // Export des fonctions
@@ -1296,6 +1818,7 @@ window.drawEnhancedLevelBackground = drawEnhancedLevelBackground;
 window.drawEnhancedLevelForeground = drawEnhancedLevelForeground;
 window.drawEnhancedZombie = drawEnhancedZombie;
 window.drawEnhancedChestMonster = drawEnhancedChestMonster;
+window.drawEnhancedSkeleton = drawEnhancedSkeleton;
 window.drawEnhancedGrassPlatform = drawEnhancedGrassPlatform;
 window.drawEnhancedMovingPlatform = drawEnhancedMovingPlatform;
 window.updateVisualElements = updateVisualElements;

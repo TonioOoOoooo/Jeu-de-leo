@@ -42,11 +42,11 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour niveaux 1-2
-    if (state.level <= 2 && typeof drawEnhancedLevelBackground === 'function') {
+    // Arrière-plan amélioré pour niveaux 1-4
+    if (state.level <= 4 && typeof drawEnhancedLevelBackground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
-    } else if (state.level <= 2) {
+    } else if (state.level <= 4) {
         drawNotebookGrid();
     }
     
@@ -126,8 +126,8 @@ function draw() {
     // Joueur
     player.draw(ctx);
 
-    // Éléments de premier plan (papillons, oiseaux) pour niveaux 1-2
-    if (state.level <= 2 && typeof drawEnhancedLevelForeground === 'function') {
+    // Éléments de premier plan (papillons, oiseaux) pour niveaux 1-4
+    if (state.level <= 4 && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
@@ -1271,8 +1271,8 @@ function drawEnemies() {
     for (const e of currentLevelData.enemies) {
         switch (e.type) {
             case 'zombie':
-                // Utiliser le sprite amélioré pour les niveaux 1-2
-                if (state.level <= 2 && typeof drawEnhancedZombie === 'function') {
+                // Utiliser le sprite amélioré pour les niveaux 1-4
+                if (state.level <= 4 && typeof drawEnhancedZombie === 'function') {
                     drawEnhancedZombie(ctx, e);
                 } else {
                     // Fallback: sprite basique
@@ -1306,8 +1306,8 @@ function drawEnemies() {
                 break;
 
             case 'chest_monster':
-                // Utiliser le sprite amélioré pour les niveaux 1-2
-                if (state.level <= 2 && typeof drawEnhancedChestMonster === 'function') {
+                // Utiliser le sprite amélioré pour les niveaux 1-4
+                if (state.level <= 4 && typeof drawEnhancedChestMonster === 'function') {
                     drawEnhancedChestMonster(ctx, e);
                 } else {
                     // Fallback: sprite basique
@@ -1584,87 +1584,91 @@ function drawEnemies() {
                 break;
 
             case 'skeleton':
-                // Squelette Minecraft avec arc
-                // Corps osseux
-                ctx.fillStyle = "#e0e0e0";
-                ctx.fillRect(e.x + e.w/2 - 8, e.y + 20, 16, e.h - 20);
-
-                // Tête carrée
-                ctx.fillRect(e.x + e.w/2 - 12, e.y, 24, 20);
-
-                // Yeux noirs
-                ctx.fillStyle = "#000";
-                ctx.fillRect(e.x + e.w/2 - 8, e.y + 5, 4, 6);
-                ctx.fillRect(e.x + e.w/2 + 4, e.y + 5, 4, 6);
-
-                // Bras avec arc - direction selon e.dir
-                ctx.fillStyle = "#d0d0d0";
-                ctx.fillRect(e.x + 5, e.y + 22, 8, 20);
-                ctx.fillRect(e.x + e.w - 13, e.y + 22, 8, 20);
-
-                // Arc - orienté selon la direction du squelette
-                // e.dir: 1 = va vers la droite, -1 = va vers la gauche
-                // L'arc doit pointer dans la direction du mouvement
-                const bowDir = e.dir || 1;
-                const bowX = bowDir > 0 ? e.x + e.w + 8 : e.x - 8;
-
-                ctx.strokeStyle = "#8B4513";
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                // Arc tourné vers la direction du mouvement
-                if (bowDir > 0) {
-                    // Face à droite: arc ouvert vers la droite
-                    ctx.arc(bowX, e.y + 30, 15, -Math.PI/2.5, Math.PI/2.5);
+                if (state.level <= 4 && typeof drawEnhancedSkeleton === 'function') {
+                    drawEnhancedSkeleton(ctx, e);
                 } else {
-                    // Face à gauche: arc ouvert vers la gauche
-                    ctx.arc(bowX, e.y + 30, 15, Math.PI - Math.PI/2.5, Math.PI + Math.PI/2.5);
-                }
-                ctx.stroke();
+                    // Squelette Minecraft avec arc
+                    // Corps osseux
+                    ctx.fillStyle = "#e0e0e0";
+                    ctx.fillRect(e.x + e.w/2 - 8, e.y + 20, 16, e.h - 20);
 
-                // Corde de l'arc (ligne droite qui ferme l'arc)
-                ctx.strokeStyle = "#fff";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                const cordX = bowDir > 0 ? bowX - 12 : bowX + 12;
-                ctx.moveTo(cordX, e.y + 20);
-                ctx.lineTo(cordX, e.y + 40);
-                ctx.stroke();
+                    // Tête carrée
+                    ctx.fillRect(e.x + e.w/2 - 12, e.y, 24, 20);
 
-                // Flèche tenue par le squelette
-                ctx.strokeStyle = "#8B4513";
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                const arrowStartX = e.x + e.w/2;
-                const arrowEndX = bowDir > 0 ? bowX + 18 : bowX - 18;
-                ctx.moveTo(arrowStartX, e.y + 30);
-                ctx.lineTo(arrowEndX, e.y + 30);
-                ctx.stroke();
+                    // Yeux noirs
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(e.x + e.w/2 - 8, e.y + 5, 4, 6);
+                    ctx.fillRect(e.x + e.w/2 + 4, e.y + 5, 4, 6);
 
-                // Pointe de flèche (triangle)
-                ctx.fillStyle = "#555";
-                ctx.beginPath();
-                if (bowDir > 0) {
-                    // Pointe vers la droite
-                    ctx.moveTo(arrowEndX + 8, e.y + 30);
-                    ctx.lineTo(arrowEndX, e.y + 26);
-                    ctx.lineTo(arrowEndX, e.y + 34);
-                } else {
-                    // Pointe vers la gauche
-                    ctx.moveTo(arrowEndX - 8, e.y + 30);
-                    ctx.lineTo(arrowEndX, e.y + 26);
-                    ctx.lineTo(arrowEndX, e.y + 34);
-                }
-                ctx.closePath();
-                ctx.fill();
+                    // Bras avec arc - direction selon e.dir
+                    ctx.fillStyle = "#d0d0d0";
+                    ctx.fillRect(e.x + 5, e.y + 22, 8, 20);
+                    ctx.fillRect(e.x + e.w - 13, e.y + 22, 8, 20);
 
-                // Jambes
-                ctx.fillStyle = "#e0e0e0";
-                if (state.frameTick % 20 < 10) {
-                    ctx.fillRect(e.x + e.w/2 - 10, e.y + e.h, 8, 10);
-                    ctx.fillRect(e.x + e.w/2 + 2, e.y + e.h - 2, 8, 12);
-                } else {
-                    ctx.fillRect(e.x + e.w/2 - 10, e.y + e.h - 2, 8, 12);
-                    ctx.fillRect(e.x + e.w/2 + 2, e.y + e.h, 8, 10);
+                    // Arc - orienté selon la direction du squelette
+                    // e.dir: 1 = va vers la droite, -1 = va vers la gauche
+                    // L'arc doit pointer dans la direction du mouvement
+                    const bowDir = e.dir || 1;
+                    const bowX = bowDir > 0 ? e.x + e.w + 8 : e.x - 8;
+
+                    ctx.strokeStyle = "#8B4513";
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    // Arc tourné vers la direction du mouvement
+                    if (bowDir > 0) {
+                        // Face à droite: arc ouvert vers la droite
+                        ctx.arc(bowX, e.y + 30, 15, -Math.PI/2.5, Math.PI/2.5);
+                    } else {
+                        // Face à gauche: arc ouvert vers la gauche
+                        ctx.arc(bowX, e.y + 30, 15, Math.PI - Math.PI/2.5, Math.PI + Math.PI/2.5);
+                    }
+                    ctx.stroke();
+
+                    // Corde de l'arc (ligne droite qui ferme l'arc)
+                    ctx.strokeStyle = "#fff";
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    const cordX = bowDir > 0 ? bowX - 12 : bowX + 12;
+                    ctx.moveTo(cordX, e.y + 20);
+                    ctx.lineTo(cordX, e.y + 40);
+                    ctx.stroke();
+
+                    // Flèche tenue par le squelette
+                    ctx.strokeStyle = "#8B4513";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    const arrowStartX = e.x + e.w/2;
+                    const arrowEndX = bowDir > 0 ? bowX + 18 : bowX - 18;
+                    ctx.moveTo(arrowStartX, e.y + 30);
+                    ctx.lineTo(arrowEndX, e.y + 30);
+                    ctx.stroke();
+
+                    // Pointe de flèche (triangle)
+                    ctx.fillStyle = "#555";
+                    ctx.beginPath();
+                    if (bowDir > 0) {
+                        // Pointe vers la droite
+                        ctx.moveTo(arrowEndX + 8, e.y + 30);
+                        ctx.lineTo(arrowEndX, e.y + 26);
+                        ctx.lineTo(arrowEndX, e.y + 34);
+                    } else {
+                        // Pointe vers la gauche
+                        ctx.moveTo(arrowEndX - 8, e.y + 30);
+                        ctx.lineTo(arrowEndX, e.y + 26);
+                        ctx.lineTo(arrowEndX, e.y + 34);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Jambes
+                    ctx.fillStyle = "#e0e0e0";
+                    if (state.frameTick % 20 < 10) {
+                        ctx.fillRect(e.x + e.w/2 - 10, e.y + e.h, 8, 10);
+                        ctx.fillRect(e.x + e.w/2 + 2, e.y + e.h - 2, 8, 12);
+                    } else {
+                        ctx.fillRect(e.x + e.w/2 - 10, e.y + e.h - 2, 8, 12);
+                        ctx.fillRect(e.x + e.w/2 + 2, e.y + e.h, 8, 10);
+                    }
                 }
                 break;
 
