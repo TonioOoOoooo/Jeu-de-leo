@@ -29,6 +29,16 @@ function init() {
     loadBadges();
     loadCustomization();
 
+    // Initialiser l'état des toggles
+    const soundToggle = document.getElementById('sound-toggle');
+    if (soundToggle) {
+        soundToggle.classList.toggle('active', state.soundEnabled);
+    }
+    const timerToggle = document.getElementById('timer-toggle');
+    if (timerToggle) {
+        timerToggle.classList.toggle('active', state.timerEnabled);
+    }
+
     const startButtons = document.querySelectorAll('[data-start]');
     startButtons.forEach(button => {
         button.addEventListener('click', () => {
