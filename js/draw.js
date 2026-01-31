@@ -42,11 +42,11 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour niveaux 1-2
-    if (state.level <= 2 && typeof drawEnhancedLevelBackground === 'function') {
+    // Arrière-plan amélioré pour niveaux 1-6
+    if (state.level <= 6 && typeof drawEnhancedLevelBackground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
-    } else if (state.level <= 2) {
+    } else if (state.level <= 4) {
         drawNotebookGrid();
     }
     
@@ -126,8 +126,8 @@ function draw() {
     // Joueur
     player.draw(ctx);
 
-    // Éléments de premier plan (papillons, oiseaux) pour niveaux 1-2
-    if (state.level <= 2 && typeof drawEnhancedLevelForeground === 'function') {
+    // Éléments de premier plan (papillons, oiseaux) pour niveaux 1-6
+    if (state.level <= 6 && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
@@ -275,7 +275,7 @@ function drawPortals() {
 
             // Effet de tourbillon
             const time = state.frameTick * 0.05;
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 6; i++) {
                 const angle = time + (i * Math.PI / 4);
                 const radius = (p.w / 2) * (0.3 + Math.sin(time * 2 + i) * 0.2);
                 const x = p.x + p.w/2 + Math.cos(angle) * radius;
@@ -327,7 +327,12 @@ function drawPortals() {
             ctx.stroke();
 
             ctx.fillStyle = p.color;
-            ctx.globalAlpha = 0.3 + Math.sin(state.frameTick * 0.1) * 0.1;
+            // Style Portal (ovale plein)
+            if (state.level === 6) {
+                ctx.globalAlpha = 0.8;
+            } else {
+                ctx.globalAlpha = 0.3 + Math.sin(state.frameTick * 0.1) * 0.1;
+            }
             ctx.fill();
             ctx.globalAlpha = 1;
         }
@@ -474,9 +479,9 @@ function drawPlatforms() {
                 
             case 'grass_block':
                 ctx.fillStyle = "#8B4513";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'grass');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.fillStyle = "#32CD32";
-                ctx.fillRect(p.x, p.y, p.w, 15);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -484,7 +489,8 @@ function drawPlatforms() {
                 
             case 'dirt_block':
                 ctx.fillStyle = "#5d4037";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'dirt');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 1;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -492,7 +498,8 @@ function drawPlatforms() {
                 
             case 'stone':
                 ctx.fillStyle = "#757575";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'stone');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -500,7 +507,8 @@ function drawPlatforms() {
                 
             case 'wood':
                 ctx.fillStyle = "#5D4037";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'wood');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -508,7 +516,8 @@ function drawPlatforms() {
                 
             case 'leaves':
                 ctx.fillStyle = "#228B22";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'leaves');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -516,7 +525,8 @@ function drawPlatforms() {
                 
             case 'netherrack':
                 ctx.fillStyle = "#800000";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (typeof drawMinecraftBlock === 'function') drawMinecraftBlock(ctx, p.x, p.y, p.w, p.h, 'netherrack');
+                else ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -524,15 +534,21 @@ function drawPlatforms() {
                 
             case 'metal':
                 ctx.fillStyle = "#7f8c8d";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.strokeStyle = "#95a5a6";
-                ctx.lineWidth = 2;
-                ctx.strokeRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = "#333";
-                ctx.beginPath();
-                ctx.arc(p.x + 8, p.y + 8, 3, 0, Math.PI * 2);
-                ctx.arc(p.x + p.w - 8, p.y + 8, 3, 0, Math.PI * 2);
-                ctx.fill();
+                // Niveau 6 : Style Portal
+                if (state.level === 6 && typeof drawPortalPlatform === 'function') {
+                    drawPortalPlatform(ctx, p.x, p.y, p.w, p.h);
+                } else {
+                    // Standard metal
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = "#95a5a6";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(p.x, p.y, p.w, p.h);
+                    ctx.fillStyle = "#333";
+                    ctx.beginPath();
+                    ctx.arc(p.x + 8, p.y + 8, 3, 0, Math.PI * 2);
+                    ctx.arc(p.x + p.w - 8, p.y + 8, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 break;
                 
             case 'castle_wall':
@@ -780,13 +796,21 @@ function drawPlatforms() {
                 // Plateformes améliorées pour niveaux 1-2
                 if (state.level <= 2 && typeof drawEnhancedGrassPlatform === 'function') {
                     drawEnhancedGrassPlatform(ctx, p);
+                } else if (state.level === 3 && typeof drawEnhancedStonePlatform === 'function') {
+                    drawEnhancedStonePlatform(ctx, p);
+                } else if (state.level === 4 && typeof drawEnhancedMushroomPlatform === 'function') {
+                    drawEnhancedMushroomPlatform(ctx, p);
                 } else {
+                    // Fallback
                     ctx.fillStyle = state.level === 3 ? "#5d4037" : "#2c3e50";
+                    if (p.type === 'stone' || p.type === 'wood') ctx.fillStyle = "#5d4037"; // Fix pour blocs non gérés
+                    
                     ctx.fillRect(p.x, p.y, p.w, p.h);
                     ctx.strokeStyle = state.level === 3 ? "#8d6e63" : "#27ae60";
                     ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x + p.w, p.y);
                     for (let i = 0; i < p.w; i += 10) {
                         ctx.lineTo(p.x + i + 5, p.y - 5);
                         ctx.lineTo(p.x + i + 10, p.y);
@@ -1271,8 +1295,8 @@ function drawEnemies() {
     for (const e of currentLevelData.enemies) {
         switch (e.type) {
             case 'zombie':
-                // Utiliser le sprite amélioré pour les niveaux 1-2
-                if (state.level <= 2 && typeof drawEnhancedZombie === 'function') {
+                // Utiliser le sprite amélioré pour les niveaux 1-4
+                if (state.level <= 4 && typeof drawEnhancedZombie === 'function') {
                     drawEnhancedZombie(ctx, e);
                 } else {
                     // Fallback: sprite basique
@@ -1306,8 +1330,8 @@ function drawEnemies() {
                 break;
 
             case 'chest_monster':
-                // Utiliser le sprite amélioré pour les niveaux 1-2
-                if (state.level <= 2 && typeof drawEnhancedChestMonster === 'function') {
+                // Utiliser le sprite amélioré pour les niveaux 1-4
+                if (state.level <= 4 && typeof drawEnhancedChestMonster === 'function') {
                     drawEnhancedChestMonster(ctx, e);
                 } else {
                     // Fallback: sprite basique
@@ -1584,87 +1608,15 @@ function drawEnemies() {
                 break;
 
             case 'skeleton':
-                // Squelette Minecraft avec arc
-                // Corps osseux
-                ctx.fillStyle = "#e0e0e0";
-                ctx.fillRect(e.x + e.w/2 - 8, e.y + 20, 16, e.h - 20);
-
-                // Tête carrée
-                ctx.fillRect(e.x + e.w/2 - 12, e.y, 24, 20);
-
-                // Yeux noirs
-                ctx.fillStyle = "#000";
-                ctx.fillRect(e.x + e.w/2 - 8, e.y + 5, 4, 6);
-                ctx.fillRect(e.x + e.w/2 + 4, e.y + 5, 4, 6);
-
-                // Bras avec arc - direction selon e.dir
-                ctx.fillStyle = "#d0d0d0";
-                ctx.fillRect(e.x + 5, e.y + 22, 8, 20);
-                ctx.fillRect(e.x + e.w - 13, e.y + 22, 8, 20);
-
-                // Arc - orienté selon la direction du squelette
-                // e.dir: 1 = va vers la droite, -1 = va vers la gauche
-                // L'arc doit pointer dans la direction du mouvement
-                const bowDir = e.dir || 1;
-                const bowX = bowDir > 0 ? e.x + e.w + 8 : e.x - 8;
-
-                ctx.strokeStyle = "#8B4513";
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                // Arc tourné vers la direction du mouvement
-                if (bowDir > 0) {
-                    // Face à droite: arc ouvert vers la droite
-                    ctx.arc(bowX, e.y + 30, 15, -Math.PI/2.5, Math.PI/2.5);
+                if (state.level <= 4 && typeof drawEnhancedSkeleton === 'function') {
+                    drawEnhancedSkeleton(ctx, e);
+                } else if (state.level === 5 && typeof drawMinecraftSkeleton === 'function') {
+                    // Squelette style Minecraft pour le niveau 5
+                    drawMinecraftSkeleton(ctx, e);
                 } else {
-                    // Face à gauche: arc ouvert vers la gauche
-                    ctx.arc(bowX, e.y + 30, 15, Math.PI - Math.PI/2.5, Math.PI + Math.PI/2.5);
-                }
-                ctx.stroke();
-
-                // Corde de l'arc (ligne droite qui ferme l'arc)
-                ctx.strokeStyle = "#fff";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                const cordX = bowDir > 0 ? bowX - 12 : bowX + 12;
-                ctx.moveTo(cordX, e.y + 20);
-                ctx.lineTo(cordX, e.y + 40);
-                ctx.stroke();
-
-                // Flèche tenue par le squelette
-                ctx.strokeStyle = "#8B4513";
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                const arrowStartX = e.x + e.w/2;
-                const arrowEndX = bowDir > 0 ? bowX + 18 : bowX - 18;
-                ctx.moveTo(arrowStartX, e.y + 30);
-                ctx.lineTo(arrowEndX, e.y + 30);
-                ctx.stroke();
-
-                // Pointe de flèche (triangle)
-                ctx.fillStyle = "#555";
-                ctx.beginPath();
-                if (bowDir > 0) {
-                    // Pointe vers la droite
-                    ctx.moveTo(arrowEndX + 8, e.y + 30);
-                    ctx.lineTo(arrowEndX, e.y + 26);
-                    ctx.lineTo(arrowEndX, e.y + 34);
-                } else {
-                    // Pointe vers la gauche
-                    ctx.moveTo(arrowEndX - 8, e.y + 30);
-                    ctx.lineTo(arrowEndX, e.y + 26);
-                    ctx.lineTo(arrowEndX, e.y + 34);
-                }
-                ctx.closePath();
-                ctx.fill();
-
-                // Jambes
-                ctx.fillStyle = "#e0e0e0";
-                if (state.frameTick % 20 < 10) {
-                    ctx.fillRect(e.x + e.w/2 - 10, e.y + e.h, 8, 10);
-                    ctx.fillRect(e.x + e.w/2 + 2, e.y + e.h - 2, 8, 12);
-                } else {
-                    ctx.fillRect(e.x + e.w/2 - 10, e.y + e.h - 2, 8, 12);
-                    ctx.fillRect(e.x + e.w/2 + 2, e.y + e.h, 8, 10);
+                    // Fallback cartoon si autre
+                    if (typeof drawEnhancedSkeleton === 'function') drawEnhancedSkeleton(ctx, e);
+                    else ctx.fillRect(e.x, e.y, e.w, e.h);
                 }
                 break;
 
