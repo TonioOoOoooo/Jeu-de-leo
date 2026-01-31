@@ -42,6 +42,9 @@ function draw() {
         return;
     }
     
+    // Arrière-plan amélioré pour niveaux 1-2, 7-8
+    const enhancedLevels = [1, 2, 7, 8];
+    if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
     // Arrière-plan amélioré pour niveaux 1-6
     if (state.level <= 6 && typeof drawEnhancedLevelBackground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
@@ -126,6 +129,8 @@ function draw() {
     // Joueur
     player.draw(ctx);
 
+    // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles) pour niveaux améliorés
+    if ([1, 2, 7, 8].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
     // Éléments de premier plan (papillons, oiseaux) pour niveaux 1-6
     if (state.level <= 6 && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
@@ -1145,83 +1150,60 @@ function drawHazards() {
                 break;
                 
             case 'knight':
-                // Chevalier médiéval amélioré !
-                const knightCenterX = h.x + h.w / 2;
-
-                // Corps en armure argentée avec reflets
-                ctx.fillStyle = "#d0d0d0";
-                ctx.fillRect(h.x + 5, h.y + 30, 30, 50);
-
-                // Reflets sur l'armure
-                ctx.fillStyle = "#f0f0f0";
-                ctx.fillRect(h.x + 8, h.y + 35, 4, 20);
-
-                // Tête avec casque
-                ctx.fillStyle = "#b0b0b0";
-                ctx.fillRect(h.x, h.y, h.w, 35);
-
-                // Fente du casque (visière)
-                ctx.fillStyle = "#000";
-                ctx.fillRect(h.x + 8, h.y + 12, 24, 8);
-
-                // Détails du casque (crête)
-                ctx.fillStyle = "#ff4444";
-                ctx.fillRect(h.x + h.w/2 - 2, h.y - 8, 4, 10);
-
-                // Épaules
-                ctx.fillStyle = "#909090";
-                ctx.beginPath();
-                ctx.arc(h.x + 5, h.y + 30, 8, 0, Math.PI * 2);
-                ctx.arc(h.x + h.w - 5, h.y + 30, 8, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Lance épique avec mouvement !
-                const lanceAngle = Math.sin(state.frameTick * 0.05) * 0.1; // Légère oscillation
-                const lanceLength = 60;
-
-                // Manche de la lance (bois)
-                ctx.strokeStyle = "#8B4513";
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.moveTo(knightCenterX, h.y + 10);
-                ctx.lineTo(knightCenterX + Math.sin(lanceAngle) * 5, h.y - lanceLength + 20);
-                ctx.stroke();
-
-                // Pointe de la lance (métal brillant)
-                ctx.save();
-                ctx.translate(knightCenterX + Math.sin(lanceAngle) * 5, h.y - lanceLength + 20);
-                ctx.rotate(lanceAngle);
-
-                // Pointe principale
-                ctx.fillStyle = "#e0e0e0";
-                ctx.beginPath();
-                ctx.moveTo(0, -20);
-                ctx.lineTo(-10, 0);
-                ctx.lineTo(10, 0);
-                ctx.closePath();
-                ctx.fill();
-
-                // Reflet sur la pointe
-                ctx.fillStyle = "#fff";
-                ctx.beginPath();
-                ctx.moveTo(0, -18);
-                ctx.lineTo(-3, -8);
-                ctx.lineTo(0, -10);
-                ctx.closePath();
-                ctx.fill();
-
-                // Garde de la lance
-                ctx.fillStyle = "#d4af37";
-                ctx.fillRect(-12, -2, 24, 4);
-
-                ctx.restore();
-
-                // Ombre du chevalier
-                ctx.fillStyle = "rgba(0,0,0,0.2)";
-                ctx.beginPath();
-                ctx.ellipse(knightCenterX, h.y + 82, 20, 6, 0, 0, Math.PI * 2);
-                ctx.fill();
-
+                // Utiliser le sprite amélioré pour le niveau 7
+                if (state.level === 7 && typeof drawEnhancedKnight === 'function') {
+                    drawEnhancedKnight(ctx, h);
+                } else {
+                    // Fallback: sprite basique
+                    const knightCenterX = h.x + h.w / 2;
+                    ctx.fillStyle = "#d0d0d0";
+                    ctx.fillRect(h.x + 5, h.y + 30, 30, 50);
+                    ctx.fillStyle = "#f0f0f0";
+                    ctx.fillRect(h.x + 8, h.y + 35, 4, 20);
+                    ctx.fillStyle = "#b0b0b0";
+                    ctx.fillRect(h.x, h.y, h.w, 35);
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(h.x + 8, h.y + 12, 24, 8);
+                    ctx.fillStyle = "#ff4444";
+                    ctx.fillRect(h.x + h.w/2 - 2, h.y - 8, 4, 10);
+                    ctx.fillStyle = "#909090";
+                    ctx.beginPath();
+                    ctx.arc(h.x + 5, h.y + 30, 8, 0, Math.PI * 2);
+                    ctx.arc(h.x + h.w - 5, h.y + 30, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    const lanceAngle = Math.sin(state.frameTick * 0.05) * 0.1;
+                    const lanceLength = 60;
+                    ctx.strokeStyle = "#8B4513";
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(knightCenterX, h.y + 10);
+                    ctx.lineTo(knightCenterX + Math.sin(lanceAngle) * 5, h.y - lanceLength + 20);
+                    ctx.stroke();
+                    ctx.save();
+                    ctx.translate(knightCenterX + Math.sin(lanceAngle) * 5, h.y - lanceLength + 20);
+                    ctx.rotate(lanceAngle);
+                    ctx.fillStyle = "#e0e0e0";
+                    ctx.beginPath();
+                    ctx.moveTo(0, -20);
+                    ctx.lineTo(-10, 0);
+                    ctx.lineTo(10, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath();
+                    ctx.moveTo(0, -18);
+                    ctx.lineTo(-3, -8);
+                    ctx.lineTo(0, -10);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = "#d4af37";
+                    ctx.fillRect(-12, -2, 24, 4);
+                    ctx.restore();
+                    ctx.fillStyle = "rgba(0,0,0,0.2)";
+                    ctx.beginPath();
+                    ctx.ellipse(knightCenterX, h.y + 82, 20, 6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 break;
         }
     }
@@ -1373,27 +1355,32 @@ function drawEnemies() {
                 break;
                 
             case 'shy_guy':
-                // Corps rouge
-                ctx.fillStyle = "#e74c3c";
-                ctx.fillRect(e.x, e.y, e.w, e.h);
-                // Masque blanc
-                ctx.fillStyle = "white";
-                ctx.beginPath();
-                ctx.arc(e.x + e.w / 2, e.y + 12, 12, 0, Math.PI * 2);
-                ctx.fill();
-                // Yeux et bouche
-                ctx.fillStyle = "#333";
-                ctx.beginPath();
-                ctx.arc(e.x + e.w / 2 - 5, e.y + 10, 2, 0, Math.PI * 2);
-                ctx.arc(e.x + e.w / 2 + 5, e.y + 10, 2, 0, Math.PI * 2);
-                ctx.arc(e.x + e.w / 2, e.y + 18, 3, 0, Math.PI * 2);
-                ctx.fill();
-                // Pieds bleus
-                ctx.fillStyle = "#3498db";
-                if (state.frameTick % 20 < 10) {
-                    ctx.fillRect(e.x, e.y + e.h - 5, 10, 5);
+                if (state.level === 8 && typeof drawEnhancedShyGuy === 'function') {
+                    drawEnhancedShyGuy(ctx, e);
                 } else {
-                    ctx.fillRect(e.x + e.w - 10, e.y + e.h - 5, 10, 5);
+                    // Fallback: sprite basique
+                    // Corps rouge
+                    ctx.fillStyle = "#e74c3c";
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    // Masque blanc
+                    ctx.fillStyle = "white";
+                    ctx.beginPath();
+                    ctx.arc(e.x + e.w / 2, e.y + 12, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Yeux et bouche
+                    ctx.fillStyle = "#333";
+                    ctx.beginPath();
+                    ctx.arc(e.x + e.w / 2 - 5, e.y + 10, 2, 0, Math.PI * 2);
+                    ctx.arc(e.x + e.w / 2 + 5, e.y + 10, 2, 0, Math.PI * 2);
+                    ctx.arc(e.x + e.w / 2, e.y + 18, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Pieds bleus
+                    ctx.fillStyle = "#3498db";
+                    if (state.frameTick % 20 < 10) {
+                        ctx.fillRect(e.x, e.y + e.h - 5, 10, 5);
+                    } else {
+                        ctx.fillRect(e.x + e.w - 10, e.y + e.h - 5, 10, 5);
+                    }
                 }
                 break;
                 

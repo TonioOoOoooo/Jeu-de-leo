@@ -9,10 +9,8 @@
 const VisualCache = {
     level1: null,
     level2: null,
-    level3: null,
-    level4: null,
-    level5: null,
-    level6: null,
+    level7: null,
+    level8: null,
     initialized: false
 };
 
@@ -1981,19 +1979,962 @@ function drawPortalPlatform(ctx, x, y, w, h) {
 
 // ===== FONCTION PRINCIPALE D'INTÉGRATION =====
 
+// ===== NIVEAU 7 : LES REMPARTS (CHÂTEAU MÉDIÉVAL) =====
+function initLevel7Visuals(w, h) {
+    if (VisualCache.level7) return VisualCache.level7;
+
+    const visuals = {
+        stars: [],
+        castleSilhouettes: [],
+        torches: [],
+        bats: [],
+        fogLayers: [],
+        clouds: []
+    };
+
+    // Étoiles scintillantes dans le ciel nocturne
+    for (let i = 0; i < 80; i++) {
+        visuals.stars.push({
+            x: seededRandom(i * 13) * w * 3,
+            y: seededRandom(i * 17) * h * 0.5,
+            size: 1 + seededRandom(i * 23) * 2,
+            twinkleOffset: seededRandom(i * 31) * Math.PI * 2,
+            twinkleSpeed: 0.02 + seededRandom(i * 37) * 0.03
+        });
+    }
+
+    // Silhouettes de châteaux lointains
+    visuals.castleSilhouettes.push({
+        x: 200,
+        towers: [
+            { x: 0, w: 40, h: 120, hasFlag: true },
+            { x: 50, w: 60, h: 180, hasFlag: true },
+            { x: 120, w: 35, h: 100, hasFlag: false },
+            { x: 180, w: 50, h: 150, hasFlag: true }
+        ]
+    });
+    visuals.castleSilhouettes.push({
+        x: 800,
+        towers: [
+            { x: 0, w: 50, h: 140, hasFlag: false },
+            { x: 70, w: 70, h: 200, hasFlag: true },
+            { x: 160, w: 45, h: 110, hasFlag: true }
+        ]
+    });
+    visuals.castleSilhouettes.push({
+        x: 1500,
+        towers: [
+            { x: 0, w: 55, h: 160, hasFlag: true },
+            { x: 80, w: 45, h: 130, hasFlag: false },
+            { x: 140, w: 65, h: 190, hasFlag: true }
+        ]
+    });
+
+    // Torches avec flammes
+    for (let i = 0; i < 10; i++) {
+        visuals.torches.push({
+            x: 150 + i * 250 + seededRandom(i * 47) * 100,
+            y: h * 0.4,
+            flickerOffset: seededRandom(i * 53) * Math.PI * 2
+        });
+    }
+
+    // Chauves-souris volantes
+    for (let i = 0; i < 8; i++) {
+        visuals.bats.push({
+            x: seededRandom(i * 59) * w * 2,
+            y: 80 + seededRandom(i * 61) * 150,
+            vx: 1.5 + seededRandom(i * 67) * 2,
+            wingPhase: seededRandom(i * 71) * Math.PI * 2,
+            size: 15 + seededRandom(i * 73) * 10
+        });
+    }
+
+    // Couches de brouillard
+    for (let i = 0; i < 4; i++) {
+        visuals.fogLayers.push({
+            y: h * 0.7 + i * 30,
+            opacity: 0.15 - i * 0.03,
+            speed: 0.3 + i * 0.1,
+            offset: seededRandom(i * 79) * 1000
+        });
+    }
+
+    // Nuages sombres
+    for (let i = 0; i < 6; i++) {
+        visuals.clouds.push({
+            x: seededRandom(i * 83) * w * 3,
+            y: 20 + seededRandom(i * 89) * 80,
+            width: 100 + seededRandom(i * 97) * 150,
+            height: 40 + seededRandom(i * 101) * 30,
+            speed: 0.1 + seededRandom(i * 103) * 0.15
+        });
+    }
+
+    VisualCache.level7 = visuals;
+    return visuals;
+}
+
+function drawLevel7Background(ctx, w, h, camX) {
+    const visuals = initLevel7Visuals(w, h);
+
+    // Dégradé du ciel nocturne
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, h);
+    skyGradient.addColorStop(0, '#0a0a1a');      // Noir bleuté
+    skyGradient.addColorStop(0.3, '#1a1a3e');    // Bleu très foncé
+    skyGradient.addColorStop(0.6, '#2d1b4e');    // Violet foncé
+    skyGradient.addColorStop(1, '#4a2c6a');      // Violet plus clair
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, w, h);
+
+    // Lune majestueuse
+    drawMoon(ctx, w - 180, 100);
+
+    // Étoiles scintillantes
+    for (const star of visuals.stars) {
+        const twinkle = Math.sin(state.frameTick * star.twinkleSpeed + star.twinkleOffset);
+        const alpha = 0.4 + twinkle * 0.4;
+        const size = star.size * (0.8 + twinkle * 0.2);
+
+        ctx.fillStyle = `rgba(255, 255, 230, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(star.x - camX * 0.02, star.y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Nuages sombres
+    for (const cloud of visuals.clouds) {
+        drawDarkCloud(ctx, cloud.x - camX * 0.1, cloud.y, cloud.width, cloud.height);
+    }
+
+    // Silhouettes de châteaux lointains
+    for (const castle of visuals.castleSilhouettes) {
+        drawCastleSilhouette(ctx, castle.x - camX * 0.15, h * 0.35, castle.towers);
+    }
+
+    // Torches avec flammes (en arrière-plan)
+    for (const torch of visuals.torches) {
+        drawTorch(ctx, torch.x - camX * 0.5, torch.y, torch.flickerOffset);
+    }
+
+    // Brouillard mystérieux
+    for (const fog of visuals.fogLayers) {
+        drawFogLayer(ctx, w, fog.y, fog.opacity, fog.speed, fog.offset, camX);
+    }
+}
+
+function drawLevel7Foreground(ctx, w, h, camX) {
+    const visuals = initLevel7Visuals(w, h);
+
+    // Chauves-souris volantes
+    for (const bat of visuals.bats) {
+        updateBat(bat, w);
+        drawBat(ctx, bat.x - camX * 0.6, bat.y, bat);
+    }
+}
+
+function drawMoon(ctx, x, y) {
+    // Halo de la lune
+    const haloGradient = ctx.createRadialGradient(x, y, 0, x, y, 120);
+    haloGradient.addColorStop(0, 'rgba(255, 255, 200, 0.3)');
+    haloGradient.addColorStop(0.5, 'rgba(255, 255, 200, 0.1)');
+    haloGradient.addColorStop(1, 'rgba(255, 255, 200, 0)');
+    ctx.fillStyle = haloGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, 120, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps de la lune
+    const moonGradient = ctx.createRadialGradient(x - 15, y - 15, 0, x, y, 55);
+    moonGradient.addColorStop(0, '#FFFDE7');
+    moonGradient.addColorStop(0.5, '#FFF9C4');
+    moonGradient.addColorStop(1, '#F0E68C');
+    ctx.fillStyle = moonGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, 55, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cratères
+    ctx.fillStyle = 'rgba(200, 180, 100, 0.3)';
+    ctx.beginPath();
+    ctx.arc(x - 20, y - 15, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + 15, y + 10, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x - 5, y + 25, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + 25, y - 20, 6, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawDarkCloud(ctx, x, y, width, height) {
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+
+    const gradient = ctx.createRadialGradient(x + width/2, y, 0, x + width/2, y, width/2);
+    gradient.addColorStop(0, '#2a2a4a');
+    gradient.addColorStop(1, '#1a1a2e');
+    ctx.fillStyle = gradient;
+
+    // Forme du nuage sombre
+    const puffs = [
+        { dx: 0, dy: 0, r: height * 0.7 },
+        { dx: width * 0.3, dy: -height * 0.2, r: height * 0.9 },
+        { dx: width * 0.6, dy: 0, r: height * 0.75 },
+        { dx: width * 0.9, dy: -height * 0.1, r: height * 0.6 }
+    ];
+
+    for (const puff of puffs) {
+        ctx.beginPath();
+        ctx.arc(x + puff.dx, y + puff.dy, puff.r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+function drawCastleSilhouette(ctx, x, baseY, towers) {
+    ctx.fillStyle = '#0a0a15';
+
+    for (const tower of towers) {
+        const tx = x + tower.x;
+        const ty = baseY - tower.h;
+
+        // Corps de la tour
+        ctx.fillRect(tx, ty, tower.w, tower.h + 100);
+
+        // Créneaux
+        const crenelWidth = tower.w / 5;
+        for (let i = 0; i < 5; i += 2) {
+            ctx.fillRect(tx + i * crenelWidth, ty - 15, crenelWidth, 15);
+        }
+
+        // Toit pointu
+        ctx.beginPath();
+        ctx.moveTo(tx - 5, ty);
+        ctx.lineTo(tx + tower.w / 2, ty - 30);
+        ctx.lineTo(tx + tower.w + 5, ty);
+        ctx.fill();
+
+        // Drapeau si présent
+        if (tower.hasFlag) {
+            ctx.fillStyle = '#4a0000';
+            ctx.fillRect(tx + tower.w / 2 - 1, ty - 50, 2, 25);
+            ctx.beginPath();
+            ctx.moveTo(tx + tower.w / 2 + 1, ty - 50);
+            ctx.lineTo(tx + tower.w / 2 + 20, ty - 42);
+            ctx.lineTo(tx + tower.w / 2 + 1, ty - 35);
+            ctx.fill();
+            ctx.fillStyle = '#0a0a15';
+        }
+
+        // Fenêtres éclairées
+        ctx.fillStyle = 'rgba(255, 200, 100, 0.3)';
+        ctx.fillRect(tx + tower.w / 2 - 4, ty + tower.h * 0.3, 8, 12);
+        ctx.fillRect(tx + tower.w / 2 - 4, ty + tower.h * 0.6, 8, 12);
+        ctx.fillStyle = '#0a0a15';
+    }
+}
+
+function drawTorch(ctx, x, y, flickerOffset) {
+    const flicker = Math.sin(state.frameTick * 0.2 + flickerOffset) * 0.3 + 0.7;
+    const flameSway = Math.sin(state.frameTick * 0.15 + flickerOffset) * 3;
+
+    // Lueur de la torche
+    const glowGradient = ctx.createRadialGradient(x, y - 20, 0, x, y - 20, 80 * flicker);
+    glowGradient.addColorStop(0, `rgba(255, 150, 50, ${0.3 * flicker})`);
+    glowGradient.addColorStop(0.5, `rgba(255, 100, 30, ${0.1 * flicker})`);
+    glowGradient.addColorStop(1, 'rgba(255, 80, 20, 0)');
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(x, y - 20, 80 * flicker, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Support de la torche
+    ctx.fillStyle = '#4a3728';
+    ctx.fillRect(x - 4, y, 8, 30);
+
+    // Flamme
+    const flameGradient = ctx.createLinearGradient(x, y, x, y - 40);
+    flameGradient.addColorStop(0, '#FF6600');
+    flameGradient.addColorStop(0.3, '#FF9900');
+    flameGradient.addColorStop(0.6, '#FFCC00');
+    flameGradient.addColorStop(1, '#FFFF99');
+
+    ctx.fillStyle = flameGradient;
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y);
+    ctx.quadraticCurveTo(x - 12 + flameSway, y - 20, x + flameSway * 0.5, y - 35 * flicker);
+    ctx.quadraticCurveTo(x + 12 + flameSway, y - 20, x + 8, y);
+    ctx.fill();
+
+    // Cœur de la flamme
+    ctx.fillStyle = '#FFFFCC';
+    ctx.beginPath();
+    ctx.moveTo(x - 3, y);
+    ctx.quadraticCurveTo(x - 4 + flameSway * 0.5, y - 12, x + flameSway * 0.3, y - 20 * flicker);
+    ctx.quadraticCurveTo(x + 4 + flameSway * 0.5, y - 12, x + 3, y);
+    ctx.fill();
+}
+
+function drawFogLayer(ctx, w, y, opacity, speed, offset, camX) {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+
+    const fogGradient = ctx.createLinearGradient(0, y - 30, 0, y + 50);
+    fogGradient.addColorStop(0, 'rgba(100, 80, 120, 0)');
+    fogGradient.addColorStop(0.5, 'rgba(80, 60, 100, 1)');
+    fogGradient.addColorStop(1, 'rgba(60, 40, 80, 0)');
+
+    ctx.fillStyle = fogGradient;
+
+    // Forme ondulante du brouillard
+    ctx.beginPath();
+    ctx.moveTo(-100, y + 50);
+
+    const waveOffset = state.frameTick * speed + offset - camX * 0.3;
+    for (let x = -100; x <= w + 100; x += 20) {
+        const waveY = y + Math.sin((x + waveOffset) * 0.02) * 15;
+        ctx.lineTo(x, waveY);
+    }
+
+    ctx.lineTo(w + 100, y + 50);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function updateBat(bat, w) {
+    bat.x += bat.vx;
+    bat.y += Math.sin(state.frameTick * 0.08 + bat.x * 0.01) * 0.8;
+    bat.wingPhase += 0.4;
+
+    if (bat.x > w * 3) {
+        bat.x = -50;
+        bat.y = 80 + seededRandom(bat.x) * 150;
+    }
+}
+
+function drawBat(ctx, x, y, bat) {
+    const wingUp = Math.sin(bat.wingPhase);
+    const size = bat.size;
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Corps
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.3, size * 0.25, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tête
+    ctx.beginPath();
+    ctx.arc(size * 0.3, -size * 0.1, size * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Oreilles pointues
+    ctx.beginPath();
+    ctx.moveTo(size * 0.25, -size * 0.2);
+    ctx.lineTo(size * 0.2, -size * 0.4);
+    ctx.lineTo(size * 0.35, -size * 0.2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(size * 0.35, -size * 0.2);
+    ctx.lineTo(size * 0.4, -size * 0.38);
+    ctx.lineTo(size * 0.45, -size * 0.2);
+    ctx.fill();
+
+    // Yeux rouges brillants
+    ctx.fillStyle = '#FF3333';
+    ctx.beginPath();
+    ctx.arc(size * 0.28, -size * 0.12, 2, 0, Math.PI * 2);
+    ctx.arc(size * 0.38, -size * 0.12, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ailes membraneuses
+    ctx.fillStyle = '#2a2a4e';
+
+    // Aile gauche
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.1, 0);
+    ctx.quadraticCurveTo(-size * 0.5, -size * 0.3 * wingUp - size * 0.2, -size * 0.7, -size * 0.1 * wingUp);
+    ctx.lineTo(-size * 0.6, size * 0.1);
+    ctx.quadraticCurveTo(-size * 0.3, 0, -size * 0.1, 0);
+    ctx.fill();
+
+    // Aile droite (derrière)
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.1, 0);
+    ctx.quadraticCurveTo(-size * 0.4, -size * 0.2 * wingUp - size * 0.15, -size * 0.55, -size * 0.05 * wingUp);
+    ctx.lineTo(-size * 0.45, size * 0.08);
+    ctx.quadraticCurveTo(-size * 0.25, 0, -size * 0.1, 0);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// ===== NIVEAU 8 : ROYAUME DES RÊVES =====
+function initLevel8Visuals(w, h) {
+    if (VisualCache.level8) return VisualCache.level8;
+
+    const visuals = {
+        stars: [],
+        dreamClouds: [],
+        sparkles: [],
+        bubbles: [],
+        rainbowArcs: []
+    };
+
+    // Étoiles magiques
+    for (let i = 0; i < 60; i++) {
+        visuals.stars.push({
+            x: seededRandom(i * 107) * w * 3,
+            y: seededRandom(i * 109) * h * 0.6,
+            size: 2 + seededRandom(i * 113) * 3,
+            twinkleOffset: seededRandom(i * 127) * Math.PI * 2,
+            color: ['#FFD700', '#FF69B4', '#87CEEB', '#DDA0DD', '#98FB98'][Math.floor(seededRandom(i * 131) * 5)]
+        });
+    }
+
+    // Gros nuages de rêve
+    for (let i = 0; i < 8; i++) {
+        visuals.dreamClouds.push({
+            x: seededRandom(i * 137) * w * 3,
+            y: h * 0.15 + seededRandom(i * 139) * h * 0.4,
+            width: 150 + seededRandom(i * 149) * 200,
+            height: 60 + seededRandom(i * 151) * 60,
+            speed: 0.15 + seededRandom(i * 157) * 0.2,
+            hue: seededRandom(i * 163) * 60 + 260 // Teintes violettes/roses
+        });
+    }
+
+    // Particules scintillantes
+    for (let i = 0; i < 40; i++) {
+        visuals.sparkles.push({
+            x: seededRandom(i * 167) * w * 3,
+            y: seededRandom(i * 173) * h,
+            size: 2 + seededRandom(i * 179) * 4,
+            speed: 0.5 + seededRandom(i * 181) * 1,
+            phase: seededRandom(i * 191) * Math.PI * 2
+        });
+    }
+
+    // Bulles de rêve flottantes
+    for (let i = 0; i < 15; i++) {
+        visuals.bubbles.push({
+            x: seededRandom(i * 193) * w * 2,
+            y: h + seededRandom(i * 197) * 200,
+            size: 15 + seededRandom(i * 199) * 25,
+            speed: 0.3 + seededRandom(i * 211) * 0.5,
+            wobble: seededRandom(i * 223) * Math.PI * 2
+        });
+    }
+
+    // Arcs-en-ciel subtils
+    visuals.rainbowArcs.push({ x: 300, y: h * 0.5, size: 200, opacity: 0.15 });
+    visuals.rainbowArcs.push({ x: 1200, y: h * 0.4, size: 250, opacity: 0.12 });
+    visuals.rainbowArcs.push({ x: 2000, y: h * 0.55, size: 180, opacity: 0.18 });
+
+    VisualCache.level8 = visuals;
+    return visuals;
+}
+
+function drawLevel8Background(ctx, w, h, camX) {
+    const visuals = initLevel8Visuals(w, h);
+
+    // Dégradé de ciel onirique
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, h);
+    skyGradient.addColorStop(0, '#1a0a2e');     // Violet très foncé
+    skyGradient.addColorStop(0.2, '#4a2c7a');   // Violet
+    skyGradient.addColorStop(0.4, '#7b4397');   // Violet rose
+    skyGradient.addColorStop(0.6, '#9290FF');   // Bleu lavande
+    skyGradient.addColorStop(0.8, '#dc98c0');   // Rose pâle
+    skyGradient.addColorStop(1, '#ffecd2');     // Pêche clair
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, w, h);
+
+    // Lune croissante magique
+    drawCrescentMoon(ctx, w - 150, 100);
+
+    // Arcs-en-ciel subtils
+    for (const rainbow of visuals.rainbowArcs) {
+        drawRainbowArc(ctx, rainbow.x - camX * 0.1, rainbow.y, rainbow.size, rainbow.opacity);
+    }
+
+    // Étoiles magiques colorées
+    for (const star of visuals.stars) {
+        const twinkle = Math.sin(state.frameTick * 0.03 + star.twinkleOffset);
+        const alpha = 0.5 + twinkle * 0.4;
+        const size = star.size * (0.8 + twinkle * 0.3);
+
+        // Halo
+        ctx.fillStyle = star.color.replace(')', `, ${alpha * 0.3})`).replace('rgb', 'rgba');
+        ctx.beginPath();
+        ctx.arc(star.x - camX * 0.03, star.y, size * 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Étoile
+        drawSparkle(ctx, star.x - camX * 0.03, star.y, size, star.color, alpha);
+    }
+
+    // Nuages de rêve
+    for (const cloud of visuals.dreamClouds) {
+        drawDreamCloud(ctx, cloud.x - camX * cloud.speed * 0.5, cloud.y, cloud.width, cloud.height, cloud.hue);
+    }
+
+    // Particules scintillantes
+    for (const sparkle of visuals.sparkles) {
+        const y = sparkle.y - (state.frameTick * sparkle.speed * 0.5) % h;
+        const alpha = Math.sin(state.frameTick * 0.05 + sparkle.phase) * 0.5 + 0.5;
+        drawSparkle(ctx, sparkle.x - camX * 0.4, y, sparkle.size, '#FFFFFF', alpha);
+    }
+}
+
+function drawLevel8Foreground(ctx, w, h, camX) {
+    const visuals = initLevel8Visuals(w, h);
+
+    // Bulles de rêve flottantes
+    for (const bubble of visuals.bubbles) {
+        updateDreamBubble(bubble, h);
+        drawDreamBubble(ctx, bubble.x - camX * 0.3, bubble.y, bubble.size, bubble.wobble);
+    }
+}
+
+function drawCrescentMoon(ctx, x, y) {
+    // Halo magique
+    const haloGradient = ctx.createRadialGradient(x, y, 0, x, y, 100);
+    haloGradient.addColorStop(0, 'rgba(255, 230, 180, 0.4)');
+    haloGradient.addColorStop(0.5, 'rgba(255, 200, 255, 0.15)');
+    haloGradient.addColorStop(1, 'rgba(200, 150, 255, 0)');
+    ctx.fillStyle = haloGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, 100, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Lune principale
+    ctx.fillStyle = '#FFFDE7';
+    ctx.beginPath();
+    ctx.arc(x, y, 45, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Découpe pour créer le croissant
+    ctx.fillStyle = '#4a2c7a';
+    ctx.beginPath();
+    ctx.arc(x + 25, y - 5, 38, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Brillance sur le croissant
+    ctx.fillStyle = 'rgba(255, 255, 230, 0.3)';
+    ctx.beginPath();
+    ctx.arc(x - 15, y - 15, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Petites étoiles autour de la lune
+    for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2 + state.frameTick * 0.01;
+        const dist = 60 + Math.sin(state.frameTick * 0.02 + i) * 10;
+        const sx = x + Math.cos(angle) * dist;
+        const sy = y + Math.sin(angle) * dist;
+        drawSparkle(ctx, sx, sy, 3, '#FFD700', 0.7);
+    }
+}
+
+function drawRainbowArc(ctx, x, y, size, opacity) {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+
+    const colors = ['#FF6B6B', '#FFA07A', '#FFD93D', '#6BCB77', '#4D96FF', '#9B59B6'];
+
+    for (let i = 0; i < colors.length; i++) {
+        ctx.strokeStyle = colors[i];
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(x, y + size, size - i * 10, Math.PI, 0);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+function drawSparkle(ctx, x, y, size, color, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+
+    // Forme d'étoile à 4 branches
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x + size * 0.3, y - size * 0.3);
+    ctx.lineTo(x + size, y);
+    ctx.lineTo(x + size * 0.3, y + size * 0.3);
+    ctx.lineTo(x, y + size);
+    ctx.lineTo(x - size * 0.3, y + size * 0.3);
+    ctx.lineTo(x - size, y);
+    ctx.lineTo(x - size * 0.3, y - size * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawDreamCloud(ctx, x, y, width, height, hue) {
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+
+    // Couleur basée sur la teinte
+    const color1 = `hsla(${hue}, 60%, 80%, 0.8)`;
+    const color2 = `hsla(${hue + 20}, 50%, 90%, 0.6)`;
+
+    const gradient = ctx.createRadialGradient(x + width/2, y, 0, x + width/2, y, width/2);
+    gradient.addColorStop(0, color2);
+    gradient.addColorStop(1, color1);
+    ctx.fillStyle = gradient;
+
+    // Forme moelleuse du nuage
+    const puffs = [
+        { dx: 0, dy: 0, r: height * 0.8 },
+        { dx: width * 0.25, dy: -height * 0.3, r: height * 1.0 },
+        { dx: width * 0.5, dy: -height * 0.1, r: height * 0.9 },
+        { dx: width * 0.75, dy: -height * 0.2, r: height * 0.7 },
+        { dx: width * 0.15, dy: height * 0.3, r: height * 0.6 },
+        { dx: width * 0.6, dy: height * 0.2, r: height * 0.5 }
+    ];
+
+    for (const puff of puffs) {
+        ctx.beginPath();
+        ctx.arc(x + puff.dx, y + puff.dy, puff.r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Brillance
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(x + width * 0.3, y - height * 0.3, height * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function updateDreamBubble(bubble, h) {
+    bubble.y -= bubble.speed;
+    bubble.wobble += 0.03;
+
+    if (bubble.y < -bubble.size * 2) {
+        bubble.y = h + bubble.size;
+        bubble.x = seededRandom(bubble.y * 7) * canvas.width * 2;
+    }
+}
+
+function drawDreamBubble(ctx, x, y, size, wobble) {
+    const wobbleX = Math.sin(wobble) * 5;
+
+    ctx.save();
+
+    // Bulle principale
+    const bubbleGradient = ctx.createRadialGradient(x + wobbleX - size * 0.3, y - size * 0.3, 0, x + wobbleX, y, size);
+    bubbleGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+    bubbleGradient.addColorStop(0.3, 'rgba(200, 220, 255, 0.4)');
+    bubbleGradient.addColorStop(0.7, 'rgba(180, 200, 255, 0.2)');
+    bubbleGradient.addColorStop(1, 'rgba(150, 180, 255, 0.1)');
+
+    ctx.fillStyle = bubbleGradient;
+    ctx.beginPath();
+    ctx.arc(x + wobbleX, y, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bordure irisée
+    ctx.strokeStyle = 'rgba(255, 200, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Reflet principal
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.beginPath();
+    ctx.ellipse(x + wobbleX - size * 0.3, y - size * 0.3, size * 0.25, size * 0.15, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Petit reflet secondaire
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.beginPath();
+    ctx.arc(x + wobbleX + size * 0.2, y + size * 0.2, size * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// ===== SPRITES AMÉLIORÉS NIVEAU 7 & 8 =====
+
+function drawEnhancedKnight(ctx, h) {
+    const time = state.frameTick;
+    const breathe = Math.sin(time * 0.05) * 2;
+    const lanceOscillation = Math.sin(time * 0.08) * 0.15;
+
+    ctx.save();
+    ctx.translate(h.x + h.w / 2, h.y + h.h / 2);
+
+    // Ombre au sol
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, h.h / 2 + 10, h.w * 0.6, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps en armure avec dégradé
+    const armorGradient = ctx.createLinearGradient(-h.w / 2, -h.h / 2, h.w / 2, h.h / 2);
+    armorGradient.addColorStop(0, '#e8e8e8');
+    armorGradient.addColorStop(0.3, '#c0c0c0');
+    armorGradient.addColorStop(0.7, '#a0a0a0');
+    armorGradient.addColorStop(1, '#808080');
+
+    // Torse
+    ctx.fillStyle = armorGradient;
+    ctx.beginPath();
+    ctx.roundRect(-12, -15 + breathe, 24, 35, 4);
+    ctx.fill();
+
+    // Détails du plastron
+    ctx.strokeStyle = '#606060';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-8, -10 + breathe);
+    ctx.lineTo(-8, 15 + breathe);
+    ctx.moveTo(8, -10 + breathe);
+    ctx.lineTo(8, 15 + breathe);
+    ctx.moveTo(-10, 0 + breathe);
+    ctx.lineTo(10, 0 + breathe);
+    ctx.stroke();
+
+    // Reflet sur l'armure
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillRect(-10, -12 + breathe, 4, 15);
+
+    // Épaulières
+    ctx.fillStyle = armorGradient;
+    ctx.beginPath();
+    ctx.ellipse(-15, -10 + breathe, 8, 10, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(15, -10 + breathe, 8, 10, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#707070';
+    ctx.stroke();
+
+    // Casque
+    const helmetGradient = ctx.createLinearGradient(-12, -h.h / 2, 12, -15);
+    helmetGradient.addColorStop(0, '#d0d0d0');
+    helmetGradient.addColorStop(0.5, '#b0b0b0');
+    helmetGradient.addColorStop(1, '#909090');
+    ctx.fillStyle = helmetGradient;
+    ctx.beginPath();
+    ctx.roundRect(-12, -h.h / 2 + breathe, 24, 28, [8, 8, 2, 2]);
+    ctx.fill();
+
+    // Visière (fente sombre)
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(-10, -h.h / 2 + 12 + breathe, 20, 6);
+
+    // Yeux menaçants dans la visière
+    const eyeGlow = Math.sin(time * 0.1) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(255, 50, 50, ${eyeGlow})`;
+    ctx.beginPath();
+    ctx.arc(-4, -h.h / 2 + 15 + breathe, 2, 0, Math.PI * 2);
+    ctx.arc(4, -h.h / 2 + 15 + breathe, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Crête du casque
+    ctx.fillStyle = '#cc0000';
+    const crestWave = Math.sin(time * 0.1) * 2;
+    ctx.beginPath();
+    ctx.moveTo(-3, -h.h / 2 + breathe);
+    ctx.quadraticCurveTo(0 + crestWave, -h.h / 2 - 20 + breathe, 3, -h.h / 2 + breathe);
+    ctx.fill();
+
+    // Plumes de la crête
+    ctx.fillStyle = '#aa0000';
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(-2 + i * 2, -h.h / 2 + breathe);
+        ctx.quadraticCurveTo(crestWave + i, -h.h / 2 - 15 - i * 3 + breathe, i, -h.h / 2 - 5 + breathe);
+        ctx.stroke();
+    }
+
+    // Jambières
+    ctx.fillStyle = armorGradient;
+    ctx.fillRect(-10, 20 + breathe, 8, 20);
+    ctx.fillRect(2, 20 + breathe, 8, 20);
+
+    // Lance épique
+    ctx.save();
+    ctx.rotate(lanceOscillation);
+
+    // Hampe de la lance
+    ctx.strokeStyle = '#5D4037';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(0, -10);
+    ctx.lineTo(0, -70);
+    ctx.stroke();
+
+    // Détails de la hampe
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-3, -20);
+    ctx.lineTo(3, -20);
+    ctx.moveTo(-3, -40);
+    ctx.lineTo(3, -40);
+    ctx.stroke();
+
+    // Pointe de la lance
+    ctx.fillStyle = '#e0e0e0';
+    ctx.beginPath();
+    ctx.moveTo(0, -95);
+    ctx.lineTo(-8, -70);
+    ctx.lineTo(-3, -70);
+    ctx.lineTo(-3, -65);
+    ctx.lineTo(3, -65);
+    ctx.lineTo(3, -70);
+    ctx.lineTo(8, -70);
+    ctx.closePath();
+    ctx.fill();
+
+    // Reflet sur la pointe
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.beginPath();
+    ctx.moveTo(-2, -90);
+    ctx.lineTo(-5, -72);
+    ctx.lineTo(-2, -72);
+    ctx.closePath();
+    ctx.fill();
+
+    // Garde de la lance
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(-6, -68, 12, 4);
+
+    ctx.restore();
+
+    ctx.restore();
+}
+
+function drawEnhancedShyGuy(ctx, e) {
+    const time = state.frameTick;
+    const bounce = Math.sin(time * 0.15) * 2;
+    const wobble = Math.sin(time * 0.1) * 0.05;
+
+    ctx.save();
+    ctx.translate(e.x + e.w / 2, e.y + e.h);
+    ctx.rotate(wobble);
+
+    const dir = e.dir || 1;
+    ctx.scale(dir, 1);
+
+    // Ombre
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(0, 5, e.w * 0.4, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Robe/Corps rouge avec dégradé
+    const bodyGradient = ctx.createLinearGradient(-e.w / 2, -e.h, e.w / 2, 0);
+    bodyGradient.addColorStop(0, '#ff4444');
+    bodyGradient.addColorStop(0.5, '#cc0000');
+    bodyGradient.addColorStop(1, '#aa0000');
+    ctx.fillStyle = bodyGradient;
+    ctx.beginPath();
+    ctx.moveTo(-e.w / 2 + 5, -e.h / 2 + bounce);
+    ctx.quadraticCurveTo(-e.w / 2, 0, -e.w / 2 + 8, 0);
+    ctx.lineTo(e.w / 2 - 8, 0);
+    ctx.quadraticCurveTo(e.w / 2, 0, e.w / 2 - 5, -e.h / 2 + bounce);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ceinture
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(-e.w / 2 + 6, -e.h / 3 + bounce, e.w - 12, 5);
+
+    // Boucle de ceinture
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(-3, -e.h / 3 + bounce, 6, 5);
+
+    // Pieds bleus animés
+    const footOffset = Math.sin(time * 0.2) * 5;
+    ctx.fillStyle = '#2980b9';
+
+    // Pied gauche
+    ctx.beginPath();
+    ctx.ellipse(-8 + footOffset, 3, 8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pied droit
+    ctx.beginPath();
+    ctx.ellipse(8 - footOffset, 3, 8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflets sur les chaussures
+    ctx.fillStyle = '#3498db';
+    ctx.beginPath();
+    ctx.ellipse(-10 + footOffset, 1, 3, 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(6 - footOffset, 1, 3, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Masque blanc
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(0, -e.h / 2 - 5 + bounce, 14, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bordure du masque
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Yeux noirs (grands et expressifs)
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.ellipse(-5, -e.h / 2 - 7 + bounce, 4, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(5, -e.h / 2 - 7 + bounce, 4, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflets dans les yeux
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(-6, -e.h / 2 - 9 + bounce, 1.5, 0, Math.PI * 2);
+    ctx.arc(4, -e.h / 2 - 9 + bounce, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bouche (petit O surpris)
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.ellipse(0, -e.h / 2 + 3 + bounce, 4, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Capuche/Tête pointue
+    ctx.fillStyle = '#cc0000';
+    ctx.beginPath();
+    ctx.moveTo(-12, -e.h / 2 - 12 + bounce);
+    ctx.quadraticCurveTo(0, -e.h - 25 + bounce, 12, -e.h / 2 - 12 + bounce);
+    ctx.fill();
+
+    // Noeud de la capuche
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(0, -e.h / 2 - 15 + bounce, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
 function drawEnhancedLevelBackground(ctx, w, h, camX) {
     if (state.level === 1) {
         drawLevel1Background(ctx, w, h, camX);
     } else if (state.level === 2) {
         drawLevel2Background(ctx, w, h, camX);
-    } else if (state.level === 3) {
-        drawLevel3Background(ctx, w, h, camX);
-    } else if (state.level === 4) {
-        drawLevel4Background(ctx, w, h, camX);
-    } else if (state.level === 5) {
-        drawLevel5Background(ctx, w, h, camX);
-    } else if (state.level === 6) {
-        drawLevel6Background(ctx, w, h, camX);
+    } else if (state.level === 7) {
+        drawLevel7Background(ctx, w, h, camX);
+    } else if (state.level === 8) {
+        drawLevel8Background(ctx, w, h, camX);
     }
 }
 
@@ -2002,18 +2943,14 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel1Foreground(ctx, w, h, camX);
     } else if (state.level === 2) {
         drawLevel2Foreground(ctx, w, h, camX);
-    } else if (state.level === 3) {
-        drawLevel3Foreground(ctx, w, h, camX);
-    } else if (state.level === 4) {
-        drawLevel4Foreground(ctx, w, h, camX);
-    } else if (state.level === 5) {
-        drawLevel5Foreground(ctx, w, h, camX);
-    } else if (state.level === 6) {
-        // Pas de foreground spécifique pour le moment
+    } else if (state.level === 7) {
+        drawLevel7Foreground(ctx, w, h, camX);
+    } else if (state.level === 8) {
+        drawLevel8Foreground(ctx, w, h, camX);
     }
 }
 
-// Mettre à jour les nuages
+// Mettre à jour les éléments visuels animés
 function updateVisualElements() {
     // Level 1
     if (VisualCache.level1) {
@@ -2035,25 +2972,24 @@ function updateVisualElements() {
         }
     }
 
-    if (VisualCache.level3) {
-        for (const dust of VisualCache.level3.dust) {
-            dust.x += dust.speed;
-            if (dust.x > canvas.width) {
-                dust.x = 0;
-                dust.y = Math.random() * canvas.height;
-            }
-        }
-    }
-
-    if (VisualCache.level4) {
-        for (const cloud of VisualCache.level4.skyClouds) {
+    // Level 7
+    if (VisualCache.level7) {
+        for (const cloud of VisualCache.level7.clouds) {
             cloud.x += cloud.speed;
             if (cloud.x > canvas.width * 4) {
                 cloud.x = -cloud.width;
             }
         }
+    }
 
-        // Fireflies are animated in the draw pass for smoother motion
+    // Level 8
+    if (VisualCache.level8) {
+        for (const cloud of VisualCache.level8.dreamClouds) {
+            cloud.x += cloud.speed;
+            if (cloud.x > canvas.width * 4) {
+                cloud.x = -cloud.width;
+            }
+        }
     }
 }
 
@@ -2061,10 +2997,8 @@ function updateVisualElements() {
 function resetVisualCache() {
     VisualCache.level1 = null;
     VisualCache.level2 = null;
-    VisualCache.level3 = null;
-    VisualCache.level4 = null;
-    VisualCache.level5 = null;
-    VisualCache.level6 = null;
+    VisualCache.level7 = null;
+    VisualCache.level8 = null;
 }
 
 // Export des fonctions
@@ -2078,7 +3012,7 @@ window.drawEnhancedGrassPlatform = drawEnhancedGrassPlatform;
 window.drawEnhancedStonePlatform = drawEnhancedStonePlatform;
 window.drawEnhancedMushroomPlatform = drawEnhancedMushroomPlatform;
 window.drawEnhancedMovingPlatform = drawEnhancedMovingPlatform;
-window.drawMinecraftBlock = drawMinecraftBlock;
-window.drawPortalPlatform = drawPortalPlatform;
+window.drawEnhancedKnight = drawEnhancedKnight;
+window.drawEnhancedShyGuy = drawEnhancedShyGuy;
 window.updateVisualElements = updateVisualElements;
 window.resetVisualCache = resetVisualCache;
