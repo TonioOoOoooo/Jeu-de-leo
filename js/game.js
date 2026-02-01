@@ -684,6 +684,14 @@ function updatePlayer() {
                 if (p.type === 'slide') {
                     player.vx += 4;
                 }
+
+                if (p.type === 'jump_pad') {
+                    player.vy = -18;
+                    player.grounded = false;
+                    player.jumpCount = 1;
+                    player.currentPlatform = null;
+                    onPlatform = false;
+                }
             }
         }
     }
