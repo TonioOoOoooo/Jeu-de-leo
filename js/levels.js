@@ -1121,84 +1121,17 @@ const LEVELS = {
         }
     },
 
-    // =================================================================
-    // NIVEAU 11 - LA DIMENSION GLITCH (Niveau Caché)
-    // =================================================================
-    // Concept UX : Parcours aérien exigeant. Pas de sol.
-    // Introduction progressive : Mouvantes -> Glace -> Tremplins.
+    // NIVEAU 11 - FRUITY FRANK (Niveau Caché / Bonus)
+    // Remastered : Moteur grid-based avec graphismes HD
+    // ========================================================
     11: {
-        name: "DIMENSION GLITCH",
-        bgColor: "#050010", // Noir profond légèrement teinté pour le fallback
-        music: "sounds/music_game.mp3", // Idéalement, une musique plus électro/abstraite ici
-        playerStart: { x: 75, y: 450 },
+        name: "🍓 SUPER FRUITY FRANK 🍓",
+        bgColor: "#1a0505", // Fond prune très sombre pour faire ressortir les couleurs
+        playerStart: { x: 0, y: 0 }, // Géré par le moteur fruity
+        needsKey: false,
+        fruityFrankLevel: true,
         setup: (w, h) => {
-            const level = createEmptyLevel();
-
-            level.platforms = [
-                // --- Zone 1 : L'Introduction Mouvante ---
-                { x: 50, y: 500, w: 150, h: 25, type: 'normal' }, // Départ safe
-                // Deux plateformes mouvantes synchronisées pour traverser
-                { x: 250, y: 500, w: 100, h: 25, type: 'moving', range: 100, speed: 2, axis: 'y' },
-                { x: 450, y: 450, w: 100, h: 25, type: 'moving', range: 100, speed: 2, axis: 'y', startOffset: 50 }, // Légèrement décalée
-                
-                // --- Zone 2 : Le Passage Glacé ---
-                { x: 650, y: 400, w: 200, h: 25, type: 'normal' }, // Repos
-                // Série de petites plateformes de glace demandant de la précision
-                { x: 900, y: 400, w: 80, h: 25, type: 'ice' },
-                { x: 1050, y: 350, w: 80, h: 25, type: 'ice' },
-                { x: 1200, y: 300, w: 80, h: 25, type: 'ice' },
-
-                // --- Zone 3 : L'Ascension Finale (Tremplins) ---
-                { x: 1350, y: 300, w: 150, h: 25, type: 'normal' }, // Base avant les sauts
-                // Le joueur doit faire confiance aux tremplins pour monter très haut
-                { x: 1600, y: 250, w: 60, h: 25, type: 'jump_pad' }, 
-                { x: 1400, y: -50, w: 60, h: 25, type: 'jump_pad' }, // Très haut !
-                
-                // Plateforme finale
-                { x: 1700, y: -200, w: 200, h: 25, type: 'normal' }
-            ];
-            for (const platform of level.platforms) {
-                if (platform.type === 'moving' && platform.range && platform.axis) {
-                    if (platform.axis === 'y') {
-                        platform.vy = platform.speed;
-                        platform.vx = 0;
-                        platform.minY = platform.y - platform.range;
-                        platform.maxY = platform.y + platform.range;
-                        if (platform.startOffset) {
-                            platform.y += platform.startOffset;
-                        }
-                    } else if (platform.axis === 'x') {
-                        platform.vx = platform.speed;
-                        platform.vy = 0;
-                        platform.minX = platform.x - platform.range;
-                        platform.maxX = platform.x + platform.range;
-                        if (platform.startOffset) {
-                            platform.x += platform.startOffset;
-                        }
-                    }
-                }
-            }
-
-            level.coins = [
-                // Pièces placées pour guider le joueur sur les trajectoires difficiles
-                { x: 300, y: 450 }, // Sur le chemin mouvant
-                { x: 940, y: 370 }, // Au-dessus de la première glace
-                { x: 1090, y: 320 }, // Au-dessus de la deuxième glace
-                { x: 1630, y: 200 }, // Juste avant le premier tremplin
-                { x: 1430, y: -100 } // Dans la trajectoire du grand saut
-            ];
-            
-            // Ennemis volants abstraits pour gêner la progression aérienne
-            level.enemies = [
-                { x: 550, y: 350, w: 40, h: 40, type: 'flyer', range: 150, speed: 3 },
-                { x: 1100, y: 200, w: 40, h: 40, type: 'flyer', range: 200, speed: 4 },
-                { x: 1600, y: 50, w: 40, h: 40, type: 'flyer', range: 100, speed: 5 }
-            ];
-            
-            level.goal = { x: 1800, y: -240, w: 40, h: 40 };
-            level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
-
-            return level;
+            return { fruityFrank: true };
         }
     }
 };
