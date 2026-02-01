@@ -9,6 +9,8 @@
 const VisualCache = {
     level1: null,
     level2: null,
+    level3: null,
+    level4: null,
     level5: null,
     level6: null,
     level7: null,
@@ -219,7 +221,7 @@ function initLevel2Visuals(w, h) {
     return visuals;
 }
 
-// ===== NIVEAU 3 : LE DONJON MAUDIT =====
+// ===== NIVEAU 3 : LE DONJON MAUDIT (VERSION SUBLIMÉE) =====
 function initLevel3Visuals(w, h) {
     if (VisualCache.level3) return VisualCache.level3;
 
@@ -228,56 +230,136 @@ function initLevel3Visuals(w, h) {
         torches: [],
         chains: [],
         windows: [],
-        dust: []
+        dust: [],
+        // Nouveaux éléments WOW
+        fogLayers: [],
+        magicRunes: [],
+        cobwebs: [],
+        skulls: [],
+        waterDrips: [],
+        floatingSpirits: [],
+        crackedStones: [],
+        wallMoss: []
     };
 
-    // Piliers de cathédrale (structure rythmée au lieu d'aléatoire)
+    // Piliers de cathédrale gothique (structure rythmée)
     const spacing = 400;
-    for (let i = -1; i < 20; i++) {
+    for (let i = -1; i < 25; i++) {
         visuals.pillars.push({
             x: i * spacing,
-            width: 60,
-            type: i % 2 === 0 ? 'major' : 'minor' // Alternance gros/petits piliers
+            width: 80,
+            type: i % 3 === 0 ? 'major' : (i % 3 === 1 ? 'medium' : 'minor'),
+            hasTorch: i % 2 === 0,
+            hasGargoyle: i % 4 === 0 && i > 0
         });
     }
 
-    // Vitraux (en arrière-plan profond)
-    for (let i = 0; i < 10; i++) {
+    // Vitraux gothiques avec motifs
+    for (let i = 0; i < 12; i++) {
         visuals.windows.push({
-            x: i * spacing * 2 + 200,
-            y: h * 0.2,
-            w: 80,
-            h: 180,
-            color: i % 2 === 0 ? '#3498db' : '#9b59b6' // Bleu et Violet mystique
+            x: i * spacing * 1.5 + 200,
+            y: h * 0.15,
+            w: 100,
+            h: 220,
+            color: ['#e74c3c', '#3498db', '#9b59b6', '#f39c12', '#1abc9c'][i % 5],
+            pattern: i % 3  // Différents motifs de vitraux
         });
     }
 
-    // Torches (alignées sur les piliers)
-    for (let i = 0; i < 20; i += 2) {
+    // Torches avec particules de feu
+    for (let i = 0; i < 25; i += 2) {
         visuals.torches.push({
-            x: i * spacing + 30, // Sur le pilier
-            y: h * 0.4,
-            flicker: Math.random() * Math.PI * 2
+            x: i * spacing + 40,
+            y: h * 0.35,
+            flicker: seededRandom(i * 101) * Math.PI * 2,
+            intensity: 0.8 + seededRandom(i * 103) * 0.4,
+            particles: []
         });
     }
 
-    // Chaînes décoratives en haut
-    for (let i = 0; i < 10; i++) {
+    // Chaînes décoratives avec crânes
+    for (let i = 0; i < 15; i++) {
         visuals.chains.push({
-            x: i * 500 + 100,
+            x: i * 450 + 100,
             y: 0,
-            length: 100 + Math.random() * 150,
-            swayOffset: Math.random() * Math.PI * 2
+            length: 80 + seededRandom(i * 107) * 180,
+            swayOffset: seededRandom(i * 109) * Math.PI * 2,
+            hasSkull: seededRandom(i * 111) > 0.6
         });
     }
 
-    // Poussière flottante (atmosphère)
-    for (let i = 0; i < 50; i++) {
+    // Couches de brouillard (effet de profondeur)
+    for (let layer = 0; layer < 4; layer++) {
+        visuals.fogLayers.push({
+            y: h * (0.5 + layer * 0.15),
+            opacity: 0.15 - layer * 0.03,
+            speed: 0.3 + layer * 0.2,
+            offset: seededRandom(layer * 113) * 1000
+        });
+    }
+
+    // Runes magiques sur les murs (lueur mystérieuse)
+    for (let i = 0; i < 20; i++) {
+        visuals.magicRunes.push({
+            x: seededRandom(i * 127) * w * 3,
+            y: h * 0.3 + seededRandom(i * 131) * h * 0.4,
+            size: 15 + seededRandom(i * 137) * 25,
+            glowPhase: seededRandom(i * 139) * Math.PI * 2,
+            symbol: Math.floor(seededRandom(i * 149) * 6),
+            color: seededRandom(i * 151) > 0.5 ? '#00ff88' : '#ff6b6b'
+        });
+    }
+
+    // Toiles d'araignée dans les coins
+    for (let i = 0; i < 18; i++) {
+        visuals.cobwebs.push({
+            x: seededRandom(i * 157) * w * 3,
+            y: seededRandom(i * 163) * h * 0.3,
+            size: 60 + seededRandom(i * 167) * 80,
+            type: Math.floor(seededRandom(i * 173) * 3)
+        });
+    }
+
+    // Crânes décoratifs
+    for (let i = 0; i < 12; i++) {
+        visuals.skulls.push({
+            x: seededRandom(i * 179) * w * 3,
+            y: h * 0.7 + seededRandom(i * 181) * h * 0.2,
+            size: 20 + seededRandom(i * 191) * 15,
+            rotation: (seededRandom(i * 193) - 0.5) * 0.5
+        });
+    }
+
+    // Gouttes d'eau qui tombent
+    for (let i = 0; i < 30; i++) {
+        visuals.waterDrips.push({
+            x: seededRandom(i * 197) * w * 3,
+            startY: seededRandom(i * 199) * h * 0.3,
+            speed: 2 + seededRandom(i * 211) * 3,
+            phase: seededRandom(i * 223) * 100
+        });
+    }
+
+    // Esprits flottants (wisps)
+    for (let i = 0; i < 8; i++) {
+        visuals.floatingSpirits.push({
+            x: seededRandom(i * 227) * w * 2,
+            y: h * 0.2 + seededRandom(i * 229) * h * 0.5,
+            size: 15 + seededRandom(i * 233) * 20,
+            phaseX: seededRandom(i * 239) * Math.PI * 2,
+            phaseY: seededRandom(i * 241) * Math.PI * 2,
+            color: ['#74b9ff', '#a29bfe', '#81ecec'][i % 3]
+        });
+    }
+
+    // Poussière flottante améliorée
+    for (let i = 0; i < 80; i++) {
         visuals.dust.push({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            size: Math.random() * 2,
-            speed: 0.2 + Math.random() * 0.3
+            x: seededRandom(i * 251) * w * 2,
+            y: seededRandom(i * 257) * h,
+            size: 1 + seededRandom(i * 263) * 2.5,
+            speed: 0.1 + seededRandom(i * 269) * 0.4,
+            brightness: 0.2 + seededRandom(i * 271) * 0.3
         });
     }
 
@@ -285,63 +367,174 @@ function initLevel3Visuals(w, h) {
     return visuals;
 }
 
-// ===== NIVEAU 4 : MONDE CHAMPIGNON =====
+// ===== NIVEAU 4 : MONDE CHAMPIGNON (VERSION SUBLIMÉE - STYLE MARIO) =====
 function initLevel4Visuals(w, h) {
     if (VisualCache.level4) return VisualCache.level4;
 
     const visuals = {
+        // Éléments de fond
         hills: [],
-        bgMushrooms: [], // Champignons géants de fond
-        skyClouds: [],
+        bgMushrooms: [],
+        clouds: [],
+        bushes: [],
+        // Éléments interactifs visuels
+        questionBlocks: [],
+        floatingCoins: [],
+        pipes: [],
+        // Effets atmosphériques
         fireflies: [],
-        particles: []
+        sparkles: [],
+        butterflies: [],
+        // Décor naturel
+        flowers: [],
+        grassTufts: []
     };
 
-    // Collines (Parallax layers)
-    // Layer lointain
-    for (let i = 0; i < 8; i++) {
+    // Soleil joyeux (stocké séparément)
+    visuals.sun = { x: w - 120, y: 100, rayPhase: 0 };
+
+    // Collines ondulantes style Mario (3 couches de parallax)
+    // Couche très lointaine (montagnes)
+    for (let i = 0; i < 6; i++) {
         visuals.hills.push({
-            x: i * 300,
-            y: h * 0.6,
-            w: 400 + Math.random() * 200,
-            h: 300,
-            color: '#2d3436', // Sombre pour le contraste
-            layer: 0.2
+            x: i * 500 - 100,
+            y: h * 0.45,
+            w: 600,
+            h: 250,
+            color: '#a8d5ba',  // Vert très clair
+            layer: 0.1
         });
     }
-    // Layer proche
-    for (let i = 0; i < 8; i++) {
+    // Couche moyenne
+    for (let i = 0; i < 10; i++) {
         visuals.hills.push({
-            x: i * 400 - 100,
-            y: h * 0.7,
-            w: 500,
+            x: i * 350 - 50,
+            y: h * 0.55,
+            w: 450,
             h: 200,
-            color: '#1e3799', // Bleu nuit saturé
-            layer: 0.5
+            color: '#7dc89e',  // Vert moyen
+            layer: 0.25
+        });
+    }
+    // Couche proche
+    for (let i = 0; i < 12; i++) {
+        visuals.hills.push({
+            x: i * 280,
+            y: h * 0.7,
+            w: 350,
+            h: 150,
+            color: '#5cb85c',  // Vert vif
+            layer: 0.4
         });
     }
 
-    // Champignons géants en arrière plan (silhouettes)
+    // Nuages Mario (blancs et moelleux)
     for (let i = 0; i < 15; i++) {
-        visuals.bgMushrooms.push({
-            x: i * 300 + Math.random() * 150,
-            y: h * 0.8,
-            scale: 0.5 + Math.random() * 1.5,
-            type: Math.floor(Math.random() * 3),
-            parallax: 0.3 + Math.random() * 0.2
+        visuals.clouds.push({
+            x: seededRandom(i * 277) * w * 3,
+            y: 60 + seededRandom(i * 281) * 120,
+            width: 100 + seededRandom(i * 283) * 120,
+            height: 50 + seededRandom(i * 293) * 30,
+            speed: 0.15 + seededRandom(i * 307) * 0.25,
+            puffs: 2 + Math.floor(seededRandom(i * 311) * 3)
         });
     }
 
-    // Lucioles / Particules magiques
+    // Champignons géants colorés (style Mario)
+    const mushroomColors = [
+        { cap: '#e74c3c', spots: '#ffffff' },  // Rouge à pois blancs
+        { cap: '#f39c12', spots: '#ffffff' },  // Orange
+        { cap: '#9b59b6', spots: '#f1c40f' },  // Violet à pois jaunes
+        { cap: '#3498db', spots: '#ffffff' },  // Bleu
+        { cap: '#2ecc71', spots: '#ffffff' }   // Vert
+    ];
+    for (let i = 0; i < 20; i++) {
+        const colorSet = mushroomColors[i % mushroomColors.length];
+        visuals.bgMushrooms.push({
+            x: seededRandom(i * 313) * w * 3,
+            baseY: h * 0.75,
+            scale: 0.6 + seededRandom(i * 317) * 1.2,
+            capColor: colorSet.cap,
+            spotColor: colorSet.spots,
+            stemColor: '#f5f5dc',
+            parallax: 0.2 + seededRandom(i * 331) * 0.3,
+            bounce: seededRandom(i * 337) * Math.PI * 2
+        });
+    }
+
+    // Buissons Mario (arrondis avec yeux)
+    for (let i = 0; i < 18; i++) {
+        visuals.bushes.push({
+            x: seededRandom(i * 347) * w * 3,
+            y: h * 0.82,
+            width: 80 + seededRandom(i * 349) * 100,
+            hasEyes: seededRandom(i * 353) > 0.6,
+            parallax: 0.5
+        });
+    }
+
+    // Blocs ? flottants
+    for (let i = 0; i < 10; i++) {
+        visuals.questionBlocks.push({
+            x: seededRandom(i * 359) * w * 2.5,
+            y: h * 0.25 + seededRandom(i * 367) * h * 0.25,
+            size: 40,
+            bounce: seededRandom(i * 373) * Math.PI * 2,
+            sparkle: seededRandom(i * 379) * Math.PI * 2
+        });
+    }
+
+    // Pièces flottantes qui tournent
+    for (let i = 0; i < 25; i++) {
+        visuals.floatingCoins.push({
+            x: seededRandom(i * 383) * w * 3,
+            y: h * 0.2 + seededRandom(i * 389) * h * 0.4,
+            rotation: seededRandom(i * 397) * Math.PI * 2,
+            bobPhase: seededRandom(i * 401) * Math.PI * 2
+        });
+    }
+
+    // Fleurs souriantes
+    const flowerColors = ['#e74c3c', '#f39c12', '#9b59b6', '#e91e63', '#ff6b6b'];
+    for (let i = 0; i < 30; i++) {
+        visuals.flowers.push({
+            x: seededRandom(i * 409) * w * 3,
+            y: h * 0.85,
+            color: flowerColors[i % flowerColors.length],
+            size: 15 + seededRandom(i * 419) * 15,
+            sway: seededRandom(i * 421) * Math.PI * 2
+        });
+    }
+
+    // Touffes d'herbe
+    for (let i = 0; i < 50; i++) {
+        visuals.grassTufts.push({
+            x: seededRandom(i * 431) * w * 3,
+            y: h * 0.88,
+            blades: 3 + Math.floor(seededRandom(i * 433) * 4),
+            height: 15 + seededRandom(i * 439) * 20
+        });
+    }
+
+    // Papillons colorés
+    for (let i = 0; i < 12; i++) {
+        visuals.butterflies.push({
+            x: seededRandom(i * 443) * w * 2,
+            y: h * 0.3 + seededRandom(i * 449) * h * 0.3,
+            color: ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff'][i % 5],
+            wingPhase: seededRandom(i * 457) * Math.PI * 2,
+            pathPhase: seededRandom(i * 461) * Math.PI * 2
+        });
+    }
+
+    // Étincelles magiques
     for (let i = 0; i < 40; i++) {
-        visuals.fireflies.push({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            pulse: Math.random() * Math.PI * 2,
-            size: 2 + Math.random() * 3,
-            speedX: (Math.random() - 0.5) * 0.5,
-            speedY: (Math.random() - 0.5) * 0.5,
-            color: Math.random() > 0.5 ? '#55efc4' : '#fd79a8' // Cyan et Rose
+        visuals.sparkles.push({
+            x: seededRandom(i * 463) * w * 2,
+            y: seededRandom(i * 467) * h,
+            size: 2 + seededRandom(i * 479) * 4,
+            twinkle: seededRandom(i * 487) * Math.PI * 2,
+            color: ['#ffffff', '#ffeaa7', '#74b9ff'][i % 3]
         });
     }
 
@@ -844,192 +1037,1017 @@ function drawBigCloud(ctx, x, y, width, height, opacity, puffCount) {
     ctx.restore();
 }
 
-// ===== FONCTIONS DE DESSIN NIVEAU 3 =====
+// ===== FONCTIONS DE DESSIN NIVEAU 3 (VERSION SUBLIMÉE) =====
 
 function drawLevel3Background(ctx, w, h, camX) {
     const visuals = initLevel3Visuals(w, h);
+    const time = state.frameTick;
 
-    // Fond dégradé nocturne
-    // UX: On assombrit pour faire ressortir les plateformes (le gameplay)
+    // Fond dégradé dramatique (du noir profond vers bleu nuit)
     const gradient = ctx.createLinearGradient(0, 0, 0, h);
-    gradient.addColorStop(0, '#1a1a2e');
-    gradient.addColorStop(1, '#16213e');
+    gradient.addColorStop(0, '#0a0a15');
+    gradient.addColorStop(0.3, '#12122a');
+    gradient.addColorStop(0.6, '#1a1a3e');
+    gradient.addColorStop(1, '#0d1b2a');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
 
-    // Vitraux en arrière plan (donne de la profondeur)
+    // Toiles d'araignée en arrière-plan profond
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    for (const web of visuals.cobwebs) {
+        const x = web.x - camX * 0.1;
+        drawCobweb(ctx, x, web.y, web.size, web.type);
+    }
+
+    // Vitraux gothiques avec lueur divine
     for (const win of visuals.windows) {
-        const x = win.x - camX * 0.2; // Parallax lent
-
-        // Lueur du vitrail
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = win.color;
-        ctx.fillStyle = win.color;
-        ctx.beginPath();
-        // Forme en ogive
-        ctx.moveTo(x, win.y + win.h);
-        ctx.lineTo(x + win.w, win.y + win.h);
-        ctx.lineTo(x + win.w, win.y + 20);
-        ctx.quadraticCurveTo(x + win.w / 2, win.y - 40, x, win.y + 20);
-        ctx.fill();
-
-        ctx.shadowBlur = 0; // Reset
+        const x = win.x - camX * 0.15;
+        drawGothicWindow(ctx, x, win.y, win.w, win.h, win.color, win.pattern, time);
     }
 
-    // Piliers (rythme visuel)
+    // Runes magiques qui brillent
+    for (const rune of visuals.magicRunes) {
+        const x = rune.x - camX * 0.25;
+        const glow = 0.3 + Math.sin(time * 0.03 + rune.glowPhase) * 0.7;
+        drawMagicRune(ctx, x, rune.y, rune.size, rune.symbol, rune.color, glow);
+    }
+
+    // Piliers gothiques avec détails architecturaux
     for (const pillar of visuals.pillars) {
-        const x = pillar.x - camX * 0.5;
-
-        ctx.fillStyle = '#0f3460'; // Bleu nuit pierre
-        if (pillar.type === 'major') {
-            ctx.fillRect(x, 0, pillar.width, h);
-            // Détails briques
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.fillRect(x + 10, 0, 10, h);
-            ctx.fillRect(x + 40, 0, 10, h);
-        } else {
-            ctx.fillStyle = '#1f4068'; // Plus clair, plus loin
-            ctx.fillRect(x + 10, 50, pillar.width - 20, h - 50);
-        }
+        const x = pillar.x - camX * 0.4;
+        drawGothicPillar(ctx, x, h, pillar.width, pillar.type);
     }
 
-    // Sol du fond (pour ancrer le décor)
-    ctx.fillStyle = '#0f3460';
+    // Crânes décoratifs sur le sol
+    ctx.fillStyle = '#d4c4a8';
+    for (const skull of visuals.skulls) {
+        const x = skull.x - camX * 0.5;
+        drawSkull(ctx, x, skull.y, skull.size, skull.rotation);
+    }
+
+    // Sol en pierre fissuré
+    const stoneGradient = ctx.createLinearGradient(0, h * 0.85, 0, h);
+    stoneGradient.addColorStop(0, '#1a2634');
+    stoneGradient.addColorStop(0.3, '#0f1922');
+    stoneGradient.addColorStop(1, '#080d12');
+    ctx.fillStyle = stoneGradient;
     ctx.fillRect(0, h * 0.85, w, h * 0.15);
+
+    // Fissures sur le sol
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 10; i++) {
+        const crackX = (seededRandom(i * 503) * w * 2 - camX * 0.5) % w;
+        ctx.beginPath();
+        ctx.moveTo(crackX, h * 0.86);
+        ctx.lineTo(crackX + 20, h * 0.88);
+        ctx.lineTo(crackX + 10, h * 0.92);
+        ctx.stroke();
+    }
 }
 
 function drawLevel3Foreground(ctx, w, h, camX) {
     const visuals = initLevel3Visuals(w, h);
+    const time = state.frameTick;
 
-    // Torches sur les piliers
+    // Torches avec flammes réalistes et particules
     for (const torch of visuals.torches) {
-        const x = torch.x - camX * 0.5;
-
-        // Support
-        ctx.fillStyle = '#16213e';
-        ctx.beginPath();
-        ctx.moveTo(x, torch.y);
-        ctx.lineTo(x + 10, torch.y + 10);
-        ctx.lineTo(x, torch.y + 20);
-        ctx.fill();
-
-        // Flamme
-        const flicker = 1 + Math.sin(state.frameTick * 0.2 + torch.flicker) * 0.2;
-        const flameY = torch.y - 15;
-
-        // Glow externe
-        const grad = ctx.createRadialGradient(x, flameY, 5, x, flameY, 40 * flicker);
-        grad.addColorStop(0, 'rgba(231, 76, 60, 0.8)');
-        grad.addColorStop(1, 'rgba(231, 76, 60, 0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(x, flameY, 40 * flicker, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Cœur de flamme
-        ctx.fillStyle = '#f1c40f';
-        ctx.beginPath();
-        ctx.arc(x, flameY + 5, 6, 0, Math.PI * 2);
-        ctx.fill();
+        const x = torch.x - camX * 0.4;
+        drawRealisticTorch(ctx, x, torch.y, torch.flicker, torch.intensity, time);
     }
 
-    // Poussières au premier plan (ambiance)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    for (const d of visuals.dust) {
-        // Mouvement continu
-        const dx = (d.x + state.frameTick * d.speed) % w;
-        const dy = d.y + Math.sin(state.frameTick * 0.01 + d.x) * 20;
+    // Esprits flottants (wisps)
+    for (const spirit of visuals.floatingSpirits) {
+        const offsetX = Math.sin(time * 0.02 + spirit.phaseX) * 30;
+        const offsetY = Math.sin(time * 0.015 + spirit.phaseY) * 20;
+        const x = spirit.x - camX * 0.6 + offsetX;
+        const y = spirit.y + offsetY;
 
+        // Traînée fantomatique
+        ctx.globalAlpha = 0.15;
+        for (let i = 3; i > 0; i--) {
+            ctx.fillStyle = spirit.color;
+            ctx.beginPath();
+            ctx.arc(x - offsetX * i * 0.3, y - offsetY * i * 0.3, spirit.size * (1 - i * 0.2), 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Corps principal du wisp
+        ctx.globalAlpha = 0.6 + Math.sin(time * 0.1) * 0.2;
+        const spiritGrad = ctx.createRadialGradient(x, y, 0, x, y, spirit.size);
+        spiritGrad.addColorStop(0, '#ffffff');
+        spiritGrad.addColorStop(0.4, spirit.color);
+        spiritGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = spiritGrad;
         ctx.beginPath();
-        ctx.arc(dx, dy, d.size, 0, Math.PI * 2);
+        ctx.arc(x, y, spirit.size, 0, Math.PI * 2);
         ctx.fill();
+
+        // Yeux du wisp
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x - 4, y - 2, 2, 0, Math.PI * 2);
+        ctx.arc(x + 4, y - 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
     }
 
-    // Chaînes en haut (très sombre pour contraste)
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
+    // Gouttes d'eau qui tombent
+    ctx.fillStyle = 'rgba(100, 180, 255, 0.6)';
+    for (const drip of visuals.waterDrips) {
+        const x = drip.x - camX * 0.5;
+        const cycleTime = (time + drip.phase) % 120;
+        if (cycleTime < 60) {
+            const y = drip.startY + cycleTime * drip.speed;
+            // Goutte
+            ctx.beginPath();
+            ctx.ellipse(x, y, 2, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Traînée
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(x - 1, y - 15, 2, 15);
+            ctx.globalAlpha = 1;
+        } else if (cycleTime < 80) {
+            // Splash
+            const splashY = drip.startY + 60 * drip.speed;
+            const splashProgress = (cycleTime - 60) / 20;
+            ctx.globalAlpha = 1 - splashProgress;
+            ctx.beginPath();
+            ctx.arc(x, splashY, 5 + splashProgress * 10, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // Chaînes avec crânes
     for (const chain of visuals.chains) {
-        const x = chain.x - camX * 0.8; // Parallax fort (premier plan)
-        const sway = Math.sin(state.frameTick * 0.05 + chain.swayOffset) * 10;
+        const x = chain.x - camX * 0.7;
+        const sway = Math.sin(time * 0.03 + chain.swayOffset) * 15;
+        drawChainWithDetails(ctx, x, chain.y, chain.length, sway, chain.hasSkull);
+    }
 
+    // Couches de brouillard animées
+    for (const fog of visuals.fogLayers) {
+        const offsetX = (time * fog.speed + fog.offset) % (w * 2);
+        ctx.globalAlpha = fog.opacity;
+        const fogGrad = ctx.createLinearGradient(0, fog.y - 50, 0, fog.y + 50);
+        fogGrad.addColorStop(0, 'transparent');
+        fogGrad.addColorStop(0.5, 'rgba(100, 120, 150, 1)');
+        fogGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = fogGrad;
+        ctx.fillRect(-offsetX, fog.y - 50, w * 3, 100);
+        ctx.globalAlpha = 1;
+    }
+
+    // Poussière atmosphérique
+    for (const d of visuals.dust) {
+        const dx = (d.x + time * d.speed) % (w * 2);
+        const dy = d.y + Math.sin(time * 0.008 + d.x * 0.01) * 30;
+
+        ctx.globalAlpha = d.brightness;
+        ctx.fillStyle = '#c4b89b';
         ctx.beginPath();
-        ctx.moveTo(x, chain.y);
-        // Courbe de chaînette simple
-        ctx.quadraticCurveTo(x + sway / 2, chain.y + chain.length / 2, x + sway, chain.y + chain.length);
+        ctx.arc(dx - camX * 0.6, dy, d.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+// Fonctions helpers pour le niveau 3
+function drawCobweb(ctx, x, y, size, type) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Fils radiaux
+    const rays = 8;
+    for (let i = 0; i < rays; i++) {
+        const angle = (i / rays) * Math.PI * 0.6 - Math.PI * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(angle) * size, Math.sin(angle) * size);
+        ctx.stroke();
+    }
+
+    // Spirales
+    for (let ring = 1; ring <= 4; ring++) {
+        const ringSize = size * ring * 0.25;
+        ctx.beginPath();
+        for (let i = 0; i <= rays; i++) {
+            const angle = (i / rays) * Math.PI * 0.6 - Math.PI * 0.3;
+            const wobble = Math.sin(i * 2) * 5;
+            const px = Math.cos(angle) * (ringSize + wobble);
+            const py = Math.sin(angle) * (ringSize + wobble);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+function drawGothicWindow(ctx, x, y, w, h, color, pattern, time) {
+    // Lueur extérieure
+    const glow = 0.5 + Math.sin(time * 0.02) * 0.2;
+    ctx.shadowBlur = 40;
+    ctx.shadowColor = color;
+
+    // Forme en ogive gothique
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.4 * glow;
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x + w, y + h * 0.3);
+    ctx.quadraticCurveTo(x + w/2, y - h * 0.1, x, y + h * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cadre intérieur
+    ctx.globalAlpha = 0.7 * glow;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Motif intérieur selon le type
+    ctx.globalAlpha = 0.5 * glow;
+    ctx.lineWidth = 1;
+    if (pattern === 0) {
+        // Croix
+        ctx.beginPath();
+        ctx.moveTo(x + w/2, y + h * 0.2);
+        ctx.lineTo(x + w/2, y + h * 0.9);
+        ctx.moveTo(x + w * 0.2, y + h * 0.5);
+        ctx.lineTo(x + w * 0.8, y + h * 0.5);
+        ctx.stroke();
+    } else if (pattern === 1) {
+        // Cercle
+        ctx.beginPath();
+        ctx.arc(x + w/2, y + h * 0.5, w * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+}
+
+function drawMagicRune(ctx, x, y, size, symbol, color, glow) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalAlpha = glow;
+
+    // Lueur
+    const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 1.5);
+    glowGrad.addColorStop(0, color);
+    glowGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Symbole runique
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    switch(symbol) {
+        case 0: // Étoile
+            for (let i = 0; i < 6; i++) {
+                const angle = i * Math.PI / 3;
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(angle) * size, Math.sin(angle) * size);
+            }
+            break;
+        case 1: // Triangle
+            ctx.moveTo(0, -size);
+            ctx.lineTo(-size * 0.866, size * 0.5);
+            ctx.lineTo(size * 0.866, size * 0.5);
+            ctx.closePath();
+            break;
+        case 2: // Cercle avec croix
+            ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2);
+            ctx.moveTo(0, -size);
+            ctx.lineTo(0, size);
+            ctx.moveTo(-size, 0);
+            ctx.lineTo(size, 0);
+            break;
+        default:
+            // Spirale
+            for (let i = 0; i < 20; i++) {
+                const angle = i * 0.5;
+                const r = size * i / 20;
+                if (i === 0) ctx.moveTo(r, 0);
+                else ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+            }
+    }
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawGothicPillar(ctx, x, h, width, type) {
+    const pillarWidth = type === 'major' ? width : (type === 'medium' ? width * 0.7 : width * 0.5);
+    const depth = type === 'major' ? 0.4 : (type === 'medium' ? 0.5 : 0.6);
+
+    // Corps du pilier
+    const pillarGrad = ctx.createLinearGradient(x, 0, x + pillarWidth, 0);
+    pillarGrad.addColorStop(0, `rgba(15, 25, 45, ${depth})`);
+    pillarGrad.addColorStop(0.3, `rgba(25, 40, 65, ${depth})`);
+    pillarGrad.addColorStop(0.7, `rgba(20, 35, 55, ${depth})`);
+    pillarGrad.addColorStop(1, `rgba(10, 20, 35, ${depth})`);
+    ctx.fillStyle = pillarGrad;
+    ctx.fillRect(x, 0, pillarWidth, h);
+
+    if (type === 'major') {
+        // Détails architecturaux
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+
+        // Cannelures
+        for (let i = 0; i < 3; i++) {
+            ctx.fillRect(x + 10 + i * 20, 0, 6, h);
+        }
+
+        // Chapiteau
+        ctx.fillStyle = 'rgba(30, 50, 80, 0.8)';
+        ctx.fillRect(x - 10, 0, pillarWidth + 20, 30);
+        ctx.fillRect(x - 5, 30, pillarWidth + 10, 15);
+
+        // Base
+        ctx.fillRect(x - 10, h - 40, pillarWidth + 20, 40);
+    }
+}
+
+function drawSkull(ctx, x, y, size, rotation) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+
+    // Crâne
+    ctx.fillStyle = '#d4c4a8';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size, size * 1.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mâchoire
+    ctx.beginPath();
+    ctx.ellipse(0, size * 0.6, size * 0.7, size * 0.4, 0, 0, Math.PI);
+    ctx.fill();
+
+    // Orbites
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath();
+    ctx.ellipse(-size * 0.35, -size * 0.1, size * 0.25, size * 0.3, 0, 0, Math.PI * 2);
+    ctx.ellipse(size * 0.35, -size * 0.1, size * 0.25, size * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Nez
+    ctx.beginPath();
+    ctx.moveTo(0, size * 0.1);
+    ctx.lineTo(-size * 0.1, size * 0.35);
+    ctx.lineTo(size * 0.1, size * 0.35);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawRealisticTorch(ctx, x, y, flickerPhase, intensity, time) {
+    // Support de torche
+    ctx.fillStyle = '#2a1a0a';
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y + 30);
+    ctx.lineTo(x + 8, y + 30);
+    ctx.lineTo(x + 5, y);
+    ctx.lineTo(x - 5, y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Bois brûlé en haut
+    ctx.fillStyle = '#1a0a00';
+    ctx.fillRect(x - 4, y - 5, 8, 10);
+
+    const flicker = 1 + Math.sin(time * 0.25 + flickerPhase) * 0.15 +
+                   Math.sin(time * 0.4 + flickerPhase * 2) * 0.1;
+    const flameY = y - 20;
+
+    // Grande lueur ambiante
+    const ambientGrad = ctx.createRadialGradient(x, flameY, 0, x, flameY, 100 * intensity);
+    ambientGrad.addColorStop(0, 'rgba(255, 150, 50, 0.3)');
+    ambientGrad.addColorStop(0.5, 'rgba(255, 100, 30, 0.1)');
+    ambientGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = ambientGrad;
+    ctx.beginPath();
+    ctx.arc(x, flameY, 100 * intensity, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flamme externe (rouge-orange)
+    const outerFlameGrad = ctx.createRadialGradient(x, flameY + 10, 0, x, flameY - 10, 35 * flicker);
+    outerFlameGrad.addColorStop(0, 'rgba(255, 100, 20, 0.9)');
+    outerFlameGrad.addColorStop(0.6, 'rgba(200, 50, 0, 0.5)');
+    outerFlameGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = outerFlameGrad;
+    ctx.beginPath();
+    ctx.ellipse(x, flameY, 15 * flicker, 25 * flicker, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flamme moyenne (orange)
+    ctx.fillStyle = 'rgba(255, 180, 50, 0.8)';
+    ctx.beginPath();
+    ctx.ellipse(x, flameY + 5, 10 * flicker, 18 * flicker, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flamme centrale (jaune-blanc)
+    ctx.fillStyle = 'rgba(255, 255, 200, 0.9)';
+    ctx.beginPath();
+    ctx.ellipse(x, flameY + 8, 5 * flicker, 10 * flicker, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Étincelles
+    for (let i = 0; i < 3; i++) {
+        const sparkTime = (time * 0.1 + flickerPhase + i * 33) % 30;
+        if (sparkTime < 20) {
+            const sparkY = flameY - 15 - sparkTime * 2;
+            const sparkX = x + Math.sin(sparkTime + i) * 8;
+            const sparkAlpha = 1 - sparkTime / 20;
+
+            ctx.globalAlpha = sparkAlpha;
+            ctx.fillStyle = '#ffff80';
+            ctx.beginPath();
+            ctx.arc(sparkX, sparkY, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawChainWithDetails(ctx, x, startY, length, sway, hasSkull) {
+    const linkCount = Math.floor(length / 12);
+
+    ctx.strokeStyle = '#2a2a2a';
+    ctx.fillStyle = '#3a3a3a';
+    ctx.lineWidth = 2;
+
+    let currentX = x;
+    let currentY = startY;
+    const swayPerLink = sway / linkCount;
+
+    for (let i = 0; i < linkCount; i++) {
+        const linkSway = swayPerLink * i;
+        const nextX = x + linkSway;
+        const nextY = startY + (i + 1) * 12;
+
+        // Maillon de chaîne
+        ctx.beginPath();
+        ctx.ellipse(currentX + (nextX - currentX) / 2, currentY + 6, 4, 7, 0, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Petit boulet au bout
-        ctx.fillStyle = '#000';
+        currentX = nextX;
+        currentY = nextY;
+    }
+
+    if (hasSkull) {
+        drawSkull(ctx, x + sway, startY + length + 15, 12, Math.sin(state.frameTick * 0.02) * 0.2);
+    } else {
+        // Simple boulet
+        ctx.fillStyle = '#1a1a1a';
         ctx.beginPath();
-        ctx.arc(x + sway, chain.y + chain.length, 5, 0, Math.PI * 2);
+        ctx.arc(x + sway, startY + length, 8, 0, Math.PI * 2);
         ctx.fill();
     }
 }
 
-// ===== FONCTIONS DE DESSIN NIVEAU 4 =====
+// ===== FONCTIONS DE DESSIN NIVEAU 4 (VERSION SUBLIMÉE - STYLE MARIO) =====
 
 function drawLevel4Background(ctx, w, h, camX) {
     const visuals = initLevel4Visuals(w, h);
+    const time = state.frameTick;
 
-    // Ciel magique (Teal vers Violet)
+    // Ciel joyeux style Mario (bleu vif vers bleu clair)
     const skyGradient = ctx.createLinearGradient(0, 0, 0, h);
-    skyGradient.addColorStop(0, '#00b894'); // Mint
-    skyGradient.addColorStop(0.4, '#0984e3'); // Bleu electron
-    skyGradient.addColorStop(1, '#6c5ce7'); // Violet
+    skyGradient.addColorStop(0, '#5dade2');   // Bleu ciel brillant
+    skyGradient.addColorStop(0.4, '#85c1e9'); // Bleu clair
+    skyGradient.addColorStop(0.7, '#aed6f1'); // Bleu très clair
+    skyGradient.addColorStop(1, '#d5f4e6');   // Vert pastel (horizon herbeux)
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, w, h);
 
-    // Champignons géants de fond (Silhouettes atmosphériques)
-    for (const mush of visuals.bgMushrooms) {
-        const parallax = mush.parallax;
-        const x = mush.x - camX * parallax;
+    // Soleil joyeux avec visage
+    drawHappySun(ctx, w - 120, 90, time);
 
-        ctx.fillStyle = `rgba(0, 0, 0, ${0.1 + mush.parallax * 0.1})`; // Transparence pour effet de distance
-
-        // Pied
-        ctx.fillRect(x - 10 * mush.scale, mush.y, 20 * mush.scale, h - mush.y);
-
-        // Chapeau
-        ctx.beginPath();
-        ctx.ellipse(x, mush.y, 60 * mush.scale, 40 * mush.scale, 0, Math.PI, Math.PI * 2);
-        ctx.fill();
+    // Nuages Mario (blancs et moelleux)
+    for (const cloud of visuals.clouds) {
+        const cloudX = (cloud.x + time * cloud.speed) % (w * 4) - camX * 0.1;
+        drawMarioCloud(ctx, cloudX, cloud.y, cloud.width, cloud.height, cloud.puffs);
     }
 
-    // Collines ondulantes
+    // Collines ondulantes (3 couches de parallax)
     for (const hill of visuals.hills) {
         const x = hill.x - camX * hill.layer;
+        drawRollingHill(ctx, x, hill.y, hill.w, hill.h, hill.color, h);
+    }
 
-        ctx.fillStyle = hill.color;
-        ctx.beginPath();
-        // Courbe de Bézier pour faire plus organique qu'un simple cercle
-        ctx.moveTo(x, h);
-        ctx.lineTo(x, hill.y);
-        ctx.bezierCurveTo(x + hill.w / 2, hill.y - 50, x + hill.w / 2, hill.y + 50, x + hill.w, hill.y);
-        ctx.lineTo(x + hill.w, h);
-        ctx.fill();
+    // Champignons géants colorés style Mario
+    for (const mush of visuals.bgMushrooms) {
+        const x = mush.x - camX * mush.parallax;
+        const bounce = Math.sin(time * 0.05 + mush.bounce) * 3;
+        drawMarioMushroom(ctx, x, mush.baseY + bounce, mush.scale, mush.capColor, mush.spotColor, mush.stemColor, h);
+    }
+
+    // Buissons arrondis style Mario
+    for (const bush of visuals.bushes) {
+        const x = bush.x - camX * bush.parallax;
+        drawMarioBush(ctx, x, bush.y, bush.width, bush.hasEyes, time);
+    }
+
+    // Blocs ? flottants en arrière-plan
+    for (const block of visuals.questionBlocks) {
+        const x = block.x - camX * 0.3;
+        const bounce = Math.sin(time * 0.08 + block.bounce) * 3;
+        drawQuestionBlock(ctx, x, block.y + bounce, block.size, time, block.sparkle);
+    }
+
+    // Pièces flottantes qui tournent
+    for (const coin of visuals.floatingCoins) {
+        const x = coin.x - camX * 0.35;
+        const rotation = (time * 0.1 + coin.rotation) % (Math.PI * 2);
+        const bob = Math.sin(time * 0.06 + coin.bobPhase) * 5;
+        drawFloatingCoin(ctx, x, coin.y + bob, rotation);
     }
 }
 
 function drawLevel4Foreground(ctx, w, h, camX) {
     const visuals = initLevel4Visuals(w, h);
+    const time = state.frameTick;
 
-    // Lucioles au premier plan
-    for (const fly of visuals.fireflies) {
-        let x = (fly.x + state.frameTick * fly.speedX) % w;
-        let y = (fly.y + state.frameTick * fly.speedY) % h;
-        if (x < 0) x += w;
-        if (y < 0) y += h;
-
-        const pulse = 0.5 + Math.sin(state.frameTick * 0.1 + fly.pulse) * 0.5;
-
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = fly.color;
-        ctx.fillStyle = fly.color;
-        ctx.beginPath();
-        ctx.arc(x, y, fly.size * pulse, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
+    // Fleurs souriantes au premier plan
+    for (const flower of visuals.flowers) {
+        const x = flower.x - camX * 0.7;
+        const sway = Math.sin(time * 0.04 + flower.sway) * 5;
+        drawSmilingFlower(ctx, x + sway, flower.y, flower.size, flower.color, time);
     }
+
+    // Touffes d'herbe animées
+    ctx.fillStyle = '#27ae60';
+    for (const grass of visuals.grassTufts) {
+        const x = grass.x - camX * 0.8;
+        drawGrassTuft(ctx, x, grass.y, grass.blades, grass.height, time);
+    }
+
+    // Papillons colorés
+    for (const butterfly of visuals.butterflies) {
+        const pathX = Math.sin(time * 0.02 + butterfly.pathPhase) * 50;
+        const pathY = Math.sin(time * 0.03 + butterfly.pathPhase * 1.5) * 30;
+        const x = butterfly.x - camX * 0.5 + pathX;
+        const y = butterfly.y + pathY;
+        drawButterfly(ctx, x, y, butterfly.color, time, butterfly.wingPhase);
+    }
+
+    // Étincelles magiques
+    for (const sparkle of visuals.sparkles) {
+        const x = sparkle.x - camX * 0.4;
+        const twinkle = Math.sin(time * 0.15 + sparkle.twinkle);
+        if (twinkle > 0) {
+            ctx.globalAlpha = twinkle;
+            ctx.fillStyle = sparkle.color;
+            drawSparkle(ctx, x, sparkle.y, sparkle.size * twinkle);
+        }
+    }
+    ctx.globalAlpha = 1;
+}
+
+// Fonctions helpers pour le niveau 4 (Monde Champignon)
+function drawHappySun(ctx, x, y, time) {
+    const pulse = 1 + Math.sin(time * 0.03) * 0.05;
+    const rayRotation = time * 0.01;
+
+    // Rayons du soleil (tournants)
+    ctx.fillStyle = '#f9e79f';
+    for (let i = 0; i < 12; i++) {
+        const angle = rayRotation + (i / 12) * Math.PI * 2;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(50 * pulse, -8);
+        ctx.lineTo(80 * pulse, 0);
+        ctx.lineTo(50 * pulse, 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Corps du soleil
+    const sunGrad = ctx.createRadialGradient(x - 10, y - 10, 0, x, y, 50 * pulse);
+    sunGrad.addColorStop(0, '#fff9c4');
+    sunGrad.addColorStop(0.5, '#ffeb3b');
+    sunGrad.addColorStop(1, '#ffc107');
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.arc(x, y, 45 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Joues roses
+    ctx.fillStyle = 'rgba(255, 150, 150, 0.5)';
+    ctx.beginPath();
+    ctx.arc(x - 25, y + 5, 10, 0, Math.PI * 2);
+    ctx.arc(x + 25, y + 5, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Yeux joyeux
+    ctx.fillStyle = '#2c3e50';
+    ctx.beginPath();
+    ctx.arc(x - 15, y - 5, 5, 0, Math.PI * 2);
+    ctx.arc(x + 15, y - 5, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflets dans les yeux
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x - 13, y - 7, 2, 0, Math.PI * 2);
+    ctx.arc(x + 17, y - 7, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sourire
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(x, y + 5, 18, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+}
+
+function drawMarioCloud(ctx, x, y, width, height, puffs) {
+    ctx.fillStyle = '#ffffff';
+
+    // Ombre légère
+    ctx.fillStyle = 'rgba(200, 220, 240, 0.7)';
+    ctx.beginPath();
+    const puffWidth = width / puffs;
+    for (let i = 0; i < puffs; i++) {
+        const puffX = x + i * puffWidth + puffWidth / 2;
+        const puffY = y + height * 0.2 + Math.sin(i * 1.5) * height * 0.15;
+        const puffR = puffWidth * 0.6 + Math.sin(i * 2) * puffWidth * 0.1;
+        ctx.arc(puffX, puffY + 5, puffR, 0, Math.PI * 2);
+    }
+    ctx.fill();
+
+    // Nuage principal
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    for (let i = 0; i < puffs; i++) {
+        const puffX = x + i * puffWidth + puffWidth / 2;
+        const puffY = y + Math.sin(i * 1.5) * height * 0.2;
+        const puffR = puffWidth * 0.65 + Math.sin(i * 2) * puffWidth * 0.15;
+        ctx.arc(puffX, puffY, puffR, 0, Math.PI * 2);
+    }
+    ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.beginPath();
+    ctx.arc(x + width * 0.3, y - height * 0.2, width * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawRollingHill(ctx, x, y, w, hillH, color, screenH) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x - 50, screenH);
+    ctx.lineTo(x - 50, y + hillH * 0.3);
+
+    // Courbe douce pour le sommet
+    ctx.quadraticCurveTo(x + w * 0.25, y - hillH * 0.2, x + w * 0.5, y);
+    ctx.quadraticCurveTo(x + w * 0.75, y + hillH * 0.1, x + w + 50, y + hillH * 0.4);
+
+    ctx.lineTo(x + w + 50, screenH);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawMarioMushroom(ctx, x, baseY, scale, capColor, spotColor, stemColor, screenH) {
+    const stemWidth = 30 * scale;
+    const stemHeight = 60 * scale;
+    const capWidth = 80 * scale;
+    const capHeight = 50 * scale;
+
+    // Tige
+    ctx.fillStyle = stemColor;
+    ctx.beginPath();
+    ctx.moveTo(x - stemWidth/2, baseY);
+    ctx.quadraticCurveTo(x - stemWidth/2 - 5, baseY - stemHeight/2, x - stemWidth/3, baseY - stemHeight);
+    ctx.lineTo(x + stemWidth/3, baseY - stemHeight);
+    ctx.quadraticCurveTo(x + stemWidth/2 + 5, baseY - stemHeight/2, x + stemWidth/2, baseY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ombre sur la tige
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.beginPath();
+    ctx.moveTo(x, baseY);
+    ctx.quadraticCurveTo(x + stemWidth/2 + 5, baseY - stemHeight/2, x + stemWidth/2, baseY - stemHeight);
+    ctx.lineTo(x + stemWidth/3, baseY - stemHeight);
+    ctx.lineTo(x, baseY);
+    ctx.fill();
+
+    // Chapeau
+    ctx.fillStyle = capColor;
+    ctx.beginPath();
+    ctx.ellipse(x, baseY - stemHeight - capHeight * 0.3, capWidth/2, capHeight/2, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Bord du chapeau
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.beginPath();
+    ctx.ellipse(x, baseY - stemHeight, capWidth/2, capHeight * 0.15, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pois sur le chapeau
+    ctx.fillStyle = spotColor;
+    const spotPositions = [
+        { dx: 0, dy: -capHeight * 0.4, size: 0.3 },
+        { dx: -capWidth * 0.25, dy: -capHeight * 0.25, size: 0.2 },
+        { dx: capWidth * 0.3, dy: -capHeight * 0.3, size: 0.22 },
+        { dx: -capWidth * 0.35, dy: -capHeight * 0.5, size: 0.15 },
+        { dx: capWidth * 0.2, dy: -capHeight * 0.55, size: 0.18 }
+    ];
+    for (const spot of spotPositions) {
+        ctx.beginPath();
+        ctx.arc(x + spot.dx, baseY - stemHeight + spot.dy, capWidth * spot.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Reflet brillant
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(x - capWidth * 0.2, baseY - stemHeight - capHeight * 0.5, capWidth * 0.12, capHeight * 0.15, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawMarioBush(ctx, x, y, width, hasEyes, time) {
+    const bushHeight = width * 0.5;
+
+    // Corps du buisson (3 boules)
+    ctx.fillStyle = '#27ae60';
+    ctx.beginPath();
+    ctx.arc(x - width * 0.25, y, width * 0.35, 0, Math.PI * 2);
+    ctx.arc(x + width * 0.25, y, width * 0.35, 0, Math.PI * 2);
+    ctx.arc(x, y - bushHeight * 0.3, width * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Couleur plus claire au centre
+    ctx.fillStyle = '#2ecc71';
+    ctx.beginPath();
+    ctx.arc(x, y - bushHeight * 0.2, width * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.arc(x - width * 0.15, y - bushHeight * 0.4, width * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (hasEyes) {
+        // Yeux
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x - 10, y - bushHeight * 0.25, 8, 0, Math.PI * 2);
+        ctx.arc(x + 10, y - bushHeight * 0.25, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pupilles (qui bougent)
+        const lookX = Math.sin(time * 0.02) * 2;
+        ctx.fillStyle = '#2c3e50';
+        ctx.beginPath();
+        ctx.arc(x - 10 + lookX, y - bushHeight * 0.25, 4, 0, Math.PI * 2);
+        ctx.arc(x + 10 + lookX, y - bushHeight * 0.25, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawQuestionBlock(ctx, x, y, size, time, sparklePhase) {
+    // Ombre
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(x + 3, y + 3, size, size);
+
+    // Corps du bloc
+    const blockGrad = ctx.createLinearGradient(x, y, x, y + size);
+    blockGrad.addColorStop(0, '#f9ca24');
+    blockGrad.addColorStop(0.5, '#f0932b');
+    blockGrad.addColorStop(1, '#d35400');
+    ctx.fillStyle = blockGrad;
+    ctx.fillRect(x, y, size, size);
+
+    // Bordure
+    ctx.strokeStyle = '#8b4513';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, size, size);
+
+    // Détails coins
+    ctx.fillStyle = '#ffeaa7';
+    ctx.fillRect(x + 2, y + 2, 6, 6);
+    ctx.fillRect(x + size - 8, y + 2, 6, 6);
+    ctx.fillRect(x + 2, y + size - 8, 6, 6);
+    ctx.fillRect(x + size - 8, y + size - 8, 6, 6);
+
+    // Point d'interrogation
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${size * 0.6}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', x + size/2, y + size/2);
+
+    // Ombre du ?
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillText('?', x + size/2 + 2, y + size/2 + 2);
+
+    // Étincelle occasionnelle
+    const sparkle = Math.sin(time * 0.1 + sparklePhase);
+    if (sparkle > 0.8) {
+        ctx.fillStyle = '#ffffff';
+        drawSparkle(ctx, x + size * 0.8, y + size * 0.2, 5);
+    }
+}
+
+function drawFloatingCoin(ctx, x, y, rotation) {
+    const scaleX = Math.cos(rotation);
+    const absScale = Math.abs(scaleX);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scaleX, 1);
+
+    // Corps de la pièce
+    const coinGrad = ctx.createLinearGradient(-12, 0, 12, 0);
+    coinGrad.addColorStop(0, '#f39c12');
+    coinGrad.addColorStop(0.3, '#f1c40f');
+    coinGrad.addColorStop(0.7, '#f39c12');
+    coinGrad.addColorStop(1, '#d68910');
+    ctx.fillStyle = coinGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 12, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bordure
+    ctx.strokeStyle = '#d68910';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (absScale > 0.3) {
+        // Étoile au centre
+        ctx.fillStyle = '#ffeaa7';
+        drawSparkle(ctx, 0, 0, 6);
+    }
+
+    ctx.restore();
+
+    // Brillance
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.beginPath();
+    ctx.arc(x - 4 * scaleX, y - 5, 3, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawSmilingFlower(ctx, x, y, size, color, time) {
+    const sway = Math.sin(time * 0.03 + x * 0.01) * 3;
+
+    // Tige
+    ctx.strokeStyle = '#27ae60';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y + size * 2);
+    ctx.quadraticCurveTo(x + sway, y + size, x + sway, y);
+    ctx.stroke();
+
+    // Feuilles
+    ctx.fillStyle = '#2ecc71';
+    ctx.beginPath();
+    ctx.ellipse(x + sway/2 - 8, y + size, 10, 5, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + sway/2 + 8, y + size * 1.3, 10, 5, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pétales
+    ctx.fillStyle = color;
+    const petalCount = 6;
+    for (let i = 0; i < petalCount; i++) {
+        const angle = (i / petalCount) * Math.PI * 2;
+        const petalX = x + sway + Math.cos(angle) * size * 0.7;
+        const petalY = y + Math.sin(angle) * size * 0.7;
+        ctx.beginPath();
+        ctx.ellipse(petalX, petalY, size * 0.45, size * 0.3, angle, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Centre
+    ctx.fillStyle = '#f1c40f';
+    ctx.beginPath();
+    ctx.arc(x + sway, y, size * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Visage
+    ctx.fillStyle = '#2c3e50';
+    ctx.beginPath();
+    ctx.arc(x + sway - size * 0.12, y - size * 0.05, 2, 0, Math.PI * 2);
+    ctx.arc(x + sway + size * 0.12, y - size * 0.05, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sourire
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x + sway, y + size * 0.05, size * 0.15, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+}
+
+function drawGrassTuft(ctx, x, y, blades, height, time) {
+    ctx.strokeStyle = '#27ae60';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+
+    for (let i = 0; i < blades; i++) {
+        const bladeX = x + (i - blades/2) * 6;
+        const sway = Math.sin(time * 0.04 + bladeX * 0.1) * 5;
+        const bladeHeight = height * (0.7 + Math.sin(i * 2) * 0.3);
+
+        ctx.beginPath();
+        ctx.moveTo(bladeX, y);
+        ctx.quadraticCurveTo(bladeX + sway/2, y - bladeHeight/2, bladeX + sway, y - bladeHeight);
+        ctx.stroke();
+    }
+}
+
+function drawButterfly(ctx, x, y, color, time, wingPhase) {
+    const wingFlap = Math.sin(time * 0.3 + wingPhase) * 0.8;
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Ailes gauche
+    ctx.fillStyle = color;
+    ctx.save();
+    ctx.scale(Math.cos(wingFlap), 1);
+    ctx.beginPath();
+    ctx.ellipse(-8, 0, 10, 7, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(-6, 6, 6, 4, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Ailes droite
+    ctx.save();
+    ctx.scale(-Math.cos(wingFlap), 1);
+    ctx.beginPath();
+    ctx.ellipse(-8, 0, 10, 7, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(-6, 6, 6, 4, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Motifs sur les ailes
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.beginPath();
+    ctx.arc(-5 * Math.cos(wingFlap), -1, 3, 0, Math.PI * 2);
+    ctx.arc(5 * Math.cos(wingFlap), -1, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps
+    ctx.fillStyle = '#2c3e50';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 2, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Antennes
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-1, -5);
+    ctx.quadraticCurveTo(-3, -10, -5, -12);
+    ctx.moveTo(1, -5);
+    ctx.quadraticCurveTo(3, -10, 5, -12);
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawSparkle(ctx, x, y, size) {
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x + size * 0.3, y - size * 0.3);
+    ctx.lineTo(x + size, y);
+    ctx.lineTo(x + size * 0.3, y + size * 0.3);
+    ctx.lineTo(x, y + size);
+    ctx.lineTo(x - size * 0.3, y + size * 0.3);
+    ctx.lineTo(x - size, y);
+    ctx.lineTo(x - size * 0.3, y - size * 0.3);
+    ctx.closePath();
+    ctx.fill();
 }
 
 function drawFloatingIsland(ctx, x, y, width, hasTree) {
@@ -3891,11 +4909,556 @@ function drawEnhancedSphinx(ctx, e) {
     ctx.restore();
 }
 
+// ===== NIVEAU 10 : ZONE FINALE - BOSS ÉPIQUE =====
+function initLevel10Visuals(w, h) {
+    if (VisualCache.level10) return VisualCache.level10;
+
+    const visuals = {
+        // Fond cosmique
+        stars: [],
+        nebulae: [],
+        shootingStars: [],
+        // Effets Sonic
+        checkerboardSegments: [],
+        speedLines: [],
+        rings: [],
+        // Arène du boss
+        energyVortex: [],
+        lightningBolts: [],
+        floatingDebris: [],
+        // Particules épiques
+        energyParticles: [],
+        sparks: [],
+        shockwaves: []
+    };
+
+    // Étoiles cosmiques (fond profond)
+    for (let i = 0; i < 250; i++) {
+        visuals.stars.push({
+            x: seededRandom(i * 601) * w * 4,
+            y: seededRandom(i * 607) * h,
+            size: 0.5 + seededRandom(i * 613) * 2.5,
+            twinklePhase: seededRandom(i * 617) * Math.PI * 2,
+            color: ['#ffffff', '#a8d5ff', '#ffd5e5', '#d5ffe5'][Math.floor(seededRandom(i * 619) * 4)],
+            brightness: 0.5 + seededRandom(i * 631) * 0.5
+        });
+    }
+
+    // Nébuleuses colorées
+    for (let i = 0; i < 6; i++) {
+        visuals.nebulae.push({
+            x: seededRandom(i * 641) * w * 3,
+            y: seededRandom(i * 643) * h * 0.8,
+            width: 300 + seededRandom(i * 647) * 400,
+            height: 200 + seededRandom(i * 653) * 300,
+            color: ['#ff006620', '#0066ff20', '#ff660020', '#00ff6620', '#6600ff20', '#ff00ff20'][i],
+            rotation: seededRandom(i * 659) * Math.PI
+        });
+    }
+
+    // Étoiles filantes
+    for (let i = 0; i < 5; i++) {
+        visuals.shootingStars.push({
+            active: false,
+            x: 0,
+            y: 0,
+            speed: 15 + seededRandom(i * 661) * 10,
+            angle: -0.3 - seededRandom(i * 673) * 0.4,
+            length: 80 + seededRandom(i * 677) * 60,
+            cooldown: 0,
+            maxCooldown: 200 + seededRandom(i * 683) * 300
+        });
+    }
+
+    // Segments de damier Sonic (pour la zone Sonic)
+    for (let i = 0; i < 20; i++) {
+        visuals.checkerboardSegments.push({
+            x: i * 150,
+            y: h * 0.7,
+            width: 150,
+            rows: 4,
+            color1: '#1e3a5f',
+            color2: '#0a1628'
+        });
+    }
+
+    // Lignes de vitesse
+    for (let i = 0; i < 30; i++) {
+        visuals.speedLines.push({
+            x: seededRandom(i * 691) * w * 2,
+            y: seededRandom(i * 701) * h,
+            length: 50 + seededRandom(i * 709) * 150,
+            speed: 10 + seededRandom(i * 719) * 20,
+            opacity: 0.2 + seededRandom(i * 727) * 0.4
+        });
+    }
+
+    // Anneaux Sonic flottants (décoratifs)
+    for (let i = 0; i < 15; i++) {
+        visuals.rings.push({
+            x: seededRandom(i * 733) * w * 2.5,
+            y: h * 0.2 + seededRandom(i * 739) * h * 0.5,
+            size: 20 + seededRandom(i * 743) * 15,
+            rotationSpeed: 0.05 + seededRandom(i * 751) * 0.1,
+            bobPhase: seededRandom(i * 757) * Math.PI * 2
+        });
+    }
+
+    // Vortex d'énergie (pour l'arène du boss)
+    for (let ring = 0; ring < 5; ring++) {
+        visuals.energyVortex.push({
+            radius: 100 + ring * 50,
+            rotationSpeed: 0.02 - ring * 0.003,
+            particles: 20 - ring * 2,
+            color: `hsl(${280 + ring * 20}, 100%, 60%)`
+        });
+    }
+
+    // Débris flottants
+    for (let i = 0; i < 20; i++) {
+        visuals.floatingDebris.push({
+            x: seededRandom(i * 761) * w * 3,
+            y: seededRandom(i * 769) * h,
+            size: 5 + seededRandom(i * 773) * 20,
+            rotationSpeed: (seededRandom(i * 787) - 0.5) * 0.1,
+            rotation: seededRandom(i * 797) * Math.PI * 2,
+            floatPhase: seededRandom(i * 809) * Math.PI * 2,
+            type: Math.floor(seededRandom(i * 811) * 3)
+        });
+    }
+
+    // Particules d'énergie
+    for (let i = 0; i < 50; i++) {
+        visuals.energyParticles.push({
+            x: seededRandom(i * 821) * w * 3,
+            y: seededRandom(i * 823) * h,
+            size: 2 + seededRandom(i * 827) * 4,
+            speedX: (seededRandom(i * 829) - 0.5) * 2,
+            speedY: -1 - seededRandom(i * 839) * 2,
+            color: ['#ff00ff', '#00ffff', '#ffff00', '#ff6600'][i % 4],
+            glowPhase: seededRandom(i * 853) * Math.PI * 2
+        });
+    }
+
+    VisualCache.level10 = visuals;
+    return visuals;
+}
+
+function drawLevel10Background(ctx, w, h, camX) {
+    const visuals = initLevel10Visuals(w, h);
+    const time = state.frameTick;
+
+    // Fond spatial épique (dégradé dramatique)
+    const spaceGrad = ctx.createLinearGradient(0, 0, 0, h);
+    spaceGrad.addColorStop(0, '#0a0015');
+    spaceGrad.addColorStop(0.3, '#150030');
+    spaceGrad.addColorStop(0.5, '#1a0a40');
+    spaceGrad.addColorStop(0.7, '#100525');
+    spaceGrad.addColorStop(1, '#050010');
+    ctx.fillStyle = spaceGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Nébuleuses (effet de profondeur cosmique)
+    for (const nebula of visuals.nebulae) {
+        const x = nebula.x - camX * 0.05;
+        drawCosmicNebula(ctx, x, nebula.y, nebula.width, nebula.height, nebula.color, time);
+    }
+
+    // Étoiles scintillantes
+    for (const star of visuals.stars) {
+        const x = star.x - camX * 0.02;
+        const twinkle = 0.5 + Math.sin(time * 0.05 + star.twinklePhase) * 0.5;
+
+        ctx.globalAlpha = star.brightness * twinkle;
+        ctx.fillStyle = star.color;
+        ctx.beginPath();
+        ctx.arc(x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Étoiles filantes occasionnelles
+    for (const shootingStar of visuals.shootingStars) {
+        updateAndDrawShootingStar(ctx, shootingStar, w, h, time);
+    }
+
+    // Damier Sonic en arrière-plan (style Green Hill Zone)
+    drawSonicCheckerboard(ctx, visuals.checkerboardSegments, camX, h, time);
+
+    // Anneaux Sonic flottants (décoratifs)
+    for (const ring of visuals.rings) {
+        const x = ring.x - camX * 0.3;
+        const bob = Math.sin(time * 0.04 + ring.bobPhase) * 10;
+        const rotation = time * ring.rotationSpeed;
+        drawSonicRing(ctx, x, ring.y + bob, ring.size, rotation, time);
+    }
+
+    // Planète/Lune épique en arrière-plan
+    drawEpicPlanet(ctx, w - 250, 180, time);
+
+    // Lignes de vitesse (effet dynamique)
+    if (state.level === 10) {
+        for (const line of visuals.speedLines) {
+            const x = (line.x - time * line.speed) % (w * 2);
+            ctx.globalAlpha = line.opacity;
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - camX * 0.5, line.y);
+            ctx.lineTo(x - line.length - camX * 0.5, line.y);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+    }
+}
+
+function drawLevel10Foreground(ctx, w, h, camX) {
+    const visuals = initLevel10Visuals(w, h);
+    const time = state.frameTick;
+
+    // Débris flottants
+    for (const debris of visuals.floatingDebris) {
+        const x = debris.x - camX * 0.6;
+        const floatY = debris.y + Math.sin(time * 0.02 + debris.floatPhase) * 20;
+        const rotation = debris.rotation + time * debris.rotationSpeed;
+        drawFloatingDebris(ctx, x, floatY, debris.size, rotation, debris.type);
+    }
+
+    // Particules d'énergie montantes
+    for (const particle of visuals.energyParticles) {
+        const x = (particle.x + time * particle.speedX) % (w * 3);
+        const y = (particle.y + time * particle.speedY) % h;
+        const adjustedY = y < 0 ? y + h : y;
+        const glow = 0.5 + Math.sin(time * 0.1 + particle.glowPhase) * 0.5;
+
+        ctx.globalAlpha = glow;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = particle.color;
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(x - camX * 0.7, adjustedY, particle.size * glow, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+
+    // Effet de vortex d'énergie (centre de l'écran pour le boss)
+    // Seulement visible dans la zone boss (après x > 2000)
+    const bossAreaStart = 2000;
+    const vortexCenterX = bossAreaStart + 400 - camX;
+    if (vortexCenterX > -200 && vortexCenterX < w + 200) {
+        drawEnergyVortex(ctx, vortexCenterX, h * 0.5, visuals.energyVortex, time);
+    }
+
+    // Éclairs occasionnels (effet dramatique)
+    if (Math.sin(time * 0.02) > 0.98) {
+        drawLightningFlash(ctx, w, h, time);
+    }
+
+    // Effet de scan horizontal épique
+    const scanY = (time * 3) % (h * 2);
+    if (scanY < h) {
+        ctx.globalAlpha = 0.15;
+        const scanGrad = ctx.createLinearGradient(0, scanY - 20, 0, scanY + 20);
+        scanGrad.addColorStop(0, 'transparent');
+        scanGrad.addColorStop(0.5, '#ff00ff');
+        scanGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = scanGrad;
+        ctx.fillRect(0, scanY - 20, w, 40);
+        ctx.globalAlpha = 1;
+    }
+}
+
+// Fonctions helpers pour le niveau 10
+function drawCosmicNebula(ctx, x, y, width, height, color, time) {
+    const pulse = 1 + Math.sin(time * 0.01) * 0.1;
+
+    ctx.save();
+    ctx.translate(x + width/2, y + height/2);
+    ctx.scale(pulse, pulse);
+
+    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(width, height) / 2);
+    grad.addColorStop(0, color);
+    grad.addColorStop(0.5, color.replace('20', '10'));
+    grad.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, width/2, height/2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function updateAndDrawShootingStar(ctx, star, w, h, time) {
+    if (!star.active) {
+        star.cooldown--;
+        if (star.cooldown <= 0 && Math.random() > 0.995) {
+            star.active = true;
+            star.x = Math.random() * w * 0.5 + w * 0.25;
+            star.y = Math.random() * h * 0.3;
+        }
+        return;
+    }
+
+    // Dessiner l'étoile filante
+    const tailX = star.x - Math.cos(star.angle) * star.length;
+    const tailY = star.y - Math.sin(star.angle) * star.length;
+
+    const grad = ctx.createLinearGradient(star.x, star.y, tailX, tailY);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.3, '#aaddff');
+    grad.addColorStop(1, 'transparent');
+
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(star.x, star.y);
+    ctx.lineTo(tailX, tailY);
+    ctx.stroke();
+
+    // Tête brillante
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Mettre à jour la position
+    star.x += Math.cos(star.angle) * star.speed;
+    star.y += Math.sin(star.angle) * star.speed;
+
+    // Désactiver si hors écran
+    if (star.x > w * 1.5 || star.y > h) {
+        star.active = false;
+        star.cooldown = star.maxCooldown;
+    }
+}
+
+function drawSonicCheckerboard(ctx, segments, camX, h, time) {
+    const tileSize = 25;
+
+    for (const seg of segments) {
+        const x = seg.x - camX * 0.4;
+
+        for (let row = 0; row < seg.rows; row++) {
+            for (let col = 0; col < seg.width / tileSize; col++) {
+                const tileX = x + col * tileSize;
+                const tileY = seg.y + row * tileSize;
+
+                // Damier
+                const isLight = (row + col + Math.floor(time * 0.05)) % 2 === 0;
+                ctx.fillStyle = isLight ? seg.color1 : seg.color2;
+                ctx.fillRect(tileX, tileY, tileSize, tileSize);
+            }
+        }
+    }
+}
+
+function drawSonicRing(ctx, x, y, size, rotation, time) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const scaleX = Math.cos(rotation);
+    ctx.scale(Math.abs(scaleX) * 0.5 + 0.5, 1);
+
+    // Anneau
+    const ringGrad = ctx.createLinearGradient(-size, 0, size, 0);
+    ringGrad.addColorStop(0, '#ffd700');
+    ringGrad.addColorStop(0.3, '#ffea00');
+    ringGrad.addColorStop(0.7, '#ffd700');
+    ringGrad.addColorStop(1, '#b8860b');
+
+    ctx.strokeStyle = ringGrad;
+    ctx.lineWidth = size * 0.3;
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Brillance
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.beginPath();
+    ctx.arc(-size * 0.3, -size * 0.3, size * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawEpicPlanet(ctx, x, y, time) {
+    const radius = 100;
+    const rotation = time * 0.002;
+
+    // Lueur externe (aura)
+    const auraGrad = ctx.createRadialGradient(x, y, radius, x, y, radius + 80);
+    auraGrad.addColorStop(0, 'rgba(150, 100, 255, 0.4)');
+    auraGrad.addColorStop(0.5, 'rgba(100, 50, 200, 0.2)');
+    auraGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(x, y, radius + 80, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps de la planète
+    const planetGrad = ctx.createRadialGradient(x - 30, y - 30, 0, x, y, radius);
+    planetGrad.addColorStop(0, '#8b5cf6');
+    planetGrad.addColorStop(0.5, '#6d28d9');
+    planetGrad.addColorStop(1, '#4c1d95');
+    ctx.fillStyle = planetGrad;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Anneaux de la planète
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(0.3);
+
+    ctx.strokeStyle = 'rgba(200, 180, 255, 0.5)';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, radius * 1.6, radius * 0.25, rotation, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(200, 180, 255, 0.3)';
+    ctx.lineWidth = 12;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, radius * 1.8, radius * 0.3, rotation, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Détails de surface (cratères/nuages)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.beginPath();
+    ctx.arc(x - 40, y - 30, 25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + 30, y + 40, 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ombre
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.arc(x + 20, y + 20, radius * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawFloatingDebris(ctx, x, y, size, rotation, type) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+
+    ctx.fillStyle = '#3d3d5c';
+    ctx.strokeStyle = '#5d5d7c';
+    ctx.lineWidth = 1;
+
+    switch(type) {
+        case 0: // Roche triangulaire
+            ctx.beginPath();
+            ctx.moveTo(0, -size);
+            ctx.lineTo(-size * 0.8, size * 0.6);
+            ctx.lineTo(size * 0.7, size * 0.5);
+            ctx.closePath();
+            break;
+        case 1: // Roche carrée
+            ctx.beginPath();
+            ctx.rect(-size/2, -size/2, size, size * 0.8);
+            break;
+        case 2: // Roche irrégulière
+            ctx.beginPath();
+            ctx.moveTo(-size * 0.3, -size);
+            ctx.lineTo(size * 0.5, -size * 0.7);
+            ctx.lineTo(size, size * 0.2);
+            ctx.lineTo(size * 0.3, size);
+            ctx.lineTo(-size * 0.8, size * 0.5);
+            ctx.closePath();
+            break;
+    }
+
+    ctx.fill();
+    ctx.stroke();
+
+    // Highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.arc(-size * 0.2, -size * 0.3, size * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawEnergyVortex(ctx, x, y, vortexRings, time) {
+    for (const ring of vortexRings) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(time * ring.rotationSpeed);
+
+        ctx.strokeStyle = ring.color;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.4;
+
+        // Dessiner les particules du vortex
+        for (let i = 0; i < ring.particles; i++) {
+            const angle = (i / ring.particles) * Math.PI * 2;
+            const particleX = Math.cos(angle) * ring.radius;
+            const particleY = Math.sin(angle) * ring.radius * 0.3; // Ellipse
+
+            ctx.beginPath();
+            ctx.arc(particleX, particleY, 3, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Arc du vortex
+        ctx.beginPath();
+        ctx.ellipse(0, 0, ring.radius, ring.radius * 0.3, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawLightningFlash(ctx, w, h, time) {
+    ctx.globalAlpha = 0.3 + Math.random() * 0.3;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+
+    // Éclair
+    ctx.strokeStyle = '#a8d5ff';
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#00ffff';
+
+    const startX = Math.random() * w;
+    let currentX = startX;
+    let currentY = 0;
+
+    ctx.beginPath();
+    ctx.moveTo(currentX, currentY);
+
+    while (currentY < h * 0.7) {
+        currentX += (Math.random() - 0.5) * 60;
+        currentY += 20 + Math.random() * 30;
+        ctx.lineTo(currentX, currentY);
+    }
+
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+}
+
 function drawEnhancedLevelBackground(ctx, w, h, camX) {
     if (state.level === 1) {
         drawLevel1Background(ctx, w, h, camX);
     } else if (state.level === 2) {
         drawLevel2Background(ctx, w, h, camX);
+    } else if (state.level === 3) {
+        drawLevel3Background(ctx, w, h, camX);
+    } else if (state.level === 4) {
+        drawLevel4Background(ctx, w, h, camX);
     } else if (state.level === 5) {
         drawLevel5Background(ctx, w, h, camX);
     } else if (state.level === 6) {
@@ -3906,6 +5469,8 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel8Background(ctx, w, h, camX);
     } else if (state.level === 9) {
         drawLevel9Background(ctx, w, h, camX);
+    } else if (state.level === 10) {
+        drawLevel10Background(ctx, w, h, camX);
     }
 }
 
@@ -3914,6 +5479,10 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel1Foreground(ctx, w, h, camX);
     } else if (state.level === 2) {
         drawLevel2Foreground(ctx, w, h, camX);
+    } else if (state.level === 3) {
+        drawLevel3Foreground(ctx, w, h, camX);
+    } else if (state.level === 4) {
+        drawLevel4Foreground(ctx, w, h, camX);
     } else if (state.level === 5) {
         drawLevel5Foreground(ctx, w, h, camX);
     } else if (state.level === 6) {
@@ -3924,6 +5493,8 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel8Foreground(ctx, w, h, camX);
     } else if (state.level === 9) {
         drawLevel9Foreground(ctx, w, h, camX);
+    } else if (state.level === 10) {
+        drawLevel10Foreground(ctx, w, h, camX);
     }
 }
 
@@ -3942,6 +5513,16 @@ function updateVisualElements() {
     // Level 2
     if (VisualCache.level2) {
         for (const cloud of VisualCache.level2.bgClouds) {
+            cloud.x += cloud.speed;
+            if (cloud.x > canvas.width * 4) {
+                cloud.x = -cloud.width;
+            }
+        }
+    }
+
+    // Level 4
+    if (VisualCache.level4) {
+        for (const cloud of VisualCache.level4.clouds) {
             cloud.x += cloud.speed;
             if (cloud.x > canvas.width * 4) {
                 cloud.x = -cloud.width;
@@ -3984,6 +5565,8 @@ function updateVisualElements() {
 function resetVisualCache() {
     VisualCache.level1 = null;
     VisualCache.level2 = null;
+    VisualCache.level3 = null;
+    VisualCache.level4 = null;
     VisualCache.level5 = null;
     VisualCache.level6 = null;
     VisualCache.level7 = null;

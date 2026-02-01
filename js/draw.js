@@ -42,13 +42,11 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour niveaux 1-2, 5-9
-    const enhancedLevels = [1, 2, 5, 6, 7, 8, 9];
+    // Arrière-plan amélioré pour tous les niveaux 1-10
+    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
-    } else if (state.level <= 4) {
-        drawNotebookGrid();
     }
     
     // Caméra
@@ -127,8 +125,8 @@ function draw() {
     // Joueur
     player.draw(ctx);
 
-    // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable) pour niveaux améliorés
-    if ([1, 2, 5, 6, 7, 8, 9].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
+    // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable) pour tous les niveaux
+    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
