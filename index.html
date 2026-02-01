@@ -265,31 +265,63 @@
         <div id="tutorial">
             <h3>🎮 Comment jouer</h3>
 
-            <div class="tutorial-step active" id="tutorial-step-1">
-                <p class="tutorial-arrow">👉</p>
-                <p><strong>Appuie sur A</strong> pour aller à gauche</p>
-                <p><strong>Appuie sur Z</strong> pour aller à droite</p>
-                <button onclick="nextTutorialStep(2)">Suivant ➡️</button>
+            <!-- TUTORIEL DESKTOP -->
+            <div class="tutorial-desktop">
+                <div class="tutorial-step active" id="tutorial-step-1">
+                    <p class="tutorial-arrow">👉</p>
+                    <p><strong>Appuie sur A</strong> pour aller à gauche</p>
+                    <p><strong>Appuie sur Z</strong> pour aller à droite</p>
+                    <button onclick="nextTutorialStep(2)">Suivant ➡️</button>
+                </div>
+
+                <div class="tutorial-step" id="tutorial-step-2">
+                    <p style="font-size: 40px;">🦘</p>
+                    <p><strong>ESPACE</strong> = Sauter !</p>
+                    <p>Tu peux sauter <strong>2 fois</strong> de suite !</p>
+                    <button onclick="nextTutorialStep(3)">Suivant ➡️</button>
+                </div>
+
+                <div class="tutorial-step" id="tutorial-step-3">
+                    <p style="font-size: 40px;">🪜</p>
+                    <p>Utilise <strong>↑ ↓</strong> pour les échelles</p>
+                    <button onclick="nextTutorialStep(4)">Suivant ➡️</button>
+                </div>
+
+                <div class="tutorial-step" id="tutorial-step-4">
+                    <p style="font-size: 40px;">🗝️ ➡️ 🚪</p>
+                    <p>Trouve la <strong>clé</strong> pour ouvrir la porte !</p>
+                    <p>Collecte les <strong>pièces 🪙</strong> pour des points !</p>
+                    <button onclick="closeTutorial()">C'est parti ! 🚀</button>
+                </div>
             </div>
 
-            <div class="tutorial-step" id="tutorial-step-2">
-                <p style="font-size: 40px;">🦘</p>
-                <p><strong>ESPACE</strong> = Sauter !</p>
-                <p>Tu peux sauter <strong>2 fois</strong> de suite !</p>
-                <button onclick="nextTutorialStep(3)">Suivant ➡️</button>
-            </div>
+            <!-- TUTORIEL MOBILE (simplifié) -->
+            <div class="tutorial-mobile">
+                <div class="tutorial-step active" id="tutorial-mobile-step-1">
+                    <p style="font-size: 50px;">🕹️</p>
+                    <p><strong>Glisse ton pouce</strong> sur le joystick<br>pour te déplacer !</p>
+                    <button onclick="nextMobileTutorialStep(2)">Suivant ➡️</button>
+                </div>
 
-            <div class="tutorial-step" id="tutorial-step-3">
-                <p style="font-size: 40px;">🪜</p>
-                <p>Utilise <strong>↑ ↓</strong> pour les échelles</p>
-                <button onclick="nextTutorialStep(4)">Suivant ➡️</button>
-            </div>
+                <div class="tutorial-step" id="tutorial-mobile-step-2">
+                    <p style="font-size: 50px;">🦘</p>
+                    <p>Appuie sur le <strong>bouton vert</strong><br>pour sauter !</p>
+                    <p style="font-size: 14px; opacity: 0.8;">Tu peux sauter 2 fois de suite !</p>
+                    <button onclick="nextMobileTutorialStep(3)">Suivant ➡️</button>
+                </div>
 
-            <div class="tutorial-step" id="tutorial-step-4">
-                <p style="font-size: 40px;">🗝️ ➡️ 🚪</p>
-                <p>Trouve la <strong>clé</strong> pour ouvrir la porte !</p>
-                <p>Collecte les <strong>pièces 🪙</strong> pour des points !</p>
-                <button onclick="closeTutorial()">C'est parti ! 🚀</button>
+                <div class="tutorial-step" id="tutorial-mobile-step-3">
+                    <p style="font-size: 50px;">🪜</p>
+                    <p>Pour grimper aux échelles,<br><strong>pousse le joystick vers le haut !</strong></p>
+                    <button onclick="nextMobileTutorialStep(4)">Suivant ➡️</button>
+                </div>
+
+                <div class="tutorial-step" id="tutorial-mobile-step-4">
+                    <p style="font-size: 40px;">🗝️ ➡️ 🚪</p>
+                    <p>Trouve la <strong>clé</strong> pour ouvrir la porte !</p>
+                    <p>Collecte les <strong>pièces 🪙</strong> !</p>
+                    <button onclick="closeTutorial()">C'est parti ! 🚀</button>
+                </div>
             </div>
         </div>
 
@@ -319,16 +351,14 @@
         <div class="btn" id="btn-pause-mobile" onclick="togglePause()">⏸️</div>
 
         <div id="controls">
-            <!-- Contrôles gauche (déplacement) -->
-            <div class="d-pad">
-                <div class="btn" id="btn-climb">↕️</div>
-                <div class="d-pad-left-row">
-                    <div class="btn" id="btn-left">←</div>
-                    <div class="btn" id="btn-right">→</div>
+            <!-- Joystick virtuel (gauche) -->
+            <div id="joystick-zone">
+                <div id="joystick-base">
+                    <div id="joystick-thumb"></div>
                 </div>
             </div>
-            <!-- Contrôles droite (saut) -->
-            <div class="d-pad-right">
+            <!-- Bouton SAUT géant (droite) -->
+            <div id="jump-zone">
                 <div class="btn" id="btn-jump">🦘</div>
             </div>
         </div>

@@ -244,37 +244,234 @@ function updateProgressBar() {
 }
 
 // ===== CONTRÔLES =====
+
+// Configuration du joystick mobile
+const mobileControls = {
+    joystick: {
+        active: false,
+        touchId: null,
+        baseX: 0,
+        baseY: 0,
+        thumbX: 0,
+        thumbY: 0,
+        maxDistance: 50,  // Rayon maximum du joystick
+        deadZone: 0.15    // Zone morte (15%)
+    },
+    jump: {
+        touchId: null
+    }
+};
+
 function setupControls() {
     window.addEventListener('keydown', e => handleKey(e, true));
     window.addEventListener('keyup', e => handleKey(e, false));
-    
-    // Touch mobile
-    const bindTouch = (id, keyName, isJump = false) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        
-        const start = (e) => {
-            e.preventDefault();
-            keys[keyName] = true;
-            if (isJump) doJump();
+
+    // ===== JOYSTICK VIRTUEL MOBILE =====
+    const joystickZone = document.getElementById('joystick-zone');
+    const joystickBase = document.getElementById('joystick-base');
+    const joystickThumb = document.getElementById('joystick-thumb');
+
+    if (joystickZone && joystickBase && joystickThumb) {
+        setupJoystick(joystickZone, joystickBase, joystickThumb);
+    }
+
+    // ===== BOUTON SAUT =====
+    setupJumpButton();
+}
+
+function setupJoystick(zone, base, thumb) {
+    const js = mobileControls.joystick;
+
+    function getJoystickCenter() {
+        const rect = base.getBoundingClientRect();
+        return {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2
         };
-        const end = (e) => {
-            e.preventDefault();
-            keys[keyName] = false;
-        };
-        
-        el.addEventListener('touchstart', start, { passive: false });
-        el.addEventListener('touchend', end, { passive: false });
-        el.addEventListener('touchcancel', end, { passive: false });
-        el.addEventListener('mousedown', start);
-        el.addEventListener('mouseup', end);
-        el.addEventListener('mouseleave', end);
-    };
-    
-    bindTouch('btn-left', 'left');
-    bindTouch('btn-right', 'right');
-    bindTouch('btn-climb', 'up');
-    bindTouch('btn-jump', 'jump', true);
+    }
+
+    function updateJoystick(clientX, clientY) {
+        const center = getJoystickCenter();
+        let dx = clientX - center.x;
+        let dy = clientY - center.y;
+
+        // Calculer la distance
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxDist = js.maxDistance;
+
+        // Limiter au cercle
+        if (distance > maxDist) {
+            dx = (dx / distance) * maxDist;
+            dy = (dy / distance) * maxDist;
+        }
+
+        // Mettre à jour visuellement le thumb
+        thumb.style.transform = `translate(${dx}px, ${dy}px)`;
+
+        // Calculer les valeurs normalisées (-1 à 1)
+        const normalizedX = dx / maxDist;
+        const normalizedY = dy / maxDist;
+
+        // Appliquer la zone morte
+        const deadZone = js.deadZone;
+
+        // Mouvement horizontal (gauche/droite)
+        if (Math.abs(normalizedX) > deadZone) {
+            keys.left = normalizedX < -deadZone;
+            keys.right = normalizedX > deadZone;
+        } else {
+            keys.left = false;
+            keys.right = false;
+        }
+
+        // Mouvement vertical (monter/descendre échelles)
+        if (Math.abs(normalizedY) > deadZone * 1.5) {  // Zone morte plus grande pour vertical
+            keys.up = normalizedY < -deadZone;
+            keys.down = normalizedY > deadZone;
+        } else {
+            keys.up = false;
+            keys.down = false;
+        }
+
+        // Vibration légère au démarrage du mouvement
+        if (!js.active && (keys.left || keys.right || keys.up || keys.down)) {
+            hapticFeedback('light');
+        }
+    }
+
+    function resetJoystick() {
+        thumb.style.transform = 'translate(0, 0)';
+        thumb.classList.remove('active');
+        keys.left = false;
+        keys.right = false;
+        keys.up = false;
+        keys.down = false;
+        js.active = false;
+        js.touchId = null;
+    }
+
+    // Touch events
+    zone.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (js.touchId !== null) return;  // Déjà actif
+
+        const touch = e.changedTouches[0];
+        js.touchId = touch.identifier;
+        js.active = true;
+        thumb.classList.add('active');
+
+        updateJoystick(touch.clientX, touch.clientY);
+    }, { passive: false });
+
+    zone.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === js.touchId) {
+                updateJoystick(touch.clientX, touch.clientY);
+                break;
+            }
+        }
+    }, { passive: false });
+
+    zone.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        for (const touch of e.changedTouches) {
+            if (touch.identifier === js.touchId) {
+                resetJoystick();
+                break;
+            }
+        }
+    }, { passive: false });
+
+    zone.addEventListener('touchcancel', (e) => {
+        e.preventDefault();
+        resetJoystick();
+    }, { passive: false });
+
+    // Mouse fallback (pour tester sur desktop)
+    let mouseDown = false;
+    zone.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        mouseDown = true;
+        js.active = true;
+        thumb.classList.add('active');
+        updateJoystick(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (mouseDown) {
+            updateJoystick(e.clientX, e.clientY);
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (mouseDown) {
+            mouseDown = false;
+            resetJoystick();
+        }
+    });
+}
+
+function setupJumpButton() {
+    const jumpBtn = document.getElementById('btn-jump');
+    if (!jumpBtn) return;
+
+    const jc = mobileControls.jump;
+
+    function handleJumpStart(e) {
+        e.preventDefault();
+        if (e.type === 'touchstart') {
+            jc.touchId = e.changedTouches[0].identifier;
+        }
+        keys.jump = true;
+        doJump();
+        hapticFeedback('medium');
+    }
+
+    function handleJumpEnd(e) {
+        e.preventDefault();
+        if (e.type === 'touchend' || e.type === 'touchcancel') {
+            for (const touch of e.changedTouches) {
+                if (touch.identifier === jc.touchId) {
+                    jc.touchId = null;
+                    keys.jump = false;
+                    break;
+                }
+            }
+        } else {
+            keys.jump = false;
+        }
+    }
+
+    jumpBtn.addEventListener('touchstart', handleJumpStart, { passive: false });
+    jumpBtn.addEventListener('touchend', handleJumpEnd, { passive: false });
+    jumpBtn.addEventListener('touchcancel', handleJumpEnd, { passive: false });
+    jumpBtn.addEventListener('mousedown', handleJumpStart);
+    jumpBtn.addEventListener('mouseup', handleJumpEnd);
+    jumpBtn.addEventListener('mouseleave', handleJumpEnd);
+}
+
+// ===== FEEDBACK HAPTIQUE =====
+function hapticFeedback(intensity = 'medium') {
+    if (!navigator.vibrate) return;
+
+    switch (intensity) {
+        case 'light':
+            navigator.vibrate(10);
+            break;
+        case 'medium':
+            navigator.vibrate(25);
+            break;
+        case 'heavy':
+            navigator.vibrate(50);
+            break;
+        case 'success':
+            navigator.vibrate([20, 50, 30]);
+            break;
+        case 'error':
+            navigator.vibrate([50, 30, 50, 30, 50]);
+            break;
+    }
 }
 
 function handleKey(e, pressed) {
@@ -371,11 +568,16 @@ function doJump() {
     const jumpForce = player.getJumpForce();
     const maxJumps = player.getMaxJumps();
 
-    if (player.grounded || player.climbing) {
+    // === COYOTE TIME : Permet de sauter même après avoir quitté une plateforme ===
+    const canCoyoteJump = player.coyoteTime > 0 && player.jumpCount === 0;
+
+    if (player.grounded || player.climbing || canCoyoteJump) {
         player.vy = -jumpForce;
         player.grounded = false;
         player.climbing = false;
         player.jumpCount = 1;
+        player.coyoteTime = 0;  // Consomme le coyote time
+        player.jumpBuffer = 0;  // Consomme le buffer
         AudioSystem.play('jump');
         ParticleSystem.emit(player.x + player.w / 2, player.y + player.h, 'dust', 5);
 
@@ -384,6 +586,7 @@ function doJump() {
     } else if (player.jumpCount < maxJumps) {
         player.vy = -jumpForce * 0.9;
         player.jumpCount++;
+        player.jumpBuffer = 0;  // Consomme le buffer
         AudioSystem.play('jump');
 
         // Statistiques
@@ -393,6 +596,9 @@ function doJump() {
         if (player.jumpCount === 3 && state.powerups.superJump > 0) {
             ParticleSystem.emit(player.x + player.w / 2, player.y + player.h / 2, 'sparkle', 15);
         }
+    } else {
+        // === JUMP BUFFER : Mémorise la tentative de saut pour exécution ultérieure ===
+        player.jumpBuffer = player.jumpBufferMax;
     }
 
     updateJumpIndicator();
@@ -507,8 +713,8 @@ function closeTutorial() {
 }
 
 function nextTutorialStep(step) {
-    // Cacher toutes les étapes
-    document.querySelectorAll('.tutorial-step').forEach(s => s.classList.remove('active'));
+    // Cacher toutes les étapes desktop
+    document.querySelectorAll('.tutorial-desktop .tutorial-step').forEach(s => s.classList.remove('active'));
     // Montrer l'étape suivante
     const nextStep = document.getElementById(`tutorial-step-${step}`);
     if (nextStep) {
@@ -517,6 +723,19 @@ function nextTutorialStep(step) {
     }
 }
 window.nextTutorialStep = nextTutorialStep;
+
+function nextMobileTutorialStep(step) {
+    // Cacher toutes les étapes mobile
+    document.querySelectorAll('.tutorial-mobile .tutorial-step').forEach(s => s.classList.remove('active'));
+    // Montrer l'étape suivante
+    const nextStep = document.getElementById(`tutorial-mobile-step-${step}`);
+    if (nextStep) {
+        nextStep.classList.add('active');
+        AudioSystem.play('coin');
+        hapticFeedback('light');
+    }
+}
+window.nextMobileTutorialStep = nextMobileTutorialStep;
 
 // ===== INITIALISATION DU NIVEAU =====
 function initLevel(levelNum) {
@@ -785,6 +1004,14 @@ function updatePlayer() {
         player.y += player.vy;
     }
     
+    // === MISE À JOUR DES ASSISTANCES MOBILE ===
+    // Sauvegarder l'état grounded avant détection
+    player.wasGrounded = player.grounded;
+
+    // Décrémenter les timers
+    if (player.coyoteTime > 0) player.coyoteTime--;
+    if (player.jumpBuffer > 0) player.jumpBuffer--;
+
     // Collisions plateformes
     player.grounded = false;
     let onPlatform = false;
@@ -833,7 +1060,19 @@ function updatePlayer() {
     }
     
     if (!onPlatform) player.currentPlatform = null;
-    
+
+    // === COYOTE TIME : Démarrer quand le joueur quitte une plateforme ===
+    if (player.wasGrounded && !player.grounded && player.vy >= 0) {
+        // Le joueur vient de quitter une plateforme (pas de saut, juste tombé)
+        player.coyoteTime = player.coyoteTimeMax;
+    }
+
+    // === JUMP BUFFER : Exécuter le saut si le joueur vient d'atterrir ===
+    if (player.grounded && player.jumpBuffer > 0) {
+        player.jumpBuffer = 0;  // Consomme le buffer
+        doJump();  // Exécute le saut mémorisé
+    }
+
     // Limites écran
     if (player.x < 0) {
         player.x = 0;
@@ -1304,9 +1543,11 @@ function checkCollisions() {
                 AudioSystem.play('powerup');
                 ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 20);
                 showMessage('💎 SECRET !', `+${coinValue} pièces !`, 1500);
+                hapticFeedback('success');
             } else {
                 AudioSystem.play('coin');
                 ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 8);
+                hapticFeedback('light');
             }
         }
     }
@@ -1625,10 +1866,8 @@ function takeDamage(reason) {
         state.companion.lastTip = state.frameTick;
     }
 
-    // Vibration mobile
-    if (navigator.vibrate) {
-        navigator.vibrate(100);
-    }
+    // Vibration mobile (feedback d'erreur)
+    hapticFeedback('error');
 
     if (state.lives <= 0) {
         gameOver(reason || "Plus de vies !");
