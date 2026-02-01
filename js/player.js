@@ -17,6 +17,13 @@ const player = {
     animFrame: 0,
     animTimer: 0,
 
+    // === ASSISTANCES MOBILE (coyote time + jump buffer) ===
+    coyoteTime: 0,          // Frames restantes de "coyote time"
+    coyoteTimeMax: 8,       // 8 frames (~133ms) pour sauter après avoir quitté une plateforme
+    jumpBuffer: 0,          // Frames restantes de "jump buffer"
+    jumpBufferMax: 10,      // 10 frames (~166ms) pour mémoriser l'appui sur saut
+    wasGrounded: false,     // Était au sol à la frame précédente
+
     // Obtenir la force de saut actuelle (normal)
     getJumpForce() {
         return this.jumpForce;
@@ -36,6 +43,10 @@ const player = {
         this.climbing = false;
         this.jumpCount = 0;
         this.currentPlatform = null;
+        // Reset des assistances mobile
+        this.coyoteTime = 0;
+        this.jumpBuffer = 0;
+        this.wasGrounded = false;
     },
     
     draw(ctx) {
