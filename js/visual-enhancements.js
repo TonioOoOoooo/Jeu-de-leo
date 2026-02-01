@@ -227,10 +227,10 @@ function initLevel3Visuals(w, h) {
 
     const visuals = {
         pillars: [],
-        torches: [],
         chains: [],
         windows: [],
         dust: [],
+        rays: [], // Ajout de rayons de lumière pour l'effet WOW
         // Nouveaux éléments WOW
         fogLayers: [],
         magicRunes: [],
@@ -244,36 +244,22 @@ function initLevel3Visuals(w, h) {
 
     // Piliers de cathédrale gothique (structure rythmée)
     const spacing = 400;
-    for (let i = -1; i < 25; i++) {
+    for (let i = -1; i < 20; i++) {
         visuals.pillars.push({
             x: i * spacing,
-            width: 80,
-            type: i % 3 === 0 ? 'major' : (i % 3 === 1 ? 'medium' : 'minor'),
-            hasTorch: i % 2 === 0,
-            hasGargoyle: i % 4 === 0 && i > 0
+            width: 80, // Plus larges pour plus de prestance
+            type: i % 2 === 0 ? 'major' : 'minor' // Alternance gros/petits piliers
         });
     }
 
-    // Vitraux gothiques avec motifs
-    for (let i = 0; i < 12; i++) {
+    // Vitraux (Moins nombreux mais plus impactants)
+    for (let i = 0; i < 10; i++) {
         visuals.windows.push({
-            x: i * spacing * 1.5 + 200,
-            y: h * 0.15,
+            x: i * spacing * 2 + 200,
+            y: h * 0.2,
             w: 100,
-            h: 220,
-            color: ['#e74c3c', '#3498db', '#9b59b6', '#f39c12', '#1abc9c'][i % 5],
-            pattern: i % 3  // Différents motifs de vitraux
-        });
-    }
-
-    // Torches avec particules de feu
-    for (let i = 0; i < 25; i += 2) {
-        visuals.torches.push({
-            x: i * spacing + 40,
-            y: h * 0.35,
-            flicker: seededRandom(i * 101) * Math.PI * 2,
-            intensity: 0.8 + seededRandom(i * 103) * 0.4,
-            particles: []
+            h: 180,
+            color: i % 2 === 0 ? '#3498db' : '#9b59b6' // Bleu et Violet mystique
         });
     }
 
@@ -307,6 +293,15 @@ function initLevel3Visuals(w, h) {
             glowPhase: seededRandom(i * 139) * Math.PI * 2,
             symbol: Math.floor(seededRandom(i * 149) * 6),
             color: seededRandom(i * 151) > 0.5 ? '#00ff88' : '#ff6b6b'
+        });
+    }
+
+    // Rayons de lumière (God Rays)
+    for (let i = 0; i < 6; i++) {
+        visuals.rays.push({
+            x: i * 600 + 100,
+            width: 150 + Math.random() * 100,
+            alpha: 0.1 + Math.random() * 0.1
         });
     }
 
@@ -367,7 +362,7 @@ function initLevel3Visuals(w, h) {
     return visuals;
 }
 
-// ===== NIVEAU 4 : MONDE CHAMPIGNON (VERSION SUBLIMÉE - STYLE MARIO) =====
+// ===== NIVEAU 4 : MONDE CHAMPIGNON (VERSION ÉPURÉE) =====
 function initLevel4Visuals(w, h) {
     if (VisualCache.level4) return VisualCache.level4;
 
@@ -382,7 +377,7 @@ function initLevel4Visuals(w, h) {
         floatingCoins: [],
         pipes: [],
         // Effets atmosphériques
-        fireflies: [],
+        fireflies: [], // Gardé mais réduit
         sparkles: [],
         butterflies: [],
         // Décor naturel
@@ -393,38 +388,27 @@ function initLevel4Visuals(w, h) {
     // Soleil joyeux (stocké séparément)
     visuals.sun = { x: w - 120, y: 100, rayPhase: 0 };
 
-    // Collines ondulantes style Mario (3 couches de parallax)
-    // Couche très lointaine (montagnes)
-    for (let i = 0; i < 6; i++) {
+    // Collines ondulantes (réduites et adoucies)
+    // Couche lointaine
+    for (let i = 0; i < 8; i++) {
         visuals.hills.push({
             x: i * 500 - 100,
-            y: h * 0.45,
-            w: 600,
-            h: 250,
-            color: '#a8d5ba',  // Vert très clair
-            layer: 0.1
+            y: h * 0.6,
+            w: 400 + Math.random() * 200,
+            h: 300,
+            color: '#2a5298', // Bleu nuit doux au lieu de gris sombre
+            layer: 0.2
         });
     }
     // Couche moyenne
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 8; i++) {
         visuals.hills.push({
             x: i * 350 - 50,
-            y: h * 0.55,
-            w: 450,
+            y: h * 0.75, // Plus bas pour dégager la vue
+            w: 500,
             h: 200,
-            color: '#7dc89e',  // Vert moyen
-            layer: 0.25
-        });
-    }
-    // Couche proche
-    for (let i = 0; i < 12; i++) {
-        visuals.hills.push({
-            x: i * 280,
-            y: h * 0.7,
-            w: 350,
-            h: 150,
-            color: '#5cb85c',  // Vert vif
-            layer: 0.4
+            color: '#1e3c72', // Bleu profond
+            layer: 0.5
         });
     }
 
@@ -448,12 +432,12 @@ function initLevel4Visuals(w, h) {
         { cap: '#3498db', spots: '#ffffff' },  // Bleu
         { cap: '#2ecc71', spots: '#ffffff' }   // Vert
     ];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 8; i++) {
         const colorSet = mushroomColors[i % mushroomColors.length];
         visuals.bgMushrooms.push({
             x: seededRandom(i * 313) * w * 3,
-            baseY: h * 0.75,
-            scale: 0.6 + seededRandom(i * 317) * 1.2,
+            baseY: h * 0.7,
+            scale: 1.0 + seededRandom(i * 317) * 1.0,
             capColor: colorSet.cap,
             spotColor: colorSet.spots,
             stemColor: '#f5f5dc',
@@ -528,7 +512,7 @@ function initLevel4Visuals(w, h) {
     }
 
     // Étincelles magiques
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 20; i++) {
         visuals.sparkles.push({
             x: seededRandom(i * 463) * w * 2,
             y: seededRandom(i * 467) * h,
@@ -1043,12 +1027,10 @@ function drawLevel3Background(ctx, w, h, camX) {
     const visuals = initLevel3Visuals(w, h);
     const time = state.frameTick;
 
-    // Fond dégradé dramatique (du noir profond vers bleu nuit)
+    // Fond dégradé nocturne (plus sombre et majestueux)
     const gradient = ctx.createLinearGradient(0, 0, 0, h);
-    gradient.addColorStop(0, '#0a0a15');
-    gradient.addColorStop(0.3, '#12122a');
-    gradient.addColorStop(0.6, '#1a1a3e');
-    gradient.addColorStop(1, '#0d1b2a');
+    gradient.addColorStop(0, '#0f0c29');
+    gradient.addColorStop(1, '#302b63');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
 
@@ -1064,6 +1046,21 @@ function drawLevel3Background(ctx, w, h, camX) {
     for (const win of visuals.windows) {
         const x = win.x - camX * 0.15;
         drawGothicWindow(ctx, x, win.y, win.w, win.h, win.color, win.pattern, time);
+    }
+
+    // God Rays (Rayons de lumière) - Effet WOW subtil
+    for (const ray of visuals.rays) {
+        const rx = ray.x - camX * 0.25;
+        const grd = ctx.createLinearGradient(rx, h * 0.2, rx - 100, h);
+        grd.addColorStop(0, `rgba(255, 255, 255, ${ray.alpha})`);
+        grd.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.moveTo(rx, h * 0.2);
+        ctx.lineTo(rx + ray.width, h * 0.2);
+        ctx.lineTo(rx + ray.width - 200, h);
+        ctx.lineTo(rx - 200, h);
+        ctx.fill();
     }
 
     // Runes magiques qui brillent
@@ -1088,9 +1085,9 @@ function drawLevel3Background(ctx, w, h, camX) {
 
     // Sol en pierre fissuré
     const stoneGradient = ctx.createLinearGradient(0, h * 0.85, 0, h);
-    stoneGradient.addColorStop(0, '#1a2634');
-    stoneGradient.addColorStop(0.3, '#0f1922');
-    stoneGradient.addColorStop(1, '#080d12');
+    stoneGradient.addColorStop(0, '#161b22');
+    stoneGradient.addColorStop(0.3, '#161b22');
+    stoneGradient.addColorStop(1, '#0b0f14');
     ctx.fillStyle = stoneGradient;
     ctx.fillRect(0, h * 0.85, w, h * 0.15);
 
@@ -1111,10 +1108,12 @@ function drawLevel3Foreground(ctx, w, h, camX) {
     const visuals = initLevel3Visuals(w, h);
     const time = state.frameTick;
 
-    // Torches avec flammes réalistes et particules
-    for (const torch of visuals.torches) {
-        const x = torch.x - camX * 0.4;
-        drawRealisticTorch(ctx, x, torch.y, torch.flicker, torch.intensity, time);
+    // Torches avec flammes réalistes et particules (si présentes)
+    if (visuals.torches) {
+        for (const torch of visuals.torches) {
+            const x = torch.x - camX * 0.4;
+            drawRealisticTorch(ctx, x, torch.y, torch.flicker, torch.intensity, time);
+        }
     }
 
     // Esprits flottants (wisps)
@@ -1354,10 +1353,10 @@ function drawGothicPillar(ctx, x, h, width, type) {
 
     // Corps du pilier
     const pillarGrad = ctx.createLinearGradient(x, 0, x + pillarWidth, 0);
-    pillarGrad.addColorStop(0, `rgba(15, 25, 45, ${depth})`);
-    pillarGrad.addColorStop(0.3, `rgba(25, 40, 65, ${depth})`);
-    pillarGrad.addColorStop(0.7, `rgba(20, 35, 55, ${depth})`);
-    pillarGrad.addColorStop(1, `rgba(10, 20, 35, ${depth})`);
+    pillarGrad.addColorStop(0, `rgba(22, 27, 34, ${depth})`);
+    pillarGrad.addColorStop(0.3, `rgba(28, 35, 49, ${depth})`);
+    pillarGrad.addColorStop(0.7, `rgba(24, 30, 40, ${depth})`);
+    pillarGrad.addColorStop(1, `rgba(15, 19, 25, ${depth})`);
     ctx.fillStyle = pillarGrad;
     ctx.fillRect(x, 0, pillarWidth, h);
 
@@ -1525,12 +1524,11 @@ function drawLevel4Background(ctx, w, h, camX) {
     const visuals = initLevel4Visuals(w, h);
     const time = state.frameTick;
 
-    // Ciel joyeux style Mario (bleu vif vers bleu clair)
+    // Ciel magique (plus doux)
     const skyGradient = ctx.createLinearGradient(0, 0, 0, h);
-    skyGradient.addColorStop(0, '#5dade2');   // Bleu ciel brillant
-    skyGradient.addColorStop(0.4, '#85c1e9'); // Bleu clair
-    skyGradient.addColorStop(0.7, '#aed6f1'); // Bleu très clair
-    skyGradient.addColorStop(1, '#d5f4e6');   // Vert pastel (horizon herbeux)
+    skyGradient.addColorStop(0, '#243B55'); // Bleu profond haut
+    skyGradient.addColorStop(0.5, '#141E30'); // Milieu sombre
+    skyGradient.addColorStop(1, '#6c5ce7'); // Bas magique
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, w, h);
 
@@ -1543,17 +1541,20 @@ function drawLevel4Background(ctx, w, h, camX) {
         drawMarioCloud(ctx, cloudX, cloud.y, cloud.width, cloud.height, cloud.puffs);
     }
 
-    // Collines ondulantes (3 couches de parallax)
+    // Collines ondulantes (parallax adouci)
     for (const hill of visuals.hills) {
         const x = hill.x - camX * hill.layer;
-        drawRollingHill(ctx, x, hill.y, hill.w, hill.h, hill.color, h);
+        drawRollingHill(ctx, x, hill.y, hill.w, hill.h, hill.color + '80', h);
     }
 
-    // Champignons géants colorés style Mario
+    // Champignons géants (silhouettes atmosphériques)
     for (const mush of visuals.bgMushrooms) {
         const x = mush.x - camX * mush.parallax;
         const bounce = Math.sin(time * 0.05 + mush.bounce) * 3;
-        drawMarioMushroom(ctx, x, mush.baseY + bounce, mush.scale, mush.capColor, mush.spotColor, mush.stemColor, h);
+        ctx.save();
+        ctx.globalAlpha = 0.05 + mush.parallax * 0.1;
+        drawMarioMushroom(ctx, x, mush.baseY + bounce, mush.scale, '#643296', '#643296', '#643296', h);
+        ctx.restore();
     }
 
     // Buissons arrondis style Mario
@@ -2489,32 +2490,35 @@ function drawMinecraftSkeleton(ctx, e) {
     ctx.translate(e.x + e.w/2, e.y);
     if (dir === -1) ctx.scale(-1, 1);
 
-    // Couleur os
-    const boneColor = "#DDD";
-    const darkBone = "#AAA";
+    // Couleur os (plus terne pour réalisme Minecraft)
+    const boneColor = "#B0B0B0";
 
     // Jambe droite
     ctx.fillStyle = boneColor;
-    ctx.fillRect(2, 32, 6, 28 + walk);
+    ctx.fillRect(4, 30, 4, 30 + walk); // Jambes plus fines
     
     // Jambe gauche
-    ctx.fillRect(-8, 32, 6, 28 - walk);
+    ctx.fillRect(-8, 30, 4, 30 - walk);
 
     // Corps (côtes)
-    ctx.fillRect(-10, 12, 20, 20);
-    ctx.fillStyle = "#555"; // Vide entre les côtes
+    ctx.fillStyle = boneColor;
+    ctx.fillRect(-8, 12, 16, 20); // Torse
+    
+    // Détails des côtes (lignes sombres)
+    ctx.fillStyle = "#1a0000"; // Très sombre (vide)
     ctx.fillRect(-6, 16, 12, 2);
     ctx.fillRect(-6, 22, 12, 2);
+    ctx.fillRect(-6, 28, 12, 2);
 
     // Tête carrée
     ctx.fillStyle = boneColor;
-    ctx.fillRect(-12, -10, 24, 22);
+    ctx.fillRect(-10, -12, 20, 20); // Tête plus proportionnée
     
     // Visage pixelisé
-    ctx.fillStyle = "#222";
-    ctx.fillRect(-8, -4, 6, 6); // Oeil G
-    ctx.fillRect(2, -4, 6, 6);  // Oeil D
-    ctx.fillRect(-6, 6, 12, 4); // Bouche
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(-7, -6, 4, 4); // Oeil G
+    ctx.fillRect(3, -6, 4, 4);  // Oeil D
+    ctx.fillRect(-4, 2, 8, 2);  // Bouche
 
     // Bras et Arc
     ctx.fillStyle = boneColor;
@@ -2522,8 +2526,8 @@ function drawMinecraftSkeleton(ctx, e) {
     // Bras qui tient l'arc (devant)
     ctx.save();
     ctx.translate(10, 16);
-    ctx.rotate(-0.5); // Bras levé
-    ctx.fillRect(-3, 0, 6, 24);
+    ctx.rotate(-0.2); // Bras levé (position tir)
+    ctx.fillRect(-2, 0, 4, 24); // Bras fin
     
     // Arc
     ctx.translate(0, 20);
@@ -2878,7 +2882,8 @@ function initLevel5Visuals(w, h) {
         mountains: [],
         trees: [],
         birds: [],
-        grassPatches: []
+        grassPatches: [],
+        bgParticles: []
     };
 
     // Nuages pixelisés style Minecraft
@@ -2921,12 +2926,48 @@ function initLevel5Visuals(w, h) {
         });
     }
 
+    // Particules de cendres (Nether)
+    for (let i = 0; i < 80; i++) {
+        visuals.bgParticles.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            size: Math.random() * 4 + 1,
+            speedY: -1 - Math.random() * 2, // Montent plus vite
+            color: Math.random() > 0.5 ? '#800000' : '#550000'
+        });
+    }
+
     VisualCache.level5 = visuals;
     return visuals;
 }
 
 function drawLevel5Background(ctx, w, h, camX) {
     const visuals = initLevel5Visuals(w, h);
+
+    if (state.inSubLevel) {
+        const netherGrad = ctx.createLinearGradient(0, 0, 0, h);
+        netherGrad.addColorStop(0, '#1a0000');
+        netherGrad.addColorStop(1, '#4a0000');
+        ctx.fillStyle = netherGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Effet de chaleur (overlay orange subtil en bas)
+        const heatGrad = ctx.createLinearGradient(0, h - 200, 0, h);
+        heatGrad.addColorStop(0, 'rgba(255, 100, 0, 0)');
+        heatGrad.addColorStop(1, 'rgba(255, 69, 0, 0.2)');
+        ctx.fillStyle = heatGrad;
+        ctx.fillRect(0, h - 200, w, 200);
+
+        // Particules de cendres qui montent
+        for (const p of visuals.bgParticles) {
+            p.y += p.speedY;
+            if (p.y < -10) p.y = h + 10;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x - camX * 0.1, p.y, p.size, p.size);
+        }
+
+        return;
+    }
 
     // Ciel Minecraft (dégradé bleu vif)
     const skyGradient = ctx.createLinearGradient(0, 0, 0, h);
@@ -5471,6 +5512,8 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel9Background(ctx, w, h, camX);
     } else if (state.level === 10) {
         drawLevel10Background(ctx, w, h, camX);
+    } else if (state.level === 11) {
+        drawLevel11Background(ctx, w, h, camX);
     }
 }
 
@@ -5495,6 +5538,8 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel9Foreground(ctx, w, h, camX);
     } else if (state.level === 10) {
         drawLevel10Foreground(ctx, w, h, camX);
+    } else if (state.level === 11) {
+        drawLevel11Foreground(ctx, w, h, camX);
     }
 }
 
@@ -5573,6 +5618,7 @@ function resetVisualCache() {
     VisualCache.level8 = null;
     VisualCache.level9 = null;
     VisualCache.level10 = null;
+    VisualCache.level11 = null;
 }
 
 // ===== NIVEAU 10 : ZONE FINALE (CYBER-SPACE) =====
@@ -5888,6 +5934,222 @@ function drawEnhancedBoss(ctx, boss) {
     ctx.textAlign = 'left';
 }
 
+// =================================================================
+// VISUELS NIVEAU 11 : LA DIMENSION GLITCH
+// =================================================================
+
+// Initialisation des éléments de fond abstraits
+function initLevel11Visuals(w, h) {
+    if (VisualCache.level11) return VisualCache.level11;
+
+    const visuals = {
+        // Cubes de données flottants
+        dataCubes: [],
+        // Lignes d'énergie verticales
+        energyLines: []
+    };
+
+    // Génération des cubes
+    for (let i = 0; i < 40; i++) {
+        visuals.dataCubes.push({
+            x: Math.random() * w * 2,
+            y: Math.random() * h * 2,
+            size: 10 + Math.random() * 40,
+            speedZ: 0.2 + Math.random() * 0.5, // Vitesse de "profondeur"
+            color: Math.random() > 0.5 ? '#00FFFF' : '#FF00FF', // Cyan ou Magenta
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.02
+        });
+    }
+
+    // Génération des lignes
+    for (let i = 0; i < 20; i++) {
+        visuals.energyLines.push({
+            x: Math.random() * w * 2,
+            width: 1 + Math.random() * 3,
+            speed: 2 + Math.random() * 5,
+            opacity: 0.1 + Math.random() * 0.3
+        });
+    }
+
+    VisualCache.level11 = visuals;
+    return visuals;
+}
+
+// Dessin de l'arrière-plan
+function drawLevel11Background(ctx, w, h, camX) {
+    const visuals = initLevel11Visuals(w, h);
+    const time = state.frameTick;
+
+    // 1. Fond dégradé profond (Espace Cyber)
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#050015'); // Noir bleuté en haut
+    grad.addColorStop(0.5, '#100030'); // Violet profond au milieu
+    grad.addColorStop(1, '#000520'); // Bleu nuit en bas
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.save();
+    // Effet de parallaxe sur les éléments
+    ctx.translate(camX * 0.5, 0);
+
+    // 2. Dessin des lignes d'énergie montantes
+    for (const line of visuals.energyLines) {
+        const yOffset = (time * line.speed) % (h * 2);
+        ctx.fillStyle = `rgba(100, 200, 255, ${line.opacity})`;
+        ctx.fillRect(line.x, h - yOffset, line.width, h);
+        ctx.fillRect(line.x, h * 2 - yOffset, line.width, h); // Boucle
+    }
+
+    // 3. Dessin des cubes de données
+    for (const cube of visuals.dataCubes) {
+        ctx.save();
+        // Mouvement complexe pour effet de flottement 3D
+        const x = (cube.x + camX * cube.speedZ * 0.1) % (w * 2.5) - 200;
+        const y = cube.y + Math.sin(time * 0.01 + cube.x) * 30;
+        
+        ctx.translate(x, y);
+        ctx.rotate(cube.rotation + time * cube.rotSpeed);
+        
+        // Style "fil de fer" néon
+        ctx.strokeStyle = cube.color;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.6;
+        ctx.strokeRect(-cube.size / 2, -cube.size / 2, cube.size, cube.size);
+        
+        // Cœur lumineux
+        ctx.fillStyle = cube.color;
+        ctx.globalAlpha = 0.2;
+        ctx.fillRect(-cube.size / 4, -cube.size / 4, cube.size / 2, cube.size / 2);
+        
+        ctx.restore();
+    }
+    ctx.restore();
+}
+
+// Dessin du premier plan (Overlay Glitch)
+function drawLevel11Foreground(ctx, w, h, camX) {
+    // Effet de "scanline" subtil qui descend
+    const scanY = (state.frameTick * 2) % h;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.fillRect(0, scanY, w, 5);
+
+    // Effet de glitch aléatoire très bref
+    if (Math.random() < 0.01) {
+        const glitchH = Math.random() * 50;
+        const glitchY = Math.random() * h;
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0, 255, 255, 0.1)' : 'rgba(255, 0, 255, 0.1)';
+        ctx.fillRect(0, glitchY, w, glitchH);
+        // Léger décalage chromatique
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.translate(5, 0);
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.05)';
+        ctx.fillRect(0, glitchY, w, glitchH);
+        ctx.restore();
+    }
+}
+
+// --- RENDU DES PLATEFORMES NIVEAU 11 ---
+
+// Helper : dessine la base néon d'une plateforme glitch
+function drawGlitchBase(ctx, p, colorMain, colorAccent) {
+    const time = state.frameTick;
+    
+    // Fond semi-transparent tech
+    ctx.fillStyle = `${colorMain}44`; // Hex avec alpha
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    
+    // Bordure néon pulsante
+    const pulse = Math.sin(time * 0.1) * 0.2 + 0.8;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = colorAccent;
+    ctx.shadowColor = colorAccent;
+    ctx.shadowBlur = 10 * pulse;
+    ctx.strokeRect(p.x, p.y, p.w, p.h);
+    
+    // Motifs de circuits internes qui défilent
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(p.x, p.y, p.w, p.h);
+    ctx.clip();
+    
+    ctx.strokeStyle = `${colorMain}88`;
+    ctx.lineWidth = 1;
+    const patternOffset = (time * 2) % 40;
+    for (let i = -40; i < p.w + p.h; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(p.x + i - patternOffset, p.y);
+        ctx.lineTo(p.x + i - patternOffset - p.h, p.y + p.h);
+        ctx.stroke();
+    }
+    ctx.restore();
+    ctx.shadowBlur = 0;
+}
+
+// 1. Plateforme Normale/Mouvante (Cyan/Bleu)
+function drawGlitchPlatformNormal(ctx, p) {
+    drawGlitchBase(ctx, p, '#0088FF', '#00FFFF');
+    // Ligne supérieure solide
+    ctx.fillStyle = '#00FFFF';
+    ctx.fillRect(p.x, p.y, p.w, 3);
+}
+
+// 2. Plateforme de Glace (Blanc/Bleu givré)
+function drawGlitchPlatformIce(ctx, p) {
+    drawGlitchBase(ctx, p, '#AACCFF', '#FFFFFF');
+    
+    // Effet de surface givrée brillante
+    const shinePos = (state.frameTick * 4) % (p.w * 2) - p.w;
+    const grad = ctx.createLinearGradient(p.x + shinePos, p.y, p.x + shinePos + 40, p.y + p.h);
+    grad.addColorStop(0, 'rgba(255,255,255,0)');
+    grad.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    
+    ctx.fillStyle = grad;
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    
+    // Bord supérieur givré
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(p.x, p.y, p.w, 3);
+}
+
+// 3. Tremplin (Jump Pad) (Magenta/Rose pulsant)
+function drawGlitchPlatformJump(ctx, p) {
+    const time = state.frameTick;
+    // Pulsation rapide pour indiquer l'énergie
+    const bouncePulse = Math.sin(time * 0.3) * 0.5 + 0.5;
+    
+    drawGlitchBase(ctx, p, '#FF0088', '#FF55FF');
+    
+    // Indicateur de saut sur le dessus (flèches ou ondes)
+    ctx.fillStyle = `rgba(255, 100, 255, ${0.5 + bouncePulse * 0.5})`;
+    
+    const centerX = p.x + p.w / 2;
+    const centerY = p.y + p.h / 2;
+    
+    // Dessin de chevrons vers le haut ^^^
+    for (let i = 0; i < 3; i++) {
+        const yOff = i * 5 - (time % 15); // Animation vers le haut
+        const alpha = 1 - (i * 0.3) - ((time % 15) / 15);
+        if (alpha > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 10, centerY + yOff);
+            ctx.lineTo(centerX, centerY - 10 + yOff);
+            ctx.lineTo(centerX + 10, centerY + yOff);
+            ctx.fill();
+        }
+    }
+    
+    // Surface de saut très lumineuse
+    ctx.shadowColor = '#FF55FF';
+    ctx.shadowBlur = 20 * bouncePulse;
+    ctx.fillStyle = '#FFBBFF';
+    ctx.fillRect(p.x, p.y, p.w, 5);
+    ctx.shadowBlur = 0;
+}
+
 // Export des fonctions
 window.drawEnhancedLevelBackground = drawEnhancedLevelBackground;
 window.drawEnhancedLevelForeground = drawEnhancedLevelForeground;
@@ -5909,3 +6171,6 @@ window.drawEnhancedBossPlatform = drawEnhancedBossPlatform;
 window.drawEnhancedBoss = drawEnhancedBoss;
 window.updateVisualElements = updateVisualElements;
 window.resetVisualCache = resetVisualCache;
+window.drawGlitchPlatformNormal = drawGlitchPlatformNormal;
+window.drawGlitchPlatformIce = drawGlitchPlatformIce;
+window.drawGlitchPlatformJump = drawGlitchPlatformJump;

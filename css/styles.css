@@ -240,10 +240,31 @@ canvas {
 
 /* ===== START SCREEN - WOW DESIGN ===== */
 #start-screen {
-    background: var(--gradient-main);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+    position: relative;
+    background: #0b0f2a;
     gap: var(--space-md);
+}
+
+#start-screen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url('../assets/leo-heroes.jpg') center/cover no-repeat;
+    filter: saturate(1.1) brightness(0.9);
+    z-index: 0;
+}
+
+#start-screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(4, 8, 20, 0.72) 0%, rgba(10, 20, 40, 0.6) 55%, rgba(12, 8, 30, 0.8) 100%);
+    z-index: 1;
+}
+
+#start-screen > * {
+    position: relative;
+    z-index: 2;
 }
 
 /* Mascot container */
