@@ -9,6 +9,8 @@
 const VisualCache = {
     level1: null,
     level2: null,
+    level5: null,
+    level6: null,
     level7: null,
     level8: null,
     level9: null,
@@ -343,61 +345,6 @@ function initLevel4Visuals(w, h) {
     }
 
     VisualCache.level4 = visuals;
-    return visuals;
-}
-
-// ===== NIVEAU 5 : MINECRAFT =====
-function initLevel5Visuals(w, h) {
-    if (VisualCache.level5) return VisualCache.level5;
-
-    const visuals = {
-        clouds: [],
-        bgParticles: [] // Cendres pour le Nether
-    };
-
-    // Nuages cubiques
-    for (let i = 0; i < 8; i++) {
-        visuals.clouds.push({
-            x: Math.random() * w * 3,
-            y: 50 + Math.random() * 100,
-            w: 100 + Math.random() * 100,
-            h: 30 + Math.random() * 20,
-            speed: 0.1 + Math.random() * 0.1
-        });
-    }
-
-    // Particules de cendres (Nether)
-    for (let i = 0; i < 50; i++) {
-        visuals.bgParticles.push({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            size: Math.random() * 4 + 1,
-            speedY: -0.5 - Math.random() * 1,
-            color: Math.random() > 0.5 ? '#800000' : '#550000'
-        });
-    }
-
-    VisualCache.level5 = visuals;
-    return visuals;
-}
-
-// ===== NIVEAU 6 : PORTAL LABS =====
-function initLevel6Visuals(w, h) {
-    if (VisualCache.level6) return VisualCache.level6;
-
-    const visuals = {
-        bgPanels: []
-    };
-
-    // Panneaux muraux modulaires en fond
-    const panelSize = 100;
-    for (let x = 0; x < w * 2; x += panelSize) {
-        for (let y = 0; y < h; y += panelSize) {
-            visuals.bgPanels.push({ x, y, size: panelSize - 2 });
-        }
-    }
-
-    VisualCache.level6 = visuals;
     return visuals;
 }
 
@@ -1082,81 +1029,6 @@ function drawLevel4Foreground(ctx, w, h, camX) {
         ctx.fill();
         ctx.shadowBlur = 0;
     }
-}
-
-// ===== FONCTIONS DE DESSIN NIVEAU 5 (MINECRAFT) =====
-function drawLevel5Background(ctx, w, h, camX) {
-    const visuals = initLevel5Visuals(w, h);
-
-    if (state.inSubLevel) {
-        // NETHER : Fond rouge sombre et brumeux
-        ctx.fillStyle = "#2A0505"; // Rouge très sombre fond
-        ctx.fillRect(0, 0, w, h);
-
-        // Brume de lave lointaine
-        const grad = ctx.createLinearGradient(0, h - 200, 0, h);
-        grad.addColorStop(0, "rgba(255, 69, 0, 0)");
-        grad.addColorStop(1, "rgba(255, 69, 0, 0.3)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
-
-        // Particules de cendres qui montent
-        for (const p of visuals.bgParticles) {
-            const y = (p.y + state.frameTick * p.speedY) % h;
-            const drawY = y < 0 ? y + h : y;
-            ctx.fillStyle = p.color;
-            ctx.fillRect(p.x, drawY, p.size, p.size);
-        }
-    } else {
-        // OVERWORLD : Ciel bleu Minecraft
-        ctx.fillStyle = "#87CEEB";
-        ctx.fillRect(0, 0, w, h);
-
-        // Soleil carré
-        ctx.fillStyle = "#FFF";
-        ctx.fillRect(w - 150, 50, 80, 80);
-
-        // Nuages cubiques
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-        for (const c of visuals.clouds) {
-            const x = (c.x + state.frameTick * c.speed) % (w * 2) - camX * 0.1;
-            // Dessiner un nuage "pixelisé"
-            ctx.fillRect(x, c.y, c.w, c.h);
-        }
-    }
-}
-
-function drawLevel5Foreground(ctx, w, h, camX) {
-    // Pas de premier plan spécifique pour Minecraft, le style est épuré
-}
-
-// ===== FONCTIONS DE DESSIN NIVEAU 6 (PORTAL) =====
-function drawLevel6Background(ctx, w, h, camX) {
-    const visuals = initLevel6Visuals(w, h);
-
-    // Fond gris technique sombre
-    ctx.fillStyle = "#1b1b1b";
-    ctx.fillRect(0, 0, w, h);
-
-    // Panneaux modulaires en arrière-plan (parallaxe très lent)
-    ctx.fillStyle = "#222";
-    for (const p of visuals.bgPanels) {
-        const x = p.x - camX * 0.05;
-        if (x > -100 && x < w + 100) {
-            ctx.fillRect(x, p.y, p.size, p.size);
-            // Petit point de fixation
-            ctx.fillStyle = "#111";
-            ctx.fillRect(x + p.size/2 - 2, p.y + p.size/2 - 2, 4, 4);
-            ctx.fillStyle = "#222";
-        }
-    }
-    
-    // Vignettage pour ambiance
-    const grad = ctx.createRadialGradient(w/2, h/2, h*0.3, w/2, h/2, h);
-    grad.addColorStop(0, "rgba(0,0,0,0)");
-    grad.addColorStop(1, "rgba(0,0,0,0.6)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
 }
 
 function drawFloatingIsland(ctx, x, y, width, hasTree) {
@@ -1976,6 +1848,523 @@ function drawPortalPlatform(ctx, x, y, w, h) {
     ctx.fillStyle = lightColor;
     ctx.fillRect(x + 5, y + 5, 6, 6);
     ctx.fillRect(x + w - 11, y + 5, 6, 6);
+}
+
+// ===== NIVEAU 5 : AVENTURE MINECRAFT =====
+function initLevel5Visuals(w, h) {
+    if (VisualCache.level5) return VisualCache.level5;
+
+    const visuals = {
+        clouds: [],
+        mountains: [],
+        trees: [],
+        birds: [],
+        grassPatches: []
+    };
+
+    // Nuages pixelisés style Minecraft
+    for (let i = 0; i < 10; i++) {
+        visuals.clouds.push({
+            x: seededRandom(i * 401) * w * 3,
+            y: 60 + seededRandom(i * 409) * 100,
+            width: 80 + seededRandom(i * 419) * 120,
+            height: 30 + seededRandom(i * 421) * 20,
+            speed: 0.2 + seededRandom(i * 431) * 0.3
+        });
+    }
+
+    // Montagnes pixelisées en arrière-plan
+    for (let i = 0; i < 6; i++) {
+        visuals.mountains.push({
+            x: seededRandom(i * 433) * w * 2,
+            height: 150 + seededRandom(i * 439) * 150,
+            width: 200 + seededRandom(i * 443) * 200,
+            color: seededRandom(i * 449) > 0.5 ? '#5D8A3E' : '#4A7A2E'
+        });
+    }
+
+    // Arbres décoratifs en arrière-plan
+    for (let i = 0; i < 12; i++) {
+        visuals.trees.push({
+            x: seededRandom(i * 457) * w * 2.5,
+            height: 60 + seededRandom(i * 461) * 80,
+            type: seededRandom(i * 463) > 0.3 ? 'oak' : 'birch'
+        });
+    }
+
+    // Oiseaux/chauves-souris pixelisés
+    for (let i = 0; i < 5; i++) {
+        visuals.birds.push({
+            x: seededRandom(i * 467) * w * 2,
+            y: 80 + seededRandom(i * 479) * 150,
+            wingPhase: seededRandom(i * 487) * Math.PI * 2,
+            speed: 1 + seededRandom(i * 491) * 2
+        });
+    }
+
+    VisualCache.level5 = visuals;
+    return visuals;
+}
+
+function drawLevel5Background(ctx, w, h, camX) {
+    const visuals = initLevel5Visuals(w, h);
+
+    // Ciel Minecraft (dégradé bleu vif)
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, h);
+    skyGradient.addColorStop(0, '#7BA4DB');
+    skyGradient.addColorStop(0.4, '#9BC4E8');
+    skyGradient.addColorStop(0.7, '#B5D6F0');
+    skyGradient.addColorStop(1, '#C8E4C8');
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, w, h);
+
+    // Soleil pixelisé Minecraft
+    drawMinecraftSun(ctx, w - 120, 80);
+
+    // Montagnes en arrière-plan
+    for (const mountain of visuals.mountains) {
+        drawPixelatedMountain(ctx, mountain.x - camX * 0.1, h * 0.6, mountain.width, mountain.height, mountain.color);
+    }
+
+    // Nuages pixelisés
+    for (const cloud of visuals.clouds) {
+        drawMinecraftCloud(ctx, cloud.x - camX * 0.15, cloud.y, cloud.width, cloud.height);
+    }
+
+    // Arbres en arrière-plan
+    for (const tree of visuals.trees) {
+        drawMinecraftTree(ctx, tree.x - camX * 0.25, h * 0.65, tree.height, tree.type);
+    }
+}
+
+function drawLevel5Foreground(ctx, w, h, camX) {
+    const visuals = initLevel5Visuals(w, h);
+
+    // Oiseaux/chauves-souris pixelisés
+    for (const bird of visuals.birds) {
+        updateMinecraftBird(bird, w);
+        drawMinecraftBird(ctx, bird.x - camX * 0.6, bird.y, bird);
+    }
+
+    // Particules de feuilles qui tombent
+    const time = state.frameTick * 0.02;
+    for (let i = 0; i < 8; i++) {
+        const x = (seededRandom(i * 503) * w * 2 + time * 20) % (w * 2);
+        const y = (seededRandom(i * 509) * h * 0.5 + time * 40 + i * 50) % h;
+        const size = 4 + seededRandom(i * 521) * 4;
+
+        ctx.fillStyle = seededRandom(i * 523) > 0.5 ? '#4CAF50' : '#8BC34A';
+        ctx.fillRect(Math.floor(x - camX * 0.7), Math.floor(y), size, size);
+    }
+}
+
+// Soleil pixelisé Minecraft
+function drawMinecraftSun(ctx, x, y) {
+    const size = 60;
+    const time = state.frameTick * 0.01;
+    const pulse = Math.sin(time) * 2;
+
+    // Halo
+    ctx.fillStyle = 'rgba(255, 255, 200, 0.3)';
+    ctx.beginPath();
+    ctx.arc(x, y, size + 20 + pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps du soleil (carré pixelisé)
+    ctx.fillStyle = '#FFEB3B';
+    ctx.fillRect(x - size/2, y - size/2, size, size);
+
+    // Rayons pixelisés
+    ctx.fillStyle = '#FFF59D';
+    const raySize = 12;
+    // Haut
+    ctx.fillRect(x - raySize/2, y - size/2 - raySize, raySize, raySize);
+    // Bas
+    ctx.fillRect(x - raySize/2, y + size/2, raySize, raySize);
+    // Gauche
+    ctx.fillRect(x - size/2 - raySize, y - raySize/2, raySize, raySize);
+    // Droite
+    ctx.fillRect(x + size/2, y - raySize/2, raySize, raySize);
+
+    // Centre plus clair
+    ctx.fillStyle = '#FFEE58';
+    ctx.fillRect(x - size/4, y - size/4, size/2, size/2);
+}
+
+// Nuage pixelisé Minecraft
+function drawMinecraftCloud(ctx, x, y, width, height) {
+    ctx.fillStyle = '#FFFFFF';
+    const blockSize = 12;
+
+    // Forme de nuage en blocs
+    const rows = Math.ceil(height / blockSize);
+    const cols = Math.ceil(width / blockSize);
+
+    for (let row = 0; row < rows; row++) {
+        const rowWidth = row === 0 || row === rows - 1 ? cols - 2 : cols;
+        const startCol = row === 0 || row === rows - 1 ? 1 : 0;
+
+        for (let col = startCol; col < startCol + rowWidth; col++) {
+            ctx.fillRect(
+                Math.floor(x + col * blockSize),
+                Math.floor(y + row * blockSize),
+                blockSize - 1,
+                blockSize - 1
+            );
+        }
+    }
+
+    // Ombre légère
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+    for (let col = 1; col < cols - 1; col++) {
+        ctx.fillRect(
+            Math.floor(x + col * blockSize),
+            Math.floor(y + (rows - 1) * blockSize),
+            blockSize - 1,
+            blockSize / 2
+        );
+    }
+}
+
+// Montagne pixelisée
+function drawPixelatedMountain(ctx, x, baseY, width, height, color) {
+    const blockSize = 16;
+    const rows = Math.ceil(height / blockSize);
+
+    for (let row = 0; row < rows; row++) {
+        const rowY = baseY - row * blockSize;
+        const rowWidth = Math.max(1, Math.floor((rows - row) / rows * (width / blockSize)));
+        const startX = x + (width / 2) - (rowWidth * blockSize / 2);
+
+        for (let col = 0; col < rowWidth; col++) {
+            // Couleur avec légère variation
+            const shade = 0.9 + seededRandom(row * 100 + col) * 0.2;
+            ctx.fillStyle = shadeColor(color, shade);
+            ctx.fillRect(
+                Math.floor(startX + col * blockSize),
+                Math.floor(rowY),
+                blockSize - 1,
+                blockSize
+            );
+        }
+    }
+
+    // Neige au sommet
+    ctx.fillStyle = '#FFFFFF';
+    const snowRows = Math.floor(rows * 0.2);
+    for (let row = rows - snowRows; row < rows; row++) {
+        const rowY = baseY - row * blockSize;
+        const rowWidth = Math.max(1, Math.floor((rows - row) / rows * (width / blockSize)));
+        const startX = x + (width / 2) - (rowWidth * blockSize / 2);
+
+        for (let col = 0; col < rowWidth; col++) {
+            if (seededRandom(row * 100 + col + 999) > 0.3) {
+                ctx.fillRect(
+                    Math.floor(startX + col * blockSize),
+                    Math.floor(rowY),
+                    blockSize - 1,
+                    blockSize
+                );
+            }
+        }
+    }
+}
+
+// Arbre Minecraft en arrière-plan
+function drawMinecraftTree(ctx, x, baseY, height, type) {
+    const trunkWidth = 16;
+    const trunkHeight = height * 0.5;
+    const leavesSize = height * 0.7;
+
+    // Tronc
+    ctx.fillStyle = type === 'birch' ? '#E8E4D4' : '#6D4C41';
+    ctx.fillRect(x - trunkWidth/2, baseY - trunkHeight, trunkWidth, trunkHeight);
+
+    // Détails du tronc birch
+    if (type === 'birch') {
+        ctx.fillStyle = '#2D2D2D';
+        for (let i = 0; i < 4; i++) {
+            ctx.fillRect(x - 4 + seededRandom(i * 777) * 8, baseY - trunkHeight + i * (trunkHeight / 4), 6, 3);
+        }
+    }
+
+    // Feuilles
+    ctx.fillStyle = type === 'birch' ? '#7CB342' : '#388E3C';
+    const leafBlocks = Math.ceil(leavesSize / 16);
+
+    for (let ly = 0; ly < leafBlocks; ly++) {
+        const rowWidth = ly < leafBlocks / 2 ? leafBlocks - ly : ly + 1;
+        for (let lx = 0; lx < rowWidth; lx++) {
+            const offsetX = (rowWidth - leafBlocks) * 8;
+            ctx.fillRect(
+                x - leafBlocks * 8 + lx * 16 - offsetX,
+                baseY - trunkHeight - ly * 16 - 16,
+                15, 15
+            );
+        }
+    }
+}
+
+// Oiseau pixelisé Minecraft
+function updateMinecraftBird(bird, w) {
+    bird.x += bird.speed;
+    bird.wingPhase += 0.2;
+    if (bird.x > w * 2.5) {
+        bird.x = -50;
+    }
+}
+
+function drawMinecraftBird(ctx, x, y, bird) {
+    const wingOffset = Math.sin(bird.wingPhase) * 4;
+
+    // Corps
+    ctx.fillStyle = '#2D2D2D';
+    ctx.fillRect(Math.floor(x), Math.floor(y), 8, 6);
+
+    // Ailes
+    ctx.fillRect(Math.floor(x - 2), Math.floor(y - 2 + wingOffset), 4, 4);
+    ctx.fillRect(Math.floor(x + 6), Math.floor(y - 2 - wingOffset), 4, 4);
+
+    // Bec
+    ctx.fillStyle = '#FF9800';
+    ctx.fillRect(Math.floor(x + 8), Math.floor(y + 1), 3, 2);
+}
+
+// Fonction utilitaire pour modifier la luminosité d'une couleur
+function shadeColor(color, factor) {
+    const hex = color.replace('#', '');
+    const r = Math.min(255, Math.floor(parseInt(hex.substr(0, 2), 16) * factor));
+    const g = Math.min(255, Math.floor(parseInt(hex.substr(2, 2), 16) * factor));
+    const b = Math.min(255, Math.floor(parseInt(hex.substr(4, 2), 16) * factor));
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
+// ===== NIVEAU 6 : LABYRINTHE DES PORTAILS (SCI-FI) =====
+function initLevel6Visuals(w, h) {
+    if (VisualCache.level6) return VisualCache.level6;
+
+    const visuals = {
+        stars: [],
+        nebulae: [],
+        gridLines: [],
+        floatingParticles: [],
+        energyBeams: []
+    };
+
+    // Étoiles en arrière-plan
+    for (let i = 0; i < 200; i++) {
+        visuals.stars.push({
+            x: seededRandom(i * 541) * w * 3,
+            y: seededRandom(i * 547) * h,
+            size: 1 + seededRandom(i * 557) * 2,
+            twinkleOffset: seededRandom(i * 563) * Math.PI * 2,
+            color: ['#FFFFFF', '#B3E5FC', '#CE93D8', '#FFCC80'][Math.floor(seededRandom(i * 569) * 4)]
+        });
+    }
+
+    // Nébuleuses colorées
+    for (let i = 0; i < 4; i++) {
+        visuals.nebulae.push({
+            x: seededRandom(i * 571) * w * 2,
+            y: seededRandom(i * 577) * h * 0.7,
+            width: 200 + seededRandom(i * 587) * 300,
+            height: 150 + seededRandom(i * 593) * 200,
+            color: ['#7C4DFF', '#00BCD4', '#E91E63', '#4CAF50'][i % 4],
+            opacity: 0.15 + seededRandom(i * 599) * 0.1
+        });
+    }
+
+    // Lignes de grille futuriste
+    for (let i = 0; i < 20; i++) {
+        visuals.gridLines.push({
+            y: seededRandom(i * 601) * h,
+            speed: 0.5 + seededRandom(i * 607) * 1,
+            opacity: 0.1 + seededRandom(i * 613) * 0.2
+        });
+    }
+
+    // Particules flottantes
+    for (let i = 0; i < 30; i++) {
+        visuals.floatingParticles.push({
+            x: seededRandom(i * 617) * w * 3,
+            y: seededRandom(i * 619) * h,
+            size: 2 + seededRandom(i * 631) * 4,
+            speedX: 0.5 + seededRandom(i * 641) * 1.5,
+            speedY: (seededRandom(i * 643) - 0.5) * 0.5,
+            color: seededRandom(i * 647) > 0.5 ? '#00FFFF' : '#FF00FF'
+        });
+    }
+
+    VisualCache.level6 = visuals;
+    return visuals;
+}
+
+function drawLevel6Background(ctx, w, h, camX) {
+    const visuals = initLevel6Visuals(w, h);
+    const time = state.frameTick;
+
+    // Fond spatial profond
+    const spaceGradient = ctx.createLinearGradient(0, 0, 0, h);
+    spaceGradient.addColorStop(0, '#0a0a1a');
+    spaceGradient.addColorStop(0.3, '#1a1a3e');
+    spaceGradient.addColorStop(0.6, '#0d0d2b');
+    spaceGradient.addColorStop(1, '#1a0a2e');
+    ctx.fillStyle = spaceGradient;
+    ctx.fillRect(0, 0, w, h);
+
+    // Nébuleuses
+    for (const nebula of visuals.nebulae) {
+        drawNebula(ctx, nebula.x - camX * 0.05, nebula.y, nebula.width, nebula.height, nebula.color, nebula.opacity);
+    }
+
+    // Étoiles scintillantes
+    for (const star of visuals.stars) {
+        const twinkle = Math.sin(time * 0.05 + star.twinkleOffset);
+        const alpha = 0.5 + twinkle * 0.5;
+
+        ctx.fillStyle = star.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba').replace('#', '');
+        if (star.color.startsWith('#')) {
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = star.color;
+        }
+        ctx.beginPath();
+        ctx.arc(star.x - camX * 0.02, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+
+    // Grille futuriste
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    for (const line of visuals.gridLines) {
+        const y = (line.y + time * line.speed * 0.5) % h;
+        ctx.globalAlpha = line.opacity;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Grille verticale
+    ctx.strokeStyle = 'rgba(255, 0, 255, 0.05)';
+    for (let x = 0; x < w; x += 100) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+    }
+
+    // Planète ou lune en arrière-plan
+    drawSciFiPlanet(ctx, w - 200, 150 - camX * 0.02);
+}
+
+function drawLevel6Foreground(ctx, w, h, camX) {
+    const visuals = initLevel6Visuals(w, h);
+    const time = state.frameTick;
+
+    // Particules flottantes
+    for (const particle of visuals.floatingParticles) {
+        const x = (particle.x + time * particle.speedX) % (w * 3);
+        const y = particle.y + Math.sin(time * 0.02 + particle.x) * 20;
+
+        ctx.fillStyle = particle.color;
+        ctx.globalAlpha = 0.6 + Math.sin(time * 0.1 + particle.x) * 0.4;
+        ctx.beginPath();
+        ctx.arc(x - camX * 0.8, y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Traînée
+        ctx.globalAlpha = 0.2;
+        ctx.beginPath();
+        ctx.moveTo(x - camX * 0.8, y);
+        ctx.lineTo(x - camX * 0.8 - 20, y);
+        ctx.strokeStyle = particle.color;
+        ctx.lineWidth = particle.size / 2;
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Effets de scan horizontal
+    const scanY = (time * 2) % h;
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, scanY);
+    ctx.lineTo(w, scanY);
+    ctx.stroke();
+}
+
+// Nébuleuse colorée
+function drawNebula(ctx, x, y, width, height, color, opacity) {
+    const gradient = ctx.createRadialGradient(x + width/2, y + height/2, 0, x + width/2, y + height/2, Math.max(width, height)/2);
+    gradient.addColorStop(0, color.replace(')', `, ${opacity})`).replace('rgb', 'rgba'));
+
+    // Convertir couleur hex en rgba si nécessaire
+    if (color.startsWith('#')) {
+        const r = parseInt(color.substr(1, 2), 16);
+        const g = parseInt(color.substr(3, 2), 16);
+        const b = parseInt(color.substr(5, 2), 16);
+        const gradient2 = ctx.createRadialGradient(x + width/2, y + height/2, 0, x + width/2, y + height/2, Math.max(width, height)/2);
+        gradient2.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${opacity})`);
+        gradient2.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.5})`);
+        gradient2.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+        ctx.fillStyle = gradient2;
+    } else {
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradient;
+    }
+
+    ctx.beginPath();
+    ctx.ellipse(x + width/2, y + height/2, width/2, height/2, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// Planète sci-fi
+function drawSciFiPlanet(ctx, x, y) {
+    const radius = 80;
+    const time = state.frameTick * 0.005;
+
+    // Lueur externe
+    const glowGradient = ctx.createRadialGradient(x, y, radius, x, y, radius + 40);
+    glowGradient.addColorStop(0, 'rgba(100, 200, 255, 0.3)');
+    glowGradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius + 40, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps de la planète
+    const planetGradient = ctx.createRadialGradient(x - 20, y - 20, 0, x, y, radius);
+    planetGradient.addColorStop(0, '#4FC3F7');
+    planetGradient.addColorStop(0.5, '#0288D1');
+    planetGradient.addColorStop(1, '#01579B');
+    ctx.fillStyle = planetGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Anneaux
+    ctx.strokeStyle = 'rgba(200, 220, 255, 0.5)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(x, y, radius * 1.5, radius * 0.3, time, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(200, 220, 255, 0.3)';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.ellipse(x, y, radius * 1.7, radius * 0.35, time, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Détails de surface
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.arc(x - 30, y - 20, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + 20, y + 30, 10, 0, Math.PI * 2);
+    ctx.fill();
 }
 
 // ===== FONCTION PRINCIPALE D'INTÉGRATION =====
@@ -3506,6 +3895,10 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel1Background(ctx, w, h, camX);
     } else if (state.level === 2) {
         drawLevel2Background(ctx, w, h, camX);
+    } else if (state.level === 5) {
+        drawLevel5Background(ctx, w, h, camX);
+    } else if (state.level === 6) {
+        drawLevel6Background(ctx, w, h, camX);
     } else if (state.level === 7) {
         drawLevel7Background(ctx, w, h, camX);
     } else if (state.level === 8) {
@@ -3520,6 +3913,10 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel1Foreground(ctx, w, h, camX);
     } else if (state.level === 2) {
         drawLevel2Foreground(ctx, w, h, camX);
+    } else if (state.level === 5) {
+        drawLevel5Foreground(ctx, w, h, camX);
+    } else if (state.level === 6) {
+        drawLevel6Foreground(ctx, w, h, camX);
     } else if (state.level === 7) {
         drawLevel7Foreground(ctx, w, h, camX);
     } else if (state.level === 8) {
@@ -3544,6 +3941,16 @@ function updateVisualElements() {
     // Level 2
     if (VisualCache.level2) {
         for (const cloud of VisualCache.level2.bgClouds) {
+            cloud.x += cloud.speed;
+            if (cloud.x > canvas.width * 4) {
+                cloud.x = -cloud.width;
+            }
+        }
+    }
+
+    // Level 5
+    if (VisualCache.level5) {
+        for (const cloud of VisualCache.level5.clouds) {
             cloud.x += cloud.speed;
             if (cloud.x > canvas.width * 4) {
                 cloud.x = -cloud.width;
@@ -3576,6 +3983,8 @@ function updateVisualElements() {
 function resetVisualCache() {
     VisualCache.level1 = null;
     VisualCache.level2 = null;
+    VisualCache.level5 = null;
+    VisualCache.level6 = null;
     VisualCache.level7 = null;
     VisualCache.level8 = null;
     VisualCache.level9 = null;
