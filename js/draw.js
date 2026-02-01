@@ -607,31 +607,19 @@ function drawPlatforms() {
             
             // === SONIC STYLE ===
             case 'sonic_ground':
-                // Damier bleu style Green Hill Zone
-                ctx.fillStyle = '#1a5276';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                // Damier
-                for (let i = 0; i < p.w; i += 40) {
-                    for (let j = 0; j < p.h; j += 40) {
-                        if ((Math.floor(i/40) + Math.floor(j/40)) % 2 === 0) {
-                            ctx.fillStyle = '#2874a6';
-                            ctx.fillRect(p.x + i, p.y + j, 40, 40);
-                        }
-                    }
+                if (typeof drawEnhancedSonicGround === 'function') drawEnhancedSonicGround(ctx, p);
+                else {
+                    ctx.fillStyle = '#1a5276';
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
                 }
-                // Bord supérieur doré
-                ctx.fillStyle = '#f4d03f';
-                ctx.fillRect(p.x, p.y, p.w, 8);
                 break;
                 
             case 'sonic_platform':
-                ctx.fillStyle = '#2874a6';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = '#f4d03f';
-                ctx.fillRect(p.x, p.y, p.w, 5);
-                ctx.strokeStyle = '#1a5276';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                if (typeof drawEnhancedSonicPlatform === 'function') drawEnhancedSonicPlatform(ctx, p);
+                else {
+                    ctx.fillStyle = '#2874a6';
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                }
                 break;
                 
             case 'spring':
@@ -675,33 +663,19 @@ function drawPlatforms() {
                 break;
                 
             case 'boss_arena':
-                // Sol d'arène épique
-                ctx.fillStyle = '#1a0a2e';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                // Motif violet
-                for (let i = 0; i < p.w; i += 50) {
-                    ctx.fillStyle = (Math.floor(i/50) % 2 === 0) ? '#2d1b4e' : '#1a0a2e';
-                    ctx.fillRect(p.x + i, p.y, 50, p.h);
+                if (typeof drawEnhancedBossArena === 'function') drawEnhancedBossArena(ctx, p);
+                else {
+                    ctx.fillStyle = '#1a0a2e';
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
                 }
-                // Ligne dorée
-                ctx.fillStyle = '#f4d03f';
-                ctx.fillRect(p.x, p.y, p.w, 5);
-                // Coins lumineux
-                ctx.fillStyle = '#9b59b6';
-                ctx.beginPath();
-                ctx.arc(p.x + 30, p.y + 5, 15, 0, Math.PI * 2);
-                ctx.arc(p.x + p.w - 30, p.y + 5, 15, 0, Math.PI * 2);
-                ctx.fill();
                 break;
                 
             case 'boss_platform':
-                ctx.fillStyle = '#8e44ad';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = '#f4d03f';
-                ctx.fillRect(p.x, p.y, p.w, 4);
-                ctx.strokeStyle = '#6c3483';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                if (typeof drawEnhancedBossPlatform === 'function') drawEnhancedBossPlatform(ctx, p);
+                else {
+                    ctx.fillStyle = '#8e44ad';
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                }
                 break;
 
             // === BOMBJACK NIVEAU 9 ===
@@ -1693,145 +1667,16 @@ function drawEnemies() {
 function drawBoss() {
     const boss = currentLevelData.boss;
     if (!boss || boss.hp <= 0) return;
-    
-    const flash = boss.invincible > 0 && boss.invincible % 10 < 5;
-    const bossY = boss.y + (boss.floatY || 0);
-    
-    ctx.save();
-    
-    // Ombre au sol
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath();
-    ctx.ellipse(boss.x + boss.w/2, canvas.height - 80, boss.w/2 + 10, 15, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // === MACHINE VOLANTE DU BOSS ===
-    
-    // Partie inférieure (moteur)
-    ctx.fillStyle = flash ? '#fff' : '#7f8c8d';
-    ctx.beginPath();
-    ctx.ellipse(boss.x + boss.w/2, bossY + boss.h - 20, boss.w/2, 25, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#5d6d7e';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    
-    // Flammes du réacteur
-    const flameHeight = 20 + Math.random() * 15;
-    ctx.fillStyle = '#e74c3c';
-    ctx.beginPath();
-    ctx.moveTo(boss.x + boss.w/2 - 15, bossY + boss.h);
-    ctx.lineTo(boss.x + boss.w/2, bossY + boss.h + flameHeight);
-    ctx.lineTo(boss.x + boss.w/2 + 15, bossY + boss.h);
-    ctx.fill();
-    ctx.fillStyle = '#f39c12';
-    ctx.beginPath();
-    ctx.moveTo(boss.x + boss.w/2 - 8, bossY + boss.h);
-    ctx.lineTo(boss.x + boss.w/2, bossY + boss.h + flameHeight * 0.6);
-    ctx.lineTo(boss.x + boss.w/2 + 8, bossY + boss.h);
-    ctx.fill();
-    
-    // Cockpit (dôme)
-    ctx.fillStyle = flash ? '#fff' : '#3498db';
-    ctx.beginPath();
-    ctx.arc(boss.x + boss.w/2, bossY + 40, 45, Math.PI, 0);
-    ctx.fill();
-    ctx.strokeStyle = '#2980b9';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    // Reflet du dôme
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(boss.x + boss.w/2, bossY + 40, 40, Math.PI * 1.2, Math.PI * 1.7);
-    ctx.stroke();
-    
-    // === LE MÉCHANT DANS LE COCKPIT ===
-    
-    // Tête
-    ctx.fillStyle = '#f5d0a9';
-    ctx.beginPath();
-    ctx.arc(boss.x + boss.w/2, bossY + 35, 20, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Moustache épique
-    ctx.fillStyle = '#c0392b';
-    ctx.beginPath();
-    ctx.ellipse(boss.x + boss.w/2, bossY + 45, 25, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Lunettes
-    ctx.fillStyle = '#2c3e50';
-    ctx.beginPath();
-    ctx.ellipse(boss.x + boss.w/2 - 10, bossY + 30, 8, 6, 0, 0, Math.PI * 2);
-    ctx.ellipse(boss.x + boss.w/2 + 10, bossY + 30, 8, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#e74c3c';
-    ctx.beginPath();
-    ctx.arc(boss.x + boss.w/2 - 10, bossY + 30, 3, 0, Math.PI * 2);
-    ctx.arc(boss.x + boss.w/2 + 10, bossY + 30, 3, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Nez
-    ctx.fillStyle = '#e8b89a';
-    ctx.beginPath();
-    ctx.arc(boss.x + boss.w/2, bossY + 38, 6, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Sourcils méchants
-    ctx.strokeStyle = '#5d4037';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(boss.x + boss.w/2 - 18, bossY + 22);
-    ctx.lineTo(boss.x + boss.w/2 - 5, bossY + 26);
-    ctx.moveTo(boss.x + boss.w/2 + 18, bossY + 22);
-    ctx.lineTo(boss.x + boss.w/2 + 5, bossY + 26);
-    ctx.stroke();
-    
-    // === INDICATEURS DE PHASE ===
-    
-    // Aura de rage en phase 3
-    if (boss.phase === 3) {
-        ctx.strokeStyle = `rgba(231, 76, 60, ${0.3 + Math.sin(state.frameTick * 0.2) * 0.3})`;
-        ctx.lineWidth = 8;
+
+    if (typeof drawEnhancedBoss === 'function') {
+        drawEnhancedBoss(ctx, boss);
+    } else {
+        // Fallback
+        ctx.fillStyle = '#7f8c8d';
         ctx.beginPath();
-        ctx.arc(boss.x + boss.w/2, bossY + boss.h/2, boss.w/2 + 20, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.ellipse(boss.x + boss.w / 2, boss.y + boss.h / 2, boss.w / 2, boss.h / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
     }
-    
-    // Indicateur de charge (phase 2)
-    if (boss.chargeTimer > 30) {
-        ctx.fillStyle = '#e74c3c';
-        ctx.font = 'bold 24px sans-serif';
-        ctx.fillText('!!!', boss.x + boss.w/2 - 15, bossY - 20);
-    }
-    
-    // === BARRE DE VIE ===
-    const hpBarWidth = 120;
-    const hpBarHeight = 14;
-    const hpX = boss.x + (boss.w - hpBarWidth) / 2;
-    const hpY = bossY - 60;
-    
-    // Fond
-    ctx.fillStyle = "#333";
-    ctx.fillRect(hpX - 3, hpY - 3, hpBarWidth + 6, hpBarHeight + 6);
-    
-    // Barre rouge (vide)
-    ctx.fillStyle = "#c0392b";
-    ctx.fillRect(hpX, hpY, hpBarWidth, hpBarHeight);
-    
-    // Barre verte (pleine)
-    const hpColor = boss.phase === 3 ? '#e74c3c' : boss.phase === 2 ? '#f39c12' : '#27ae60';
-    ctx.fillStyle = hpColor;
-    ctx.fillRect(hpX, hpY, (boss.hp / boss.maxHp) * hpBarWidth, hpBarHeight);
-    
-    // Texte phase
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.fillText(`PHASE ${boss.phase}`, hpX, hpY - 8);
-    
-    ctx.restore();
 }
 
 function drawProjectiles() {
