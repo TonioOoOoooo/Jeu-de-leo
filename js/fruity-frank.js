@@ -17,30 +17,41 @@ const FRANK_CONFIG = {
     APPLE_SHAKE_DURATION: 40,   // Frames de tremblement avant chute
     MONSTER_SPAWN_INTERVAL: 300, // Spawn d'ennemi (5 sec)
 
-    // Couleurs Amstrad CPC authentiques
+    // Couleurs Amstrad CPC authentiques (Base) + Palette Moderne (Remaster)
     COLORS: {
+        BG: '#1a0505',
+        WALL_MAIN: '#c0392b',
+        WALL_SHADOW: '#922b21',
+        DIRT_MAIN: '#27ae60',
+        DIRT_HIGHLIGHT: '#2ecc71',
+        PLAYER_MAIN: '#f1c40f',
+        PLAYER_SHADOW: '#d4ac0d',
+        ENEMY_MAIN: '#8e44ad',
+        ENEMY_GLOW: '#9b59b6',
+        APPLE_MAIN: '#e74c3c',
+        APPLE_SHINE: '#ff7675',
         BLACK: '#000000',
-        BRICK_RED: '#CC0000',
-        BRICK_DARK: '#880000',
-        BRICK_MORTAR: '#553333',
-        DIRT_GREEN: '#00AA00',
-        DIRT_DARK: '#006600',
-        DIRT_LEAF: '#00CC00',
-        YELLOW: '#FFCC00',
-        YELLOW_DARK: '#CC9900',
-        PURPLE: '#AA00AA',
-        PURPLE_DARK: '#660066',
-        CHERRY_RED: '#FF0000',
-        CHERRY_DARK: '#AA0000',
-        BANANA_YELLOW: '#FFFF00',
-        BANANA_DARK: '#CCAA00',
-        STRAWBERRY_RED: '#FF3366',
-        STRAWBERRY_DARK: '#CC0033',
-        ORANGE: '#FF8800',
-        ORANGE_DARK: '#CC6600',
-        WHITE: '#FFFFFF',
-        STEM_GREEN: '#00AA00',
-        STEM_BROWN: '#884422'
+        BRICK_RED: '#c0392b',
+        BRICK_DARK: '#922b21',
+        BRICK_MORTAR: '#4a0d0d',
+        DIRT_GREEN: '#27ae60',
+        DIRT_DARK: '#145a32',
+        DIRT_LEAF: '#2ecc71',
+        YELLOW: '#f1c40f',
+        YELLOW_DARK: '#d4ac0d',
+        PURPLE: '#8e44ad',
+        PURPLE_DARK: '#6c3483',
+        CHERRY_RED: '#e74c3c',
+        CHERRY_DARK: '#c0392b',
+        BANANA_YELLOW: '#f9e79f',
+        BANANA_DARK: '#f7dc6f',
+        STRAWBERRY_RED: '#ff3366',
+        STRAWBERRY_DARK: '#cc0033',
+        ORANGE: '#ff8800',
+        ORANGE_DARK: '#cc6600',
+        WHITE: '#ffffff',
+        STEM_GREEN: '#2ecc71',
+        STEM_BROWN: '#6d4c41'
     }
 };
 
@@ -348,6 +359,16 @@ function updateFrankMovement() {
                 frankState.grid[frank.gridY][frank.gridX] = TILE.EMPTY;
                 frankState.score += 5;
                 if (typeof AudioSystem !== 'undefined') AudioSystem.play('coin');
+                // Particules de terre !
+                if (typeof ParticleSystem !== 'undefined' && typeof canvas !== 'undefined') {
+                    const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
+                    const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
+                    ParticleSystem.emit(
+                        offsetX + frank.pixelX + tileSize / 2,
+                        offsetY + frank.pixelY + tileSize / 2,
+                        'dust', 5
+                    );
+                }
             } else if (tile === TILE.CHERRY || tile === TILE.STRAWBERRY || tile === TILE.BANANA || tile === TILE.ORANGE) {
                 // Collecter fruit
                 frankState.grid[frank.gridY][frank.gridX] = TILE.EMPTY;
@@ -475,6 +496,16 @@ function updateApples() {
                 apple.pixelY = apple.gridY * tileSize;
                 frankState.grid[apple.gridY][apple.gridX] = TILE.APPLE;
                 if (typeof AudioSystem !== 'undefined') AudioSystem.play('jump');
+                // Effet de rebond/poussière à l'atterrissage
+                if (typeof ParticleSystem !== 'undefined' && typeof canvas !== 'undefined') {
+                    const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
+                    const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
+                    ParticleSystem.emit(
+                        offsetX + apple.gridX * tileSize + tileSize / 2,
+                        offsetY + apple.pixelY + tileSize,
+                        'dust', 8
+                    );
+                }
             } else {
                 // Mettre à jour position grille
                 const oldGridY = apple.gridY;
@@ -763,8 +794,26 @@ function drawFruityFrank(ctx, offsetX, offsetY) {
     const tileSize = FRANK_CONFIG.TILE_SIZE;
     const colors = FRANK_CONFIG.COLORS;
 
-    // Fond noir
-    ctx.fillStyle = colors.BLACK;
+    // Fond Moderne avec vignettage
+    const bgGrad = ctx.createRadialGradient(
+        offsetX + (FRANK_CONFIG.GRID_WIDTH * tileSize) / 2,
+        offsetY + (FRANK_CONFIG.GRID_HEIGHT * tileSize) / 2,
+        100,
+        offsetX + (FRANK_CONFIG.GRID_WIDTH * tileSize) / 2,
+        offsetY + (FRANK_CONFIG.GRID_HEIGHT * tileSize) / 2,
+        600
+    );
+    bgGrad.addColorStop(0, '#2c0a1a'); // Centre prune
+    bgGrad.addColorStop(1, '#0a0005'); // Bords noirs
+    ctx.fillStyle = bgGrad;
+    
+    // Cadre néon
+    ctx.fillRect(offsetX - 5, offsetY - 5, FRANK_CONFIG.GRID_WIDTH * tileSize + 10, FRANK_CONFIG.GRID_HEIGHT * tileSize + 10);
+    ctx.strokeStyle = '#ff0055';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(offsetX - 2, offsetY - 2, FRANK_CONFIG.GRID_WIDTH * tileSize + 4, FRANK_CONFIG.GRID_HEIGHT * tileSize + 4);
+
+    // Rendu du contenu
     ctx.fillRect(offsetX, offsetY,
         FRANK_CONFIG.GRID_WIDTH * tileSize,
         FRANK_CONFIG.GRID_HEIGHT * tileSize);
@@ -846,81 +895,40 @@ function drawFruityFrank(ctx, offsetX, offsetY) {
 // ===== DESSIN: MUR DE BRIQUES ROUGES =====
 function drawBrickWall(ctx, px, py, size) {
     const colors = FRANK_CONFIG.COLORS;
-
-    // Fond mortier
-    ctx.fillStyle = colors.BRICK_MORTAR;
+    // Style "Brique Néon"
+    ctx.fillStyle = '#4a0d0d'; // Fond brique sombre
     ctx.fillRect(px, py, size, size);
-
-    // Briques
-    const brickH = size / 4;
-    const brickW = size / 2;
-
-    for (let row = 0; row < 4; row++) {
-        const offsetBrick = (row % 2) * (brickW / 2);
-
-        for (let col = -1; col < 3; col++) {
-            const bx = px + col * brickW + offsetBrick;
-            const by = py + row * brickH;
-
-            if (bx >= px && bx < px + size) {
-                // Brique principale
-                ctx.fillStyle = colors.BRICK_RED;
-                ctx.fillRect(
-                    Math.max(bx + 1, px),
-                    by + 1,
-                    Math.min(brickW - 2, px + size - bx - 1),
-                    brickH - 2
-                );
-
-                // Ombre brique
-                ctx.fillStyle = colors.BRICK_DARK;
-                ctx.fillRect(
-                    Math.max(bx + 1, px),
-                    by + brickH - 3,
-                    Math.min(brickW - 2, px + size - bx - 1),
-                    2
-                );
-            }
-        }
-    }
+    
+    ctx.fillStyle = colors.WALL_MAIN;
+    // Briques arrondies
+    const pad = 2;
+    ctx.fillRect(px + pad, py + pad, size - pad * 2, size / 2 - pad * 2);
+    ctx.fillRect(px + pad, py + size / 2 + pad, size - pad * 2, size / 2 - pad * 2);
+    
+    // Reflet brillant
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillRect(px + pad + 2, py + pad + 2, size - 10, 2);
+    ctx.fillRect(px + pad + 2, py + size / 2 + pad + 2, size - 10, 2);
 }
 
 // ===== DESSIN: TERRE/FEUILLAGE VERT =====
 function drawDirt(ctx, px, py, size, gridX, gridY) {
     const colors = FRANK_CONFIG.COLORS;
 
-    // Fond vert foncé
-    ctx.fillStyle = colors.DIRT_DARK;
-    ctx.fillRect(px, py, size, size);
-
-    // Motif de feuilles/buissons
-    const leafSize = 6;
-    const pattern = (gridX + gridY) % 3;
-
-    for (let ly = 0; ly < size; ly += leafSize) {
-        for (let lx = 0; lx < size; lx += leafSize) {
-            const offset = ((lx + ly + pattern) % 2) * 2;
-
-            // Feuille claire
-            ctx.fillStyle = colors.DIRT_GREEN;
-            ctx.beginPath();
-            ctx.arc(px + lx + leafSize/2 + offset, py + ly + leafSize/2, leafSize/2 - 1, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Reflet
-            if ((lx + ly) % 12 === 0) {
-                ctx.fillStyle = colors.DIRT_LEAF;
-                ctx.beginPath();
-                ctx.arc(px + lx + leafSize/2 + offset - 1, py + ly + leafSize/2 - 1, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-    }
-
-    // Bordure légère
-    ctx.strokeStyle = colors.DIRT_DARK;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(px, py, size, size);
+    // Style "Organique"
+    // On ne dessine pas un carré plein, mais des "touffes"
+    ctx.fillStyle = colors.DIRT_MAIN;
+    ctx.beginPath();
+    // Forme centrale
+    ctx.arc(px + size / 2, py + size / 2, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Détails feuilles claires
+    ctx.fillStyle = colors.DIRT_HIGHLIGHT;
+    ctx.beginPath();
+    ctx.arc(px + size / 2 - 5, py + size / 2 - 5, 6, 0, Math.PI * 2);
+    ctx.arc(px + size / 2 + 6, py + size / 2 + 2, 5, 0, Math.PI * 2);
+    ctx.fill();
 }
 
 // ===== DESSIN: CERISE =====
@@ -1108,20 +1116,30 @@ function drawApple(ctx, px, py, size) {
     const cx = px + size / 2;
     const cy = py + size / 2;
 
-    // Corps de la pomme
-    ctx.fillStyle = colors.CHERRY_RED;
+    // Ombre portée
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 12, 10, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Corps (Dégradé radial pour effet 3D)
+    const grad = ctx.createRadialGradient(cx - 5, cy - 5, 2, cx, cy, 15);
+    grad.addColorStop(0, colors.APPLE_SHINE);
+    grad.addColorStop(1, colors.APPLE_MAIN);
+    ctx.fillStyle = grad;
+    
     ctx.beginPath();
     ctx.arc(cx, cy + 2, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // Ombre
-    ctx.fillStyle = colors.CHERRY_DARK;
+    // Reflet blanc pur "Cartoon"
+    ctx.fillStyle = "white";
     ctx.beginPath();
-    ctx.arc(cx + 2, cy + 5, 10, 0, Math.PI);
+    ctx.ellipse(cx - 6, cy - 4, 4, 6, -0.5, 0, Math.PI * 2);
     ctx.fill();
 
     // Queue
-    ctx.strokeStyle = colors.STEM_BROWN;
+    ctx.strokeStyle = "#6d4c41";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy - 8);
@@ -1134,11 +1152,6 @@ function drawApple(ctx, px, py, size) {
     ctx.ellipse(cx + 5, cy - 10, 4, 2, 0.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Reflet
-    ctx.fillStyle = colors.WHITE;
-    ctx.beginPath();
-    ctx.arc(cx - 4, cy - 2, 3, 0, Math.PI * 2);
-    ctx.fill();
 }
 
 // ===== DESSIN: NID =====
@@ -1147,32 +1160,29 @@ function drawNest(ctx, px, py, size) {
     const cx = px + size / 2;
     const cy = py + size / 2;
 
-    // Fond sombre
-    ctx.fillStyle = '#330033';
-    ctx.fillRect(px, py, size, size);
-
     // Cercle violet pulsant
-    const pulse = Math.sin(frankState.frameTick * 0.1) * 0.2 + 0.8;
-    ctx.fillStyle = colors.PURPLE;
+    const pulse = Math.sin(frankState.frameTick * 0.1) * 3 + 15;
+    
+    // Glow
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#d2527f';
+    ctx.fillStyle = '#8e44ad';
+    
     ctx.beginPath();
-    ctx.arc(cx, cy, 12 * pulse, 0, Math.PI * 2);
+    ctx.arc(cx, cy, pulse, 0, Math.PI * 2);
     ctx.fill();
+    ctx.shadowBlur = 0;
 
-    // Centre noir
-    ctx.fillStyle = colors.BLACK;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Effet de portail
-    ctx.strokeStyle = colors.PURPLE_DARK;
+    // Spirale
+    ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
-    for (let i = 0; i < 4; i++) {
-        const angle = (frankState.frameTick * 0.05) + (i * Math.PI / 2);
-        ctx.beginPath();
-        ctx.arc(cx, cy, 10, angle, angle + 0.5);
-        ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+        const angle = frankState.frameTick * 0.1 + i;
+        const r = i * 1.5;
+        ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
     }
+    ctx.stroke();
 }
 
 // ===== DESSIN: MONSTRE VIOLET =====
@@ -1288,52 +1298,60 @@ function drawFrank(ctx, offsetX, offsetY, size) {
         ctx.translate(-cx, 0);
     }
 
-    // Corps jaune principal (cercle)
-    ctx.fillStyle = colors.YELLOW;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 13, 0, Math.PI * 2);
-    ctx.fill();
+    // Effet de respiration
+    const breath = Math.sin(frankState.frameTick * 0.2) * 1;
 
-    // Ombre corps
-    ctx.fillStyle = colors.YELLOW_DARK;
+    // Corps jaune avec dégradé
+    const grad = ctx.createRadialGradient(cx - 4, cy - 4, 2, cx, cy, 14);
+    grad.addColorStop(0, '#ffeaa7');
+    grad.addColorStop(1, '#f1c40f');
+    ctx.fillStyle = grad;
+    
     ctx.beginPath();
-    ctx.arc(cx + 2, cy + 2, 12, 0, Math.PI);
+    ctx.arc(cx, cy, 13 + breath, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Bordure cartoon
+    ctx.strokeStyle = '#b7950b';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Nez rouge (Le fameux nez de Fruity Frank !)
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.arc(cx + 10, cy + 2, 4, 0, Math.PI * 2);
     ctx.fill();
 
     // Bouche (ouverte/fermée selon animation)
     if (frank.mouthOpen && frank.moving) {
-        // Bouche ouverte style Pac-Man
-        ctx.fillStyle = colors.BLACK;
+        ctx.fillStyle = '#2d3436';
         ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, 13, 0.3, -0.3, true);
-        ctx.lineTo(cx, cy);
+        ctx.arc(cx + 5, cy + 6, 4, 0, Math.PI * 2);
         ctx.fill();
     } else {
-        // Bouche fermée (sourire)
-        ctx.strokeStyle = colors.BLACK;
+        ctx.strokeStyle = '#2d3436';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(cx + 4, cy + 2, 5, 0.2, Math.PI - 0.2);
+        ctx.arc(cx + 4, cy + 5, 4, 0.2, Math.PI - 0.2);
         ctx.stroke();
     }
 
-    // Oeil
+    // Oeil (Grand et cartoon)
     ctx.fillStyle = colors.WHITE;
     ctx.beginPath();
-    ctx.arc(cx + 2, cy - 4, 5, 0, Math.PI * 2);
+    ctx.ellipse(cx + 2, cy - 5, 5, 7, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Pupille
-    ctx.fillStyle = colors.BLACK;
+    ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.arc(cx + 4, cy - 4, 2, 0, Math.PI * 2);
+    ctx.arc(cx + 4, cy - 5, 2.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Reflet oeil
+    // Reflet
     ctx.fillStyle = colors.WHITE;
     ctx.beginPath();
-    ctx.arc(cx + 1, cy - 5, 1, 0, Math.PI * 2);
+    ctx.arc(cx + 3, cy - 7, 1.5, 0, Math.PI * 2);
     ctx.fill();
 
     // Joue rose
@@ -1350,25 +1368,36 @@ function drawFruityFrankUI(ctx, offsetX, offsetY) {
     const colors = FRANK_CONFIG.COLORS;
     const tileSize = FRANK_CONFIG.TILE_SIZE;
 
-    // Barre supérieure
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(offsetX, offsetY - 50, FRANK_CONFIG.GRID_WIDTH * tileSize, 45);
+    // Barre supérieure moderne
+    const w = FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE;
+    
+    ctx.fillStyle = 'rgba(20, 20, 30, 0.9)';
+    ctx.beginPath();
+    if (ctx.roundRect) {
+        ctx.roundRect(offsetX, offsetY - 55, w, 50, 10);
+    } else {
+        ctx.rect(offsetX, offsetY - 55, w, 50);
+    }
+    ctx.fill();
+    ctx.strokeStyle = '#ff0055';
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-    // Score
-    ctx.fillStyle = colors.YELLOW;
-    ctx.font = 'bold 20px "Courier New", monospace';
+    // Score avec icône
+    ctx.fillStyle = '#f1c40f';
+    ctx.font = 'bold 24px "Fredoka One", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`SCORE: ${frankState.score}`, offsetX + 10, offsetY - 22);
+    ctx.fillText(`🏆 ${frankState.score}`, offsetX + 20, offsetY - 20);
 
     // Fruits restants
-    ctx.fillStyle = colors.CHERRY_RED;
-    ctx.fillText(`FRUITS: ${frankState.fruitsCollected}/${frankState.fruitsTotal}`,
-        offsetX + 200, offsetY - 22);
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillText(`🍒 ${frankState.fruitsCollected}/${frankState.fruitsTotal}`,
+        offsetX + w / 2 - 60, offsetY - 20);
 
     // Vies
     if (typeof state !== 'undefined') {
-        ctx.fillStyle = colors.YELLOW;
-        ctx.fillText(`VIES: ${state.lives}`, offsetX + 420, offsetY - 22);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`❤️ ${state.lives}`, offsetX + w - 100, offsetY - 20);
     }
 
     // Indicateur de pépin (prêt ou en cooldown)

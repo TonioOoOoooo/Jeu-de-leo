@@ -5471,6 +5471,8 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel9Background(ctx, w, h, camX);
     } else if (state.level === 10) {
         drawLevel10Background(ctx, w, h, camX);
+    } else if (state.level === 11) {
+        drawLevel11Background(ctx, w, h, camX);
     }
 }
 
@@ -5495,6 +5497,8 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel9Foreground(ctx, w, h, camX);
     } else if (state.level === 10) {
         drawLevel10Foreground(ctx, w, h, camX);
+    } else if (state.level === 11) {
+        drawLevel11Foreground(ctx, w, h, camX);
     }
 }
 
@@ -5573,6 +5577,7 @@ function resetVisualCache() {
     VisualCache.level8 = null;
     VisualCache.level9 = null;
     VisualCache.level10 = null;
+    VisualCache.level11 = null;
 }
 
 // ===== NIVEAU 10 : ZONE FINALE (CYBER-SPACE) =====
@@ -5888,6 +5893,222 @@ function drawEnhancedBoss(ctx, boss) {
     ctx.textAlign = 'left';
 }
 
+// =================================================================
+// VISUELS NIVEAU 11 : LA DIMENSION GLITCH
+// =================================================================
+
+// Initialisation des éléments de fond abstraits
+function initLevel11Visuals(w, h) {
+    if (VisualCache.level11) return VisualCache.level11;
+
+    const visuals = {
+        // Cubes de données flottants
+        dataCubes: [],
+        // Lignes d'énergie verticales
+        energyLines: []
+    };
+
+    // Génération des cubes
+    for (let i = 0; i < 40; i++) {
+        visuals.dataCubes.push({
+            x: Math.random() * w * 2,
+            y: Math.random() * h * 2,
+            size: 10 + Math.random() * 40,
+            speedZ: 0.2 + Math.random() * 0.5, // Vitesse de "profondeur"
+            color: Math.random() > 0.5 ? '#00FFFF' : '#FF00FF', // Cyan ou Magenta
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.02
+        });
+    }
+
+    // Génération des lignes
+    for (let i = 0; i < 20; i++) {
+        visuals.energyLines.push({
+            x: Math.random() * w * 2,
+            width: 1 + Math.random() * 3,
+            speed: 2 + Math.random() * 5,
+            opacity: 0.1 + Math.random() * 0.3
+        });
+    }
+
+    VisualCache.level11 = visuals;
+    return visuals;
+}
+
+// Dessin de l'arrière-plan
+function drawLevel11Background(ctx, w, h, camX) {
+    const visuals = initLevel11Visuals(w, h);
+    const time = state.frameTick;
+
+    // 1. Fond dégradé profond (Espace Cyber)
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#050015'); // Noir bleuté en haut
+    grad.addColorStop(0.5, '#100030'); // Violet profond au milieu
+    grad.addColorStop(1, '#000520'); // Bleu nuit en bas
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.save();
+    // Effet de parallaxe sur les éléments
+    ctx.translate(camX * 0.5, 0);
+
+    // 2. Dessin des lignes d'énergie montantes
+    for (const line of visuals.energyLines) {
+        const yOffset = (time * line.speed) % (h * 2);
+        ctx.fillStyle = `rgba(100, 200, 255, ${line.opacity})`;
+        ctx.fillRect(line.x, h - yOffset, line.width, h);
+        ctx.fillRect(line.x, h * 2 - yOffset, line.width, h); // Boucle
+    }
+
+    // 3. Dessin des cubes de données
+    for (const cube of visuals.dataCubes) {
+        ctx.save();
+        // Mouvement complexe pour effet de flottement 3D
+        const x = (cube.x + camX * cube.speedZ * 0.1) % (w * 2.5) - 200;
+        const y = cube.y + Math.sin(time * 0.01 + cube.x) * 30;
+        
+        ctx.translate(x, y);
+        ctx.rotate(cube.rotation + time * cube.rotSpeed);
+        
+        // Style "fil de fer" néon
+        ctx.strokeStyle = cube.color;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.6;
+        ctx.strokeRect(-cube.size / 2, -cube.size / 2, cube.size, cube.size);
+        
+        // Cœur lumineux
+        ctx.fillStyle = cube.color;
+        ctx.globalAlpha = 0.2;
+        ctx.fillRect(-cube.size / 4, -cube.size / 4, cube.size / 2, cube.size / 2);
+        
+        ctx.restore();
+    }
+    ctx.restore();
+}
+
+// Dessin du premier plan (Overlay Glitch)
+function drawLevel11Foreground(ctx, w, h, camX) {
+    // Effet de "scanline" subtil qui descend
+    const scanY = (state.frameTick * 2) % h;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.fillRect(0, scanY, w, 5);
+
+    // Effet de glitch aléatoire très bref
+    if (Math.random() < 0.01) {
+        const glitchH = Math.random() * 50;
+        const glitchY = Math.random() * h;
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0, 255, 255, 0.1)' : 'rgba(255, 0, 255, 0.1)';
+        ctx.fillRect(0, glitchY, w, glitchH);
+        // Léger décalage chromatique
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.translate(5, 0);
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.05)';
+        ctx.fillRect(0, glitchY, w, glitchH);
+        ctx.restore();
+    }
+}
+
+// --- RENDU DES PLATEFORMES NIVEAU 11 ---
+
+// Helper : dessine la base néon d'une plateforme glitch
+function drawGlitchBase(ctx, p, colorMain, colorAccent) {
+    const time = state.frameTick;
+    
+    // Fond semi-transparent tech
+    ctx.fillStyle = `${colorMain}44`; // Hex avec alpha
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    
+    // Bordure néon pulsante
+    const pulse = Math.sin(time * 0.1) * 0.2 + 0.8;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = colorAccent;
+    ctx.shadowColor = colorAccent;
+    ctx.shadowBlur = 10 * pulse;
+    ctx.strokeRect(p.x, p.y, p.w, p.h);
+    
+    // Motifs de circuits internes qui défilent
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(p.x, p.y, p.w, p.h);
+    ctx.clip();
+    
+    ctx.strokeStyle = `${colorMain}88`;
+    ctx.lineWidth = 1;
+    const patternOffset = (time * 2) % 40;
+    for (let i = -40; i < p.w + p.h; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(p.x + i - patternOffset, p.y);
+        ctx.lineTo(p.x + i - patternOffset - p.h, p.y + p.h);
+        ctx.stroke();
+    }
+    ctx.restore();
+    ctx.shadowBlur = 0;
+}
+
+// 1. Plateforme Normale/Mouvante (Cyan/Bleu)
+function drawGlitchPlatformNormal(ctx, p) {
+    drawGlitchBase(ctx, p, '#0088FF', '#00FFFF');
+    // Ligne supérieure solide
+    ctx.fillStyle = '#00FFFF';
+    ctx.fillRect(p.x, p.y, p.w, 3);
+}
+
+// 2. Plateforme de Glace (Blanc/Bleu givré)
+function drawGlitchPlatformIce(ctx, p) {
+    drawGlitchBase(ctx, p, '#AACCFF', '#FFFFFF');
+    
+    // Effet de surface givrée brillante
+    const shinePos = (state.frameTick * 4) % (p.w * 2) - p.w;
+    const grad = ctx.createLinearGradient(p.x + shinePos, p.y, p.x + shinePos + 40, p.y + p.h);
+    grad.addColorStop(0, 'rgba(255,255,255,0)');
+    grad.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    
+    ctx.fillStyle = grad;
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    
+    // Bord supérieur givré
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(p.x, p.y, p.w, 3);
+}
+
+// 3. Tremplin (Jump Pad) (Magenta/Rose pulsant)
+function drawGlitchPlatformJump(ctx, p) {
+    const time = state.frameTick;
+    // Pulsation rapide pour indiquer l'énergie
+    const bouncePulse = Math.sin(time * 0.3) * 0.5 + 0.5;
+    
+    drawGlitchBase(ctx, p, '#FF0088', '#FF55FF');
+    
+    // Indicateur de saut sur le dessus (flèches ou ondes)
+    ctx.fillStyle = `rgba(255, 100, 255, ${0.5 + bouncePulse * 0.5})`;
+    
+    const centerX = p.x + p.w / 2;
+    const centerY = p.y + p.h / 2;
+    
+    // Dessin de chevrons vers le haut ^^^
+    for (let i = 0; i < 3; i++) {
+        const yOff = i * 5 - (time % 15); // Animation vers le haut
+        const alpha = 1 - (i * 0.3) - ((time % 15) / 15);
+        if (alpha > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 10, centerY + yOff);
+            ctx.lineTo(centerX, centerY - 10 + yOff);
+            ctx.lineTo(centerX + 10, centerY + yOff);
+            ctx.fill();
+        }
+    }
+    
+    // Surface de saut très lumineuse
+    ctx.shadowColor = '#FF55FF';
+    ctx.shadowBlur = 20 * bouncePulse;
+    ctx.fillStyle = '#FFBBFF';
+    ctx.fillRect(p.x, p.y, p.w, 5);
+    ctx.shadowBlur = 0;
+}
+
 // Export des fonctions
 window.drawEnhancedLevelBackground = drawEnhancedLevelBackground;
 window.drawEnhancedLevelForeground = drawEnhancedLevelForeground;
@@ -5909,3 +6130,6 @@ window.drawEnhancedBossPlatform = drawEnhancedBossPlatform;
 window.drawEnhancedBoss = drawEnhancedBoss;
 window.updateVisualElements = updateVisualElements;
 window.resetVisualCache = resetVisualCache;
+window.drawGlitchPlatformNormal = drawGlitchPlatformNormal;
+window.drawGlitchPlatformIce = drawGlitchPlatformIce;
+window.drawGlitchPlatformJump = drawGlitchPlatformJump;
