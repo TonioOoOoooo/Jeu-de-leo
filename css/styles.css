@@ -240,10 +240,33 @@ canvas {
 
 /* ===== START SCREEN - WOW DESIGN ===== */
 #start-screen {
-    background: var(--gradient-main);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+    position: relative;
+    background: #0b0f2a;
     gap: var(--space-md);
+    padding-top: clamp(24px, 4vh, 48px);
+    padding-bottom: clamp(24px, 6vh, 64px);
+}
+
+#start-screen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url('../assets/leo-heroes.jpg') center 25%/cover no-repeat;
+    filter: saturate(1.05) brightness(0.85);
+    z-index: 0;
+}
+
+#start-screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(4, 8, 20, 0.78) 0%, rgba(10, 20, 40, 0.62) 55%, rgba(8, 6, 20, 0.88) 100%);
+    z-index: 1;
+}
+
+#start-screen > * {
+    position: relative;
+    z-index: 2;
 }
 
 /* Mascot container */
@@ -270,7 +293,7 @@ canvas {
     color: white;
     text-shadow:
         0 4px 0 rgba(0,0,0,0.2),
-        0 8px 20px rgba(0,0,0,0.3);
+        0 10px 30px rgba(0,0,0,0.45);
     margin: 0;
     animation: titleFloat 3s ease-in-out infinite;
     letter-spacing: 2px;
@@ -299,6 +322,7 @@ canvas {
     color: white;
     animation: slideDown 0.5s ease-out;
     box-shadow: var(--glass-shadow);
+    width: min(520px, 92vw);
 }
 
 @keyframes slideDown {
@@ -332,6 +356,7 @@ canvas {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    min-height: 150px;
 }
 
 .difficulty-card::before {
@@ -361,7 +386,7 @@ canvas {
 }
 
 .difficulty-icon {
-    font-size: 48px;
+    font-size: clamp(34px, 4vw, 48px);
     margin-bottom: var(--space-xs);
     display: block;
 }
@@ -1390,6 +1415,8 @@ canvas {
 /* ===== RESPONSIVE ===== */
 @media (max-width: 600px) {
     .game-title { font-size: 36px; }
+    .subtitle { font-size: 15px; }
+    #saved-game { width: min(92vw, 420px); }
     .big-btn {
         padding: var(--space-sm) var(--space-md);
         font-size: 18px;
@@ -1399,10 +1426,12 @@ canvas {
 
     .difficulty-container {
         grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-xs);
     }
 
     .difficulty-card {
         padding: var(--space-sm);
+        min-height: 130px;
     }
 
     .difficulty-icon {
@@ -1411,6 +1440,11 @@ canvas {
 
     .difficulty-label {
         font-size: 15px;
+    }
+
+    .difficulty-desc {
+        font-size: 11px;
+        line-height: 1.25;
     }
 
     .color-btn {
@@ -1426,7 +1460,7 @@ canvas {
 
     .menu-btn {
         padding: var(--space-xs) var(--space-sm);
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .settings-fab {
@@ -1461,7 +1495,7 @@ canvas {
     }
 
     .difficulty-container {
-        margin-top: var(--space-sm);
+        margin-top: var(--space-xs);
     }
 
     .difficulty-card {
