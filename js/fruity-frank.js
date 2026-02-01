@@ -7,15 +7,15 @@
 const FRANK_CONFIG = {
     GRID_WIDTH: 20,      // Largeur de la grille en tiles
     GRID_HEIGHT: 15,     // Hauteur de la grille en tiles
-    TILE_SIZE: 32,       // Taille d'une tile en pixels
+    TILE_SIZE: 40,       // Taille d'une tile en pixels
 
-    // Vitesses de mouvement
-    FRANK_SPEED: 3,      // Vitesse de Frank
-    ENEMY_SPEED: 1.5,    // Vitesse des monstres
+    // Vitesses de mouvement (pixels par frame)
+    FRANK_SPEED: 4,      // Vitesse ajustée pour le grid
+    ENEMY_SPEED: 2,
 
     // Timers
-    APPLE_SHAKE_DURATION: 40,   // Frames de tremblement avant chute
-    MONSTER_SPAWN_INTERVAL: 300, // Spawn d'ennemi (5 sec)
+    APPLE_SHAKE_DURATION: 45,    // Plus long pour laisser le temps de passer (Gameplay Amstrad)
+    MONSTER_SPAWN_INTERVAL: 240, // Spawn un peu plus rapide
 
     // Couleurs Amstrad CPC authentiques (Base) + Palette Moderne (Remaster)
     COLORS: {
@@ -85,7 +85,8 @@ const frankState = {
         facingRight: true,
         animFrame: 0,
         dead: false,
-        mouthOpen: true
+        mouthOpen: true,
+        nextDirection: null
     },
 
     // Pommes avec physique
@@ -106,6 +107,9 @@ const frankState = {
     // Nid
     nest: { gridX: 10, gridY: 7 },
     spawnTimer: 0,
+
+    // Particules maison (remaster)
+    particles: [],
 
     // Animation
     frameTick: 0,
@@ -135,6 +139,9 @@ const FRUITY_FRANK_LEVEL = [
     "WWWWWWWWWWWWWWWWWWWW"
 ];
 
+// Position de spawn initiale (sauvegardée pour le respawn)
+let spawnPoint = { x: 1, y: 1 };
+
 // ===== INITIALISATION =====
 function initFruityFrankGrid() {
     frankState.grid = [];
@@ -144,6 +151,7 @@ function initFruityFrankGrid() {
     frankState.seedCooldown = 0;
     frankState.spawnTimer = 0;
     frankState.frameTick = 0;
+    frankState.particles = [];
     frankState.score = 0;
     frankState.fruitsCollected = 0;
     frankState.fruitsTotal = 0;
@@ -202,7 +210,7 @@ function initFruityFrankGrid() {
                     frankState.grid[y][x] = TILE.NEST;
                     frankState.nest = { gridX: x, gridY: y };
                     break;
-                case 'F':
+                case 'F': // Point de départ de Frank
                     frankState.grid[y][x] = TILE.EMPTY;
                     frankStartX = x;
                     frankStartY = y;
@@ -213,19 +221,27 @@ function initFruityFrankGrid() {
         }
     }
 
+    spawnPoint = { x: frankStartX, y: frankStartY };
+    resetPlayerAndMonsters();
+}
+
+// ===== RESPAWN SANS RESET DE LA GRILLE (Gameplay Arcade) =====
+function resetPlayerAndMonsters() {
     // Initialiser Frank
-    frankState.frank.gridX = frankStartX;
-    frankState.frank.gridY = frankStartY;
-    frankState.frank.targetX = frankStartX;
-    frankState.frank.targetY = frankStartY;
-    frankState.frank.pixelX = frankStartX * FRANK_CONFIG.TILE_SIZE;
-    frankState.frank.pixelY = frankStartY * FRANK_CONFIG.TILE_SIZE;
+    frankState.frank.gridX = spawnPoint.x;
+    frankState.frank.gridY = spawnPoint.y;
+    frankState.frank.targetX = spawnPoint.x;
+    frankState.frank.targetY = spawnPoint.y;
+    frankState.frank.pixelX = spawnPoint.x * FRANK_CONFIG.TILE_SIZE;
+    frankState.frank.pixelY = spawnPoint.y * FRANK_CONFIG.TILE_SIZE;
     frankState.frank.moving = false;
     frankState.frank.dead = false;
     frankState.frank.animFrame = 0;
+    frankState.frank.nextDirection = null;
 
-    // Spawn initial de monstres
-    spawnMonster();
+    // Reset des monstres (On vide la liste et on en remet un neuf)
+    frankState.monsters = [];
+    frankState.spawnTimer = FRANK_CONFIG.MONSTER_SPAWN_INTERVAL - 60; // Spawn rapide du premier
     spawnMonster();
 }
 
@@ -239,9 +255,11 @@ function spawnMonster() {
         gridY: nest.gridY,
         pixelX: nest.gridX * FRANK_CONFIG.TILE_SIZE,
         pixelY: nest.gridY * FRANK_CONFIG.TILE_SIZE,
-        direction: ['up', 'down', 'left', 'right'][Math.floor(Math.random() * 4)],
+        // Le monstre sort du nid dans une direction valide
+        direction: 'up',
         animFrame: 0,
-        canDig: Math.random() > 0.5 // 50% des monstres peuvent creuser
+        active: true, // Force l'activation
+        canDig: Math.random() > 0.7 // Moins de monstres creuseurs pour équilibrer
     });
 }
 
@@ -277,6 +295,9 @@ function updateFruityFrank() {
 
     // Update des monstres
     updateMonsters();
+
+    // Particules maison
+    updateFruityParticles();
 
     // Spawn de monstres
     frankState.spawnTimer++;
@@ -360,31 +381,14 @@ function updateFrankMovement() {
                 frankState.score += 5;
                 if (typeof AudioSystem !== 'undefined') AudioSystem.play('coin');
                 // Particules de terre !
-                if (typeof ParticleSystem !== 'undefined' && typeof canvas !== 'undefined') {
-                    const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
-                    const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
-                    ParticleSystem.emit(
-                        offsetX + frank.pixelX + tileSize / 2,
-                        offsetY + frank.pixelY + tileSize / 2,
-                        'dust', 5
-                    );
-                }
-            } else if (tile === TILE.CHERRY || tile === TILE.STRAWBERRY || tile === TILE.BANANA || tile === TILE.ORANGE) {
+                createFruityParticles(frank.pixelX + tileSize / 2, frank.pixelY + tileSize / 2, 'dirt');
+            } else if ([TILE.CHERRY, TILE.STRAWBERRY, TILE.BANANA, TILE.ORANGE].includes(tile)) {
                 // Collecter fruit
                 frankState.grid[frank.gridY][frank.gridX] = TILE.EMPTY;
                 frankState.fruitsCollected++;
                 frankState.score += 100;
                 if (typeof AudioSystem !== 'undefined') AudioSystem.play('powerup');
-                if (typeof ParticleSystem !== 'undefined' && typeof canvas !== 'undefined') {
-                    // Calculer l'offset écran pour les particules
-                    const offsetX = (canvas.width - FRANK_CONFIG.GRID_WIDTH * FRANK_CONFIG.TILE_SIZE) / 2;
-                    const offsetY = (canvas.height - FRANK_CONFIG.GRID_HEIGHT * FRANK_CONFIG.TILE_SIZE) / 2 + 50;
-                    ParticleSystem.emit(
-                        offsetX + frank.pixelX + tileSize / 2,
-                        offsetY + frank.pixelY + tileSize / 2,
-                        'coin', 15
-                    );
-                }
+                createFruityParticles(frank.pixelX + tileSize / 2, frank.pixelY + tileSize / 2, 'sparkle');
             }
         }
     }
@@ -559,16 +563,24 @@ function updateApples() {
 
             if (apple.shaking) {
                 apple.shakeTimer--;
-                if (apple.shakeTimer <= 0) {
+                if (apple.shakeTimer <= 0 && !checkCollisionWithFrank(apple.gridX, apple.gridY)) {
                     // Commencer la chute
+                    // NE TOMBE PAS SI FRANK EST DESSOUS (Protection "Casque")
+                    // Sauf si la pomme tombe déjà d'en haut
                     apple.shaking = false;
                     apple.falling = true;
-                    apple.fallSpeed = 1;
+                    apple.fallSpeed = 2; // Chute plus franche
                     frankState.grid[apple.gridY][apple.gridX] = TILE.EMPTY;
                 }
             }
         }
     }
+}
+
+function checkCollisionWithFrank(gx, gy) {
+    // Vérifie si Frank est exactement sur cette case (pour bloquer la chute initiale)
+    // Dans Fruity Frank, on peut "porter" la pomme si on est juste dessous
+    return (Math.round(frankState.frank.gridX) === gx && Math.round(frankState.frank.gridY) === gy + 1);
 }
 
 // ===== SYSTÈME DE PÉPIN (PROJECTILE) =====
@@ -692,16 +704,42 @@ function updateMonsters() {
 
         monster.animFrame++;
 
-        // IA simple: se diriger vers Frank
-        const dx = frank.gridX - Math.round(monster.gridX);
-        const dy = frank.gridY - Math.round(monster.gridY);
-
-        // Changer de direction occasionnellement ou si bloqué
-        if (Math.random() < 0.02) {
-            if (Math.abs(dx) > Math.abs(dy)) {
-                monster.direction = dx > 0 ? 'right' : 'left';
+        // IA SIMPLE ET EFFICACE (Pas de "Frozen")
+        const isAligned = (monster.pixelX % tileSize === 0) && (monster.pixelY % tileSize === 0);
+        
+        if (isAligned) {
+            monster.gridX = monster.pixelX / tileSize;
+            monster.gridY = monster.pixelY / tileSize;
+            
+            // Logique de poursuite simplifiée
+            const dx = frank.gridX - monster.gridX;
+            const dy = frank.gridY - monster.gridY;
+            
+            // Choix de direction : Poursuite ou Aléatoire
+            let desiredDir = null;
+            
+            // 50% chance de tracker le joueur si aligné
+            if (Math.random() < 0.5) {
+                if (Math.abs(dx) > Math.abs(dy)) desiredDir = dx > 0 ? 'right' : 'left';
+                else desiredDir = dy > 0 ? 'down' : 'up';
+            }
+            
+            // Essayer la direction désirée, sinon aléatoire valide
+            const possibleDirs = [];
+            if (canMonsterMove(monster.gridX + 1, monster.gridY, monster.canDig)) possibleDirs.push('right');
+            if (canMonsterMove(monster.gridX - 1, monster.gridY, monster.canDig)) possibleDirs.push('left');
+            if (canMonsterMove(monster.gridX, monster.gridY + 1, monster.canDig)) possibleDirs.push('down');
+            if (canMonsterMove(monster.gridX, monster.gridY - 1, monster.canDig)) possibleDirs.push('up');
+            
+            if (possibleDirs.length > 0) {
+                if (possibleDirs.includes(desiredDir)) monster.direction = desiredDir;
+                else monster.direction = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
             } else {
-                monster.direction = dy > 0 ? 'down' : 'up';
+                // Cul de sac : demi-tour
+                if (monster.direction === 'up') monster.direction = 'down';
+                else if (monster.direction === 'down') monster.direction = 'up';
+                else if (monster.direction === 'left') monster.direction = 'right';
+                else if (monster.direction === 'right') monster.direction = 'left';
             }
         }
 
@@ -738,6 +776,40 @@ function updateMonsters() {
             monster.direction = dirs[Math.floor(Math.random() * dirs.length)];
         }
     }
+}
+
+function createFruityParticles(x, y, type) {
+    for (let i = 0; i < 8; i++) {
+        frankState.particles.push({
+            x: x, y: y,
+            vx: (Math.random() - 0.5) * 4, // Moins violent
+            vy: (Math.random() - 0.5) * 4,
+            life: 1.0,
+            color: type === 'dirt' ? '#27ae60' : (type === 'explosion' ? '#e74c3c' : '#f1c40f'),
+            size: Math.random() * 3 + 1 // Plus petit pour ne pas confondre avec des items
+        });
+    }
+}
+
+function updateFruityParticles() {
+    for (let i = frankState.particles.length - 1; i >= 0; i--) {
+        const p = frankState.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.1; // Disparition plus rapide (10 frames)
+        if (p.life <= 0) frankState.particles.splice(i, 1);
+    }
+}
+
+function drawFruityParticles(ctx, offsetX, offsetY) {
+    for (const p of frankState.particles) {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(offsetX + p.x, offsetY + p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
 }
 
 function canMonsterMove(gridX, gridY, canDig) {
@@ -783,7 +855,7 @@ function frankDeath() {
             if (state.lives <= 0) {
                 if (typeof gameOver === 'function') gameOver("Oh non! Fruity Frank a perdu!");
             } else {
-                initFruityFrankGrid();
+                resetPlayerAndMonsters(); // On garde la grille, on reset juste les acteurs !
             }
         }
     }, 1000);
@@ -887,6 +959,9 @@ function drawFruityFrank(ctx, offsetX, offsetY) {
     if (!frankState.frank.dead) {
         drawFrank(ctx, offsetX, offsetY, tileSize);
     }
+
+    // Particules maison
+    drawFruityParticles(ctx, offsetX, offsetY);
 
     // UI
     drawFruityFrankUI(ctx, offsetX, offsetY);
