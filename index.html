@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="screen-orientation" content="landscape">
     <title>L'Aventure de Léo - Version 2.0</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="manifest" href="assets/site.webmanifest">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -59,24 +64,26 @@
         <!-- Settings FAB -->
         <button class="settings-fab" onclick="openSettings()" title="Paramètres">⚙️</button>
 
-        <!-- Mascot animée -->
-        <div class="mascot-container">
-            <span class="mascot">🦸</span>
+        <video id="start-bg-video" class="start-bg-video" muted playsinline preload="auto" poster="assets/leo-heroes.jpg">
+            <source src="assets/leo-heroes.mp4" type="video/mp4">
+        </video>
+
+        <div class="start-header">
+            <h1 class="game-title">L'Aventure de Léo</h1>
+            <p class="subtitle">Un jeu de plateforme épique en 10 niveaux !</p>
         </div>
 
-        <h1 class="game-title">L'Aventure de Léo</h1>
-        <p class="subtitle">Un jeu de plateforme épique en 10 niveaux !</p>
+        <div class="start-footer">
+            <div id="saved-game" style="display: none;">
+                <p>📁 Partie sauvegardée trouvée !</p>
+                <p id="saved-info"></p>
+                <button class="big-btn btn-continue" onclick="continueSavedGame()">▶️ CONTINUER</button>
+            </div>
 
-        <div id="saved-game" style="display: none;">
-            <p>📁 Partie sauvegardée trouvée !</p>
-            <p id="saved-info"></p>
-            <button class="big-btn btn-continue" onclick="continueSavedGame()">▶️ CONTINUER</button>
-        </div>
+            <p class="subtitle" style="margin-top: 10px;">Choisis ta difficulté :</p>
 
-        <p class="subtitle" style="margin-top: 10px;">Choisis ta difficulté :</p>
-
-        <!-- Difficulty Cards -->
-        <div class="difficulty-container">
+            <!-- Difficulty Cards -->
+            <div class="difficulty-container">
             <div class="difficulty-card very-easy" data-start="very_easy">
                 <span class="difficulty-icon">🌈</span>
                 <div class="difficulty-label">TRÈS FACILE</div>
@@ -97,19 +104,20 @@
                 <div class="difficulty-label">DUR</div>
                 <div class="difficulty-desc">2 vies • Ennemis rapides • Sans pitié !</div>
             </div>
-        </div>
+            </div>
 
-        <!-- Menu Bar -->
-        <div class="menu-bar">
-            <button class="menu-btn" onclick="showCustomization()">
-                <span class="menu-btn-icon">🎨</span> Personnaliser
-            </button>
-            <button class="menu-btn" onclick="showStats()">
-                <span class="menu-btn-icon">📊</span> Stats
-            </button>
-            <button class="menu-btn" onclick="showBadges()">
-                <span class="menu-btn-icon">🏆</span> Badges
-            </button>
+            <!-- Menu Bar -->
+            <div class="menu-bar">
+                <button class="menu-btn" onclick="showCustomization()">
+                    <span class="menu-btn-icon">🎨</span> Personnaliser
+                </button>
+                <button class="menu-btn" onclick="showStats()">
+                    <span class="menu-btn-icon">📊</span> Stats
+                </button>
+                <button class="menu-btn" onclick="showBadges()">
+                    <span class="menu-btn-icon">🏆</span> Badges
+                </button>
+            </div>
         </div>
     </div>
 

@@ -24,6 +24,8 @@ function init() {
         updateSoundButton();
     }
 
+    setupStartScreenIntro();
+
     // Charger les données sauvegardées
     loadStats();
     loadBadges();
@@ -68,6 +70,71 @@ function init() {
             AudioSystem.play('coin');
         });
     });
+}
+
+function setupStartScreenIntro() {
+    const startScreen = document.getElementById('start-screen');
+    const video = document.getElementById('start-bg-video');
+    if (!startScreen || !video) return;
+
+    let introTimer = null;
+    let loopTimer = null;
+    let started = false;
+
+    const stopAndHide = () => {
+        if (introTimer) {
+            clearTimeout(introTimer);
+            introTimer = null;
+        }
+        if (loopTimer) {
+            clearInterval(loopTimer);
+            loopTimer = null;
+        }
+        try {
+            video.pause();
+            video.currentTime = 0;
+        } catch (e) {}
+    };
+
+    const resetToPoster = () => {
+        try {
+            video.pause();
+            video.currentTime = 0;
+        } catch (e) {}
+    };
+
+    const showVideo = async () => {
+        if (started) return;
+        if (startScreen.style.display === 'none') return;
+        try {
+            await video.play();
+        } catch (e) {
+            stopAndHide();
+        }
+    };
+
+    introTimer = setTimeout(showVideo, 3500);
+
+    loopTimer = setInterval(() => {
+        if (started) return;
+        if (startScreen.style.display === 'none') return;
+        try {
+            video.currentTime = 0;
+            video.play();
+        } catch (e) {}
+    }, 15000);
+
+    video.addEventListener('ended', () => {
+        resetToPoster();
+    });
+
+    const observer = new MutationObserver(() => {
+        if (startScreen.style.display === 'none') {
+            started = true;
+            stopAndHide();
+        }
+    });
+    observer.observe(startScreen, { attributes: true, attributeFilter: ['style'] });
 }
 
 function checkSavedGame() {
@@ -328,6 +395,14 @@ function startGame(difficulty) {
     state.score = 0;
     state.cheatsUsed = false;
     
+    const startVideo = document.getElementById('start-bg-video');
+    if (startVideo) {
+        try {
+            startVideo.pause();
+            startVideo.currentTime = 0;
+        } catch (e) {}
+    }
+
     document.getElementById('start-screen').style.display = 'none';
     
     initLevel(state.level);

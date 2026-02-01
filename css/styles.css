@@ -227,6 +227,7 @@ canvas {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -242,25 +243,92 @@ canvas {
 #start-screen {
     position: relative;
     background: #0b0f2a;
-    gap: var(--space-md);
-    padding-top: clamp(24px, 4vh, 48px);
-    padding-bottom: clamp(24px, 6vh, 64px);
+    gap: var(--space-sm);
+    padding-top: clamp(8px, 2vh, 20px);
+    padding-bottom: clamp(18px, 4vh, 44px);
+    min-height: 100dvh;
+    justify-content: space-between;
+    height: 100dvh;
+    overflow: hidden;
 }
 
 #start-screen::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: url('../assets/leo-heroes.jpg') center 25%/cover no-repeat;
-    filter: saturate(1.05) brightness(0.85);
+    background: url('../assets/leo-heroes.jpg') center 15%/cover no-repeat;
+    filter: saturate(1.08) brightness(0.9);
+    transform: scale(1.03);
     z-index: 0;
+}
+
+.start-bg-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 15%;
+    z-index: 0;
+    opacity: 1;
+    pointer-events: none;
+    filter: saturate(1.08) brightness(0.9);
+}
+
+.start-bg-video.is-active {
+    opacity: 1;
+}
+
+#start-screen .difficulty-container {
+    margin-top: var(--space-sm);
+}
+
+#start-screen .menu-bar {
+    margin-top: var(--space-sm);
+}
+
+.start-header {
+    width: 100%;
+    max-width: 720px;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.start-footer {
+    width: 100%;
+    max-width: 720px;
+    padding-bottom: clamp(6px, 1.5vh, 14px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+@media (max-width: 1024px) {
+    .start-header,
+    .start-footer {
+        max-width: 640px;
+    }
+}
+
+@media (max-width: 600px) {
+    #start-screen {
+        padding-top: 16px;
+        padding-bottom: 16px;
+        gap: var(--space-xs);
+    }
+
+    .start-header,
+    .start-footer {
+        max-width: 520px;
+    }
 }
 
 #start-screen::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(4, 8, 20, 0.78) 0%, rgba(10, 20, 40, 0.62) 55%, rgba(8, 6, 20, 0.88) 100%);
+    background: linear-gradient(180deg, rgba(4, 8, 20, 0.70) 0%, rgba(10, 20, 40, 0.55) 55%, rgba(12, 8, 30, 0.75) 100%);
     z-index: 1;
 }
 
@@ -269,26 +337,9 @@ canvas {
     z-index: 2;
 }
 
-#start-screen::before {
-    content: "";
+#start-screen > .start-bg-video {
     position: absolute;
-    inset: 0;
-    background: url('../assets/leo-heroes.jpg') center/cover no-repeat;
-    filter: saturate(1.1) brightness(0.9);
     z-index: 0;
-}
-
-#start-screen::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(4, 8, 20, 0.72) 0%, rgba(10, 20, 40, 0.6) 55%, rgba(12, 8, 30, 0.8) 100%);
-    z-index: 1;
-}
-
-#start-screen > * {
-    position: relative;
-    z-index: 2;
 }
 
 /* Mascot container */
@@ -333,6 +384,14 @@ canvas {
     font-weight: 600;
 }
 
+#start-screen .game-title {
+    margin-top: 0;
+}
+
+#start-screen .subtitle {
+    margin-top: 0;
+}
+
 /* ===== SAVED GAME BANNER ===== */
 #saved-game {
     background: var(--glass-bg);
@@ -340,7 +399,7 @@ canvas {
     -webkit-backdrop-filter: blur(15px);
     border: 2px solid var(--glass-border);
     border-radius: var(--radius-md);
-    padding: var(--space-md) var(--space-lg);
+    padding: var(--space-sm) var(--space-md);
     color: white;
     animation: slideDown 0.5s ease-out;
     box-shadow: var(--glass-shadow);
@@ -355,6 +414,31 @@ canvas {
 #saved-game p {
     margin: var(--space-xs) 0;
     font-weight: 600;
+}
+
+@media (max-height: 760px) {
+    #start-screen {
+        gap: var(--space-xs);
+        padding-top: 12px;
+        padding-bottom: 16px;
+    }
+
+    .game-title {
+        font-size: clamp(30px, 7vw, 56px);
+    }
+
+    #saved-game {
+        padding: var(--space-xs) var(--space-sm);
+    }
+
+    #saved-game p {
+        margin: 6px 0;
+    }
+
+    .difficulty-card {
+        min-height: 132px;
+        padding: var(--space-sm);
+    }
 }
 
 /* ===== DIFFICULTY CARDS ===== */
@@ -490,9 +574,9 @@ canvas {
 
 /* ===== SETTINGS BUTTON (Floating) ===== */
 .settings-fab {
-    position: absolute;
-    top: var(--space-md);
-    right: var(--space-md);
+    position: fixed;
+    top: calc(var(--space-md) + env(safe-area-inset-top, 0px));
+    right: calc(var(--space-md) + env(safe-area-inset-right, 0px));
     width: 56px;
     height: 56px;
     background: var(--glass-bg);
@@ -508,6 +592,7 @@ canvas {
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--glass-shadow);
+    z-index: 50;
 }
 
 .settings-fab:hover {
