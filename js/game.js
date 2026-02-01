@@ -79,7 +79,50 @@ function setupStartScreenIntro() {
 
     let introTimer = null;
     let loopTimer = null;
+    let gapTimer = null;
     let started = false;
+
+    const FADE_MS = 250;
+    const GAP_MS = 5000;
+    let holdUntil = 0;
+
+    const playlist = [
+        'assets/leo-heroes.mp4',
+        'assets/leo-heroes2.mp4',
+        'assets/leo-heroes3.mp4',
+        'assets/leo-heroes4.mp4',
+        'assets/leo-heroes5.mp4',
+        'assets/leo-heroes6.mp4',
+        'assets/leo-heroes7.mp4'
+    ];
+    let currentIndex = 0;
+
+    const setVideoSrc = (src) => {
+        const source = video.querySelector('source');
+        if (source) {
+            source.src = src;
+        } else {
+            video.src = src;
+        }
+        try {
+            video.load();
+        } catch (e) {}
+    };
+
+    const fadeToNext = (nextSrc) => {
+        video.classList.add('is-fading');
+        setTimeout(() => {
+            if (nextSrc) {
+                setVideoSrc(nextSrc);
+            }
+            video.classList.remove('is-fading');
+            try {
+                video.play();
+            } catch (e) {
+                resetToPoster();
+            }
+        }, FADE_MS);
+    };
 
     const stopAndHide = () => {
         if (introTimer) {
@@ -89,6 +132,10 @@ function setupStartScreenIntro() {
         if (loopTimer) {
             clearInterval(loopTimer);
             loopTimer = null;
+        }
+        if (gapTimer) {
+            clearTimeout(gapTimer);
+            gapTimer = null;
         }
         try {
             video.pause();
@@ -106,6 +153,7 @@ function setupStartScreenIntro() {
     const showVideo = async () => {
         if (started) return;
         if (startScreen.style.display === 'none') return;
+        setVideoSrc(playlist[currentIndex]);
         try {
             await video.play();
         } catch (e) {
@@ -118,14 +166,27 @@ function setupStartScreenIntro() {
     loopTimer = setInterval(() => {
         if (started) return;
         if (startScreen.style.display === 'none') return;
+        if (Date.now() < holdUntil) return;
+        if (!video.paused) return;
         try {
-            video.currentTime = 0;
             video.play();
         } catch (e) {}
     }, 15000);
 
     video.addEventListener('ended', () => {
+        if (gapTimer) {
+            clearTimeout(gapTimer);
+            gapTimer = null;
+        }
+
+        currentIndex = (currentIndex + 1) % playlist.length;
+
         resetToPoster();
+        holdUntil = Date.now() + GAP_MS;
+
+        gapTimer = setTimeout(() => {
+            fadeToNext(playlist[currentIndex]);
+        }, GAP_MS);
     });
 
     const observer = new MutationObserver(() => {

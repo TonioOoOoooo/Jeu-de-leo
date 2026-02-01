@@ -273,10 +273,15 @@ canvas {
     opacity: 1;
     pointer-events: none;
     filter: saturate(1.08) brightness(0.9);
+    transition: opacity 250ms ease;
 }
 
 .start-bg-video.is-active {
     opacity: 1;
+}
+
+.start-bg-video.is-fading {
+    opacity: 0;
 }
 
 #start-screen .difficulty-container {
