@@ -42,13 +42,9 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour niveaux 1-2, 7-9
-    const enhancedLevels = [1, 2, 7, 8, 9];
+    // Arrière-plan amélioré pour niveaux 1-2, 5-9
+    const enhancedLevels = [1, 2, 5, 6, 7, 8, 9];
     if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
-        const camX = Math.min(0, (canvas.width * 0.3) - player.x);
-        drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
-    } else if (state.level <= 6 && typeof drawEnhancedLevelBackground === 'function') {
-        // Arrière-plan amélioré pour niveaux 3-6
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
     } else if (state.level <= 4) {
@@ -132,11 +128,7 @@ function draw() {
     player.draw(ctx);
 
     // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable) pour niveaux améliorés
-    if ([1, 2, 7, 8, 9].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
-        const camX = Math.min(0, (canvas.width * 0.3) - player.x);
-        drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
-    } else if (state.level <= 6 && typeof drawEnhancedLevelForeground === 'function') {
-        // Éléments de premier plan pour niveaux 3-6
+    if ([1, 2, 5, 6, 7, 8, 9].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
