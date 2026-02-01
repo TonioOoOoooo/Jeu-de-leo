@@ -1121,19 +1121,16 @@ const LEVELS = {
         }
     },
 
-    // ========================================
-    // NIVEAU 11 - FRUITY FRANK (mis de côté)
-    // Inspiré du jeu Amstrad CPC - Moteur grid-based complet
-    // ========================================
+    // NIVEAU 11 - FRUITY FRANK (Niveau Caché / Bonus)
+    // Remastered : Moteur grid-based avec graphismes HD
+    // ========================================================
     11: {
-        name: "🍓 FRUITY FRANK 🍓",
-        bgColor: "#000000",
-        playerStart: { x: 40, y: 440 },
+        name: "🍓 SUPER FRUITY FRANK 🍓",
+        bgColor: "#1a0505", // Fond prune très sombre pour faire ressortir les couleurs
+        playerStart: { x: 0, y: 0 }, // Géré par le moteur fruity
         needsKey: false,
         fruityFrankLevel: true,
         setup: (w, h) => {
-            // Le niveau Fruity Frank utilise son propre moteur grid-based
-            // Pas besoin de créer des plateformes ici
             return { fruityFrank: true };
         }
     }

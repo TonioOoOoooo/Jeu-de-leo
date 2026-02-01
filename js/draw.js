@@ -42,8 +42,8 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour tous les niveaux 1-10
-    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    // Arrière-plan amélioré pour tous les niveaux 1-11
+    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
@@ -126,7 +126,7 @@ function draw() {
     player.draw(ctx);
 
     // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable) pour tous les niveaux
-    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
+    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
@@ -391,6 +391,25 @@ function drawLadders() {
 function drawPlatforms() {
     for (const p of currentLevelData.platforms) {
         if (p.type === 'slide') continue;
+
+        if (state.level === 11) {
+            if (p.type === 'normal' || p.type === 'moving') {
+                if (typeof drawGlitchPlatformNormal === 'function') {
+                    drawGlitchPlatformNormal(ctx, p);
+                    continue;
+                }
+            } else if (p.type === 'ice') {
+                if (typeof drawGlitchPlatformIce === 'function') {
+                    drawGlitchPlatformIce(ctx, p);
+                    continue;
+                }
+            } else if (p.type === 'jump_pad') {
+                if (typeof drawGlitchPlatformJump === 'function') {
+                    drawGlitchPlatformJump(ctx, p);
+                    continue;
+                }
+            }
+        }
         
         switch (p.type) {
             case 'slide_visual':
