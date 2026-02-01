@@ -3,6 +3,36 @@
 // ============================================================
 
 // ===== HUD =====
+function updateKeyIndicator() {
+    const keyDisplay = document.getElementById('key-display');
+    if (!keyDisplay) return;
+
+    let nextText = '';
+    let shouldShow = false;
+
+    if (state.hasKey) {
+        shouldShow = true;
+        nextText = '🗝️ CLÉ !';
+    } else if (typeof currentLevelData !== 'undefined' && currentLevelData && currentLevelData.keyItem) {
+        shouldShow = true;
+
+        const playerCx = (typeof player !== 'undefined' && player)
+            ? (player.x + player.w / 2)
+            : 0;
+        const keyCx = currentLevelData.keyItem.x + currentLevelData.keyItem.w / 2;
+        const dx = keyCx - playerCx;
+        const dead = 10;
+        const arrow = dx < -dead ? '←' : dx > dead ? '→' : '•';
+        nextText = arrow === '•' ? '🗝️ PROCHE' : `🗝️ ${arrow}`;
+    }
+
+    if (keyDisplay.dataset.lastText === nextText && ((keyDisplay.style.display !== 'none') === shouldShow)) return;
+    keyDisplay.dataset.lastText = nextText;
+
+    keyDisplay.style.display = shouldShow ? 'inline' : 'none';
+    if (shouldShow) keyDisplay.textContent = nextText;
+}
+
 function updateHud() {
     let hearts = "";
     for (let i = 0; i < state.lives; i++) hearts += "❤️";
@@ -21,16 +51,7 @@ function updateHud() {
         streakEl.style.display = 'none';
     }
 
-    const keyDisplay = document.getElementById('key-display');
-    if (state.hasKey) {
-        keyDisplay.style.display = 'inline';
-        keyDisplay.textContent = '🗝️ CLÉ !';
-    } else if (currentLevelData && currentLevelData.keyItem) {
-        keyDisplay.style.display = 'inline';
-        keyDisplay.textContent = '🗝️ →';
-    } else {
-        keyDisplay.style.display = 'none';
-    }
+    updateKeyIndicator();
 
     // Indicateur spécial pour le Nether
     const levelDisplay = document.getElementById('level-display');
@@ -44,7 +65,16 @@ function updateHud() {
 }
 
 function updateCoinsDisplay() {
-    document.getElementById('coins-display').textContent = `🪙 ${state.coins}`;
+    const el = document.getElementById('coins-display');
+    if (!el) return;
+
+    const total = Number.isFinite(state.maxCoinsInLevel) ? state.maxCoinsInLevel : 0;
+    if (total > 0) {
+        const done = state.coins >= total;
+        el.textContent = done ? `🪙 ${state.coins}/${total} ✅` : `🪙 ${state.coins}/${total}`;
+    } else {
+        el.textContent = `🪙 ${state.coins}`;
+    }
 }
 
 function updateStarsDisplay() {
@@ -321,6 +351,9 @@ function returnToMenu() {
     state.level = 1;
     state.current = GameState.MENU;
     document.getElementById('start-screen').style.display = 'flex';
+
+    document.body.classList.remove('is-playing');
+    document.body.classList.remove('is-paused');
     if (state.animationId) cancelAnimationFrame(state.animationId);
 }
 
@@ -352,6 +385,8 @@ function togglePause() {
         state.current = GameState.PAUSED;
         document.getElementById('pause-screen').style.display = 'flex';
         document.getElementById('pause-level').textContent = state.level;
+
+        document.body.classList.add('is-paused');
     } else if (state.current === GameState.PAUSED) {
         resumeGame();
     }
@@ -363,6 +398,8 @@ function resumeGame() {
 
     state.current = GameState.PLAYING;
     document.getElementById('pause-screen').style.display = 'none';
+
+    document.body.classList.remove('is-paused');
     state.lastTime = 0;
 }
 
@@ -371,6 +408,7 @@ function restartLevel() {
     if (typeof resetKeys === 'function') resetKeys();
 
     document.getElementById('pause-screen').style.display = 'none';
+    document.body.classList.remove('is-paused');
 
     // Réinitialiser les vies selon la difficulté
     const maxLives = state.difficulty <= 0.5 ? 10 : state.difficulty <= 0.7 ? 7 : state.difficulty <= 1.2 ? 4 : 2;
@@ -390,6 +428,9 @@ function quitToMenu() {
     state.current = GameState.MENU;
     state.level = 1; // Retour au niveau 1
     document.getElementById('start-screen').style.display = 'flex';
+
+    document.body.classList.remove('is-playing');
+    document.body.classList.remove('is-paused');
     if (state.animationId) cancelAnimationFrame(state.animationId);
 }
 

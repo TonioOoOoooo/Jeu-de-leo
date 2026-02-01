@@ -671,6 +671,8 @@ function startGame(difficulty) {
     }
 
     document.getElementById('start-screen').style.display = 'none';
+
+    document.body.classList.add('is-playing');
     
     initLevel(state.level);
     state.current = GameState.PLAYING;
@@ -771,8 +773,10 @@ function initLevel(levelNum) {
     state.teleportTimer = 0;
     state.screenShake = 0; // IMPORTANT : Reset screen shake !
     state.coins = 0;
-    // Compter TOUTES les pièces (normales + spéciales du niveau BombJack)
-    state.maxCoinsInLevel = currentLevelData.coins.length + (currentLevelData.specialCoins ? currentLevelData.specialCoins.length : 0);
+    // Compter TOUTES les pièces (normales + secrètes/valeur variable) en additionnant leurs valeurs
+    const baseCoinsTotal = (currentLevelData.coins || []).reduce((sum, c) => sum + (c.value || 1), 0);
+    const specialCoinsTotal = (currentLevelData.specialCoins || []).reduce((sum, c) => sum + (c.value || 1), 0);
+    state.maxCoinsInLevel = baseCoinsTotal + specialCoinsTotal;
 
     // Reset sous-niveaux (pour niveau 5)
     state.inSubLevel = false;
@@ -922,6 +926,10 @@ function update() {
 
 function updateHints() {
     if (!currentLevelData) return;
+
+    if (typeof updateKeyIndicator === 'function') {
+        updateKeyIndicator();
+    }
 
     if (!state.hasKey && currentLevelData.keyItem && state.keyHintCooldown === 0) {
         const dx = (player.x + player.w / 2) - (currentLevelData.keyItem.x + currentLevelData.keyItem.w / 2);
