@@ -362,163 +362,67 @@ function initLevel3Visuals(w, h) {
     return visuals;
 }
 
-// ===== NIVEAU 4 : MONDE CHAMPIGNON (VERSION ÉPURÉE) =====
+// ===== NIVEAU 4 : MONDE CHAMPIGNON (VERSION CLASSIC MARIO) =====
 function initLevel4Visuals(w, h) {
     if (VisualCache.level4) return VisualCache.level4;
 
     const visuals = {
-        // Éléments de fond
+        // --- ÉLÉMENTS DE FOND ACTIFS ---
         hills: [],
-        bgMushrooms: [],
         clouds: [],
         bushes: [],
-        // Éléments interactifs visuels
-        questionBlocks: [],
-        floatingCoins: [],
-        pipes: [],
-        // Effets atmosphériques
-        fireflies: [], // Gardé mais réduit
+        
+        // --- ÉLÉMENTS VIDE (Pour ne pas perturber le joueur) ---
+        // On laisse les tableaux vides pour éviter les bugs si le moteur de rendu les cherche
+        bgMushrooms: [],     // Supprimé : Trop distrayant
+        questionBlocks: [],  // Supprimé : C'était des faux blocs !
+        floatingCoins: [],   // Supprimé : C'était des fausses pièces !
+        pipes: [],           // Supprimé : Les vrais tuyaux sont dans levels.js
+        fireflies: [],       
         sparkles: [],
         butterflies: [],
-        // Décor naturel
         flowers: [],
         grassTufts: []
     };
 
-    // Soleil joyeux (stocké séparément)
-    visuals.sun = { x: w - 120, y: 100, rayPhase: 0 };
+    // Soleil (Optionnel, on peut le garder en haut à droite)
+    visuals.sun = { x: w - 100, y: 80, rayPhase: 0 };
 
-    // Collines ondulantes (réduites et adoucies)
-    // Couche lointaine
-    for (let i = 0; i < 8; i++) {
+    // 1. COLLINES (Style Mario : Vertes et simples)
+    // On remplace les collines bleues complexes par des collines vertes classiques
+    for (let i = 0; i < 6; i++) {
         visuals.hills.push({
-            x: i * 500 - 100,
-            y: h * 0.6,
-            w: 400 + Math.random() * 200,
-            h: 300,
-            color: '#2a5298', // Bleu nuit doux au lieu de gris sombre
-            layer: 0.2
-        });
-    }
-    // Couche moyenne
-    for (let i = 0; i < 8; i++) {
-        visuals.hills.push({
-            x: i * 350 - 50,
-            y: h * 0.75, // Plus bas pour dégager la vue
-            w: 500,
-            h: 200,
-            color: '#1e3c72', // Bleu profond
-            layer: 0.5
+            x: i * 600, // Espacées régulièrement
+            y: h * 0.65, 
+            w: 400, 
+            h: 300, 
+            color: '#009900', // Vert Mario classique
+            border: '#006600', // Contour plus sombre
+            layer: 0.2 // Très loin derrière
         });
     }
 
-    // Nuages Mario (blancs et moelleux)
-    for (let i = 0; i < 15; i++) {
+    // 2. NUAGES (Style Mario : Blancs et en haut)
+    for (let i = 0; i < 8; i++) {
         visuals.clouds.push({
-            x: seededRandom(i * 277) * w * 3,
-            y: 60 + seededRandom(i * 281) * 120,
-            width: 100 + seededRandom(i * 283) * 120,
-            height: 50 + seededRandom(i * 293) * 30,
-            speed: 0.15 + seededRandom(i * 307) * 0.25,
-            puffs: 2 + Math.floor(seededRandom(i * 311) * 3)
+            x: seededRandom(i * 100) * w * 2,
+            y: 50 + seededRandom(i * 200) * 150, // Restent dans le ciel
+            width: 80 + seededRandom(i * 300) * 60,
+            height: 40,
+            speed: 0.05, // Bougent très doucement
+            puffs: 3
         });
     }
 
-    // Champignons géants colorés (style Mario)
-    const mushroomColors = [
-        { cap: '#e74c3c', spots: '#ffffff' },  // Rouge à pois blancs
-        { cap: '#f39c12', spots: '#ffffff' },  // Orange
-        { cap: '#9b59b6', spots: '#f1c40f' },  // Violet à pois jaunes
-        { cap: '#3498db', spots: '#ffffff' },  // Bleu
-        { cap: '#2ecc71', spots: '#ffffff' }   // Vert
-    ];
-    for (let i = 0; i < 8; i++) {
-        const colorSet = mushroomColors[i % mushroomColors.length];
-        visuals.bgMushrooms.push({
-            x: seededRandom(i * 313) * w * 3,
-            baseY: h * 0.7,
-            scale: 1.0 + seededRandom(i * 317) * 1.0,
-            capColor: colorSet.cap,
-            spotColor: colorSet.spots,
-            stemColor: '#f5f5dc',
-            parallax: 0.2 + seededRandom(i * 331) * 0.3,
-            bounce: seededRandom(i * 337) * Math.PI * 2
-        });
-    }
-
-    // Buissons Mario (arrondis avec yeux)
-    for (let i = 0; i < 18; i++) {
-        visuals.bushes.push({
-            x: seededRandom(i * 347) * w * 3,
-            y: h * 0.82,
-            width: 80 + seededRandom(i * 349) * 100,
-            hasEyes: seededRandom(i * 353) > 0.6,
-            parallax: 0.5
-        });
-    }
-
-    // Blocs ? flottants
+    // 3. BUISSONS (Au sol uniquement)
+    // Ils décorent le sol sans gêner la vue
     for (let i = 0; i < 10; i++) {
-        visuals.questionBlocks.push({
-            x: seededRandom(i * 359) * w * 2.5,
-            y: h * 0.25 + seededRandom(i * 367) * h * 0.25,
-            size: 40,
-            bounce: seededRandom(i * 373) * Math.PI * 2,
-            sparkle: seededRandom(i * 379) * Math.PI * 2
-        });
-    }
-
-    // Pièces flottantes qui tournent
-    for (let i = 0; i < 25; i++) {
-        visuals.floatingCoins.push({
-            x: seededRandom(i * 383) * w * 3,
-            y: h * 0.2 + seededRandom(i * 389) * h * 0.4,
-            rotation: seededRandom(i * 397) * Math.PI * 2,
-            bobPhase: seededRandom(i * 401) * Math.PI * 2
-        });
-    }
-
-    // Fleurs souriantes
-    const flowerColors = ['#e74c3c', '#f39c12', '#9b59b6', '#e91e63', '#ff6b6b'];
-    for (let i = 0; i < 30; i++) {
-        visuals.flowers.push({
-            x: seededRandom(i * 409) * w * 3,
-            y: h * 0.85,
-            color: flowerColors[i % flowerColors.length],
-            size: 15 + seededRandom(i * 419) * 15,
-            sway: seededRandom(i * 421) * Math.PI * 2
-        });
-    }
-
-    // Touffes d'herbe
-    for (let i = 0; i < 50; i++) {
-        visuals.grassTufts.push({
-            x: seededRandom(i * 431) * w * 3,
-            y: h * 0.88,
-            blades: 3 + Math.floor(seededRandom(i * 433) * 4),
-            height: 15 + seededRandom(i * 439) * 20
-        });
-    }
-
-    // Papillons colorés
-    for (let i = 0; i < 12; i++) {
-        visuals.butterflies.push({
-            x: seededRandom(i * 443) * w * 2,
-            y: h * 0.3 + seededRandom(i * 449) * h * 0.3,
-            color: ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff'][i % 5],
-            wingPhase: seededRandom(i * 457) * Math.PI * 2,
-            pathPhase: seededRandom(i * 461) * Math.PI * 2
-        });
-    }
-
-    // Étincelles magiques
-    for (let i = 0; i < 20; i++) {
-        visuals.sparkles.push({
-            x: seededRandom(i * 463) * w * 2,
-            y: seededRandom(i * 467) * h,
-            size: 2 + seededRandom(i * 479) * 4,
-            twinkle: seededRandom(i * 487) * Math.PI * 2,
-            color: ['#ffffff', '#ffeaa7', '#74b9ff'][i % 3]
+        visuals.bushes.push({
+            x: i * 400 + 50, // Alignés ou semi-aléatoires
+            y: h * 0.88, // Juste posés sur le sol (supposant que le sol est à h*0.9)
+            width: 100,
+            hasEyes: false, // Pas d'yeux pour rester sobre
+            parallax: 0.5
         });
     }
 
