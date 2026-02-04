@@ -1550,6 +1550,25 @@ function drawEnemies() {
                     ctx.fillRect(e.x + e.w - 13, e.y + 10, 8, 3);
                 }
                 break;
+
+            case 'turret':
+                // ========== TOURELLE APERTURE (style Portal) ==========
+                if (typeof drawApertureTurret === 'function') {
+                    drawApertureTurret(ctx, e, state.frameTick);
+                } else {
+                    // Fallback simple
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    ctx.fillStyle = '#FF0000';
+                    ctx.beginPath();
+                    ctx.arc(e.x + e.w/2, e.y + 15, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Pattes
+                    ctx.fillStyle = '#333333';
+                    ctx.fillRect(e.x + 5, e.y + e.h - 15, 8, 15);
+                    ctx.fillRect(e.x + e.w - 13, e.y + e.h - 15, 8, 15);
+                }
+                break;
         }
     }
 }

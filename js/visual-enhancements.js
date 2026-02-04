@@ -3167,96 +3167,229 @@ function drawLevel6Background(ctx, w, h, camX) {
     const visuals = initLevel6Visuals(w, h);
     const time = state.frameTick;
 
-    // Fond spatial profond
-    const spaceGradient = ctx.createLinearGradient(0, 0, 0, h);
-    spaceGradient.addColorStop(0, '#0a0a1a');
-    spaceGradient.addColorStop(0.3, '#1a1a3e');
-    spaceGradient.addColorStop(0.6, '#0d0d2b');
-    spaceGradient.addColorStop(1, '#1a0a2e');
-    ctx.fillStyle = spaceGradient;
+    // ===== FOND LABORATOIRE APERTURE (blanc/gris clair) =====
+    const labGradient = ctx.createLinearGradient(0, 0, 0, h);
+    labGradient.addColorStop(0, '#F5F5F5');
+    labGradient.addColorStop(0.3, '#E8E8E8');
+    labGradient.addColorStop(0.7, '#DEDEDE');
+    labGradient.addColorStop(1, '#D0D0D0');
+    ctx.fillStyle = labGradient;
     ctx.fillRect(0, 0, w, h);
 
-    // Nébuleuses
-    for (const nebula of visuals.nebulae) {
-        drawNebula(ctx, nebula.x - camX * 0.05, nebula.y, nebula.width, nebula.height, nebula.color, nebula.opacity);
+    // ===== PANNEAUX DE MUR (style Portal) =====
+    const panelSize = 80;
+    const panelMargin = 4;
+
+    for (let py = 0; py < h; py += panelSize) {
+        for (let px = -camX * 0.1; px < w + panelSize; px += panelSize) {
+            const adjustedX = px % (w + panelSize * 2);
+
+            // Panneau principal (blanc cassé)
+            ctx.fillStyle = '#FAFAFA';
+            ctx.fillRect(adjustedX + panelMargin, py + panelMargin,
+                         panelSize - panelMargin * 2, panelSize - panelMargin * 2);
+
+            // Bordure du panneau
+            ctx.strokeStyle = '#C0C0C0';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(adjustedX + panelMargin, py + panelMargin,
+                           panelSize - panelMargin * 2, panelSize - panelMargin * 2);
+
+            // Vis dans les coins (détail)
+            ctx.fillStyle = '#A0A0A0';
+            const screwSize = 3;
+            ctx.beginPath();
+            ctx.arc(adjustedX + panelMargin + 8, py + panelMargin + 8, screwSize, 0, Math.PI * 2);
+            ctx.arc(adjustedX + panelSize - panelMargin - 8, py + panelMargin + 8, screwSize, 0, Math.PI * 2);
+            ctx.arc(adjustedX + panelMargin + 8, py + panelSize - panelMargin - 8, screwSize, 0, Math.PI * 2);
+            ctx.arc(adjustedX + panelSize - panelMargin - 8, py + panelSize - panelMargin - 8, screwSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
-    // Étoiles scintillantes
-    for (const star of visuals.stars) {
-        const twinkle = Math.sin(time * 0.05 + star.twinkleOffset);
-        const alpha = 0.5 + twinkle * 0.5;
+    // ===== BANDES ORANGE/NOIR (warning stripes) =====
+    const stripeY = h - 60;
+    ctx.fillStyle = '#1A1A1A';
+    ctx.fillRect(0, stripeY, w, 20);
 
-        ctx.fillStyle = star.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba').replace('#', '');
-        if (star.color.startsWith('#')) {
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle = star.color;
-        }
+    for (let sx = -camX * 0.5; sx < w + 40; sx += 40) {
+        ctx.fillStyle = '#FF6600';
         ctx.beginPath();
-        ctx.arc(star.x - camX * 0.02, star.y, star.size, 0, Math.PI * 2);
+        ctx.moveTo(sx, stripeY);
+        ctx.lineTo(sx + 20, stripeY);
+        ctx.lineTo(sx + 40, stripeY + 20);
+        ctx.lineTo(sx + 20, stripeY + 20);
+        ctx.closePath();
         ctx.fill();
+    }
+
+    // ===== LOGO APERTURE EN ARRIÈRE-PLAN =====
+    const logoX = w / 2 - camX * 0.02;
+    const logoY = h * 0.3;
+    const logoSize = 150;
+
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.strokeStyle = '#FF6600';
+    ctx.lineWidth = 8;
+
+    // Cercle principal avec segments (logo Aperture stylisé)
+    for (let i = 0; i < 8; i++) {
+        const startAngle = (i / 8) * Math.PI * 2 - Math.PI / 2;
+        const endAngle = ((i + 0.7) / 8) * Math.PI * 2 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.arc(logoX, logoY, logoSize, startAngle, endAngle);
+        ctx.stroke();
+    }
+
+    // Cercle intérieur
+    ctx.lineWidth = 4;
+    for (let i = 0; i < 8; i++) {
+        const startAngle = (i / 8) * Math.PI * 2 - Math.PI / 2 + 0.2;
+        const endAngle = ((i + 0.5) / 8) * Math.PI * 2 - Math.PI / 2 + 0.2;
+        ctx.beginPath();
+        ctx.arc(logoX, logoY, logoSize * 0.6, startAngle, endAngle);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // ===== LUMIÈRES DE PLAFOND =====
+    for (let lx = 100 - camX * 0.15; lx < w + 200; lx += 300) {
+        // Boîtier de la lumière
+        ctx.fillStyle = '#E0E0E0';
+        ctx.fillRect(lx - 60, 0, 120, 15);
+
+        // Néon
+        const flicker = Math.sin(time * 0.1 + lx) > 0.95 ? 0.5 : 1;
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * flicker})`;
+        ctx.shadowColor = '#FFFFFF';
+        ctx.shadowBlur = 20 * flicker;
+        ctx.fillRect(lx - 50, 5, 100, 8);
+        ctx.shadowBlur = 0;
+    }
+
+    // ===== CONDUITS/TUYAUX EN HAUT =====
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(0, 25, w, 8);
+    ctx.fillStyle = '#606060';
+    ctx.fillRect(0, 33, w, 3);
+
+    // ===== ÉCRANS DE MONITORING =====
+    for (let screenX = 200 - camX * 0.1; screenX < w; screenX += 600) {
+        // Cadre de l'écran
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(screenX, 50, 100, 70);
+
+        // Écran
+        ctx.fillStyle = '#001A00';
+        ctx.fillRect(screenX + 5, 55, 90, 60);
+
+        // Texte/données simulées
+        ctx.fillStyle = '#00FF00';
+        ctx.font = '8px monospace';
+        ctx.globalAlpha = 0.8;
+        const statusText = ['CHAMBRE ACTIVE', 'TEST EN COURS', 'SUJET: OK'][Math.floor(screenX / 200) % 3];
+        ctx.fillText(statusText, screenX + 10, 75);
+
+        // Barres de données
+        for (let bar = 0; bar < 3; bar++) {
+            const barWidth = 30 + Math.sin(time * 0.05 + bar + screenX) * 20;
+            ctx.fillRect(screenX + 10, 85 + bar * 10, barWidth, 6);
+        }
         ctx.globalAlpha = 1;
     }
-
-    // Grille futuriste
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
-    ctx.lineWidth = 1;
-    for (const line of visuals.gridLines) {
-        const y = (line.y + time * line.speed * 0.5) % h;
-        ctx.globalAlpha = line.opacity;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-        ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-
-    // Grille verticale
-    ctx.strokeStyle = 'rgba(255, 0, 255, 0.05)';
-    for (let x = 0; x < w; x += 100) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
-    }
-
-    // Planète ou lune en arrière-plan
-    drawSciFiPlanet(ctx, w - 200, 150 - camX * 0.02);
 }
 
 function drawLevel6Foreground(ctx, w, h, camX) {
     const visuals = initLevel6Visuals(w, h);
     const time = state.frameTick;
 
-    // Particules flottantes
+    // ===== PARTICULES DE POUSSIÈRE (laboratoire) =====
     for (const particle of visuals.floatingParticles) {
-        const x = (particle.x + time * particle.speedX) % (w * 3);
-        const y = particle.y + Math.sin(time * 0.02 + particle.x) * 20;
+        const x = (particle.x + time * particle.speedX * 0.3) % (w * 3);
+        const y = particle.y + Math.sin(time * 0.01 + particle.x) * 10;
 
-        ctx.fillStyle = particle.color;
-        ctx.globalAlpha = 0.6 + Math.sin(time * 0.1 + particle.x) * 0.4;
+        // Particules blanches/grises au lieu de cyan/magenta
+        ctx.fillStyle = '#FFFFFF';
+        ctx.globalAlpha = 0.15 + Math.sin(time * 0.05 + particle.x) * 0.1;
         ctx.beginPath();
-        ctx.arc(x - camX * 0.8, y, particle.size, 0, Math.PI * 2);
+        ctx.arc(x - camX * 0.8, y, particle.size * 0.5, 0, Math.PI * 2);
         ctx.fill();
-
-        // Traînée
-        ctx.globalAlpha = 0.2;
-        ctx.beginPath();
-        ctx.moveTo(x - camX * 0.8, y);
-        ctx.lineTo(x - camX * 0.8 - 20, y);
-        ctx.strokeStyle = particle.color;
-        ctx.lineWidth = particle.size / 2;
-        ctx.stroke();
     }
     ctx.globalAlpha = 1;
 
-    // Effets de scan horizontal
-    const scanY = (time * 2) % h;
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
-    ctx.lineWidth = 2;
+    // ===== EFFET DE SCAN LABORATOIRE =====
+    const scanY = (time * 1.5) % (h + 100) - 50;
+    ctx.strokeStyle = 'rgba(255, 102, 0, 0.15)'; // Orange Aperture
+    ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(0, scanY);
     ctx.lineTo(w, scanY);
     ctx.stroke();
+
+    // Ligne de scan secondaire (décalée)
+    const scanY2 = (time * 1.5 + 200) % (h + 100) - 50;
+    ctx.strokeStyle = 'rgba(0, 170, 255, 0.1)'; // Bleu portail
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, scanY2);
+    ctx.lineTo(w, scanY2);
+    ctx.stroke();
+
+    // ===== SIGNALÉTIQUE DES CHAMBRES DE TEST =====
+    // Ces panneaux sont dessinés en foreground pour être visibles
+    if (typeof currentLevelData !== 'undefined' && currentLevelData.decorations) {
+        for (const deco of currentLevelData.decorations) {
+            if (deco.type === 'chamber_sign') {
+                drawChamberSign(ctx, deco.x - camX, deco.y, deco.number);
+            }
+        }
+    }
+
+    // ===== EFFET DE VIGNETTE LÉGÈRE =====
+    const vignetteGrad = ctx.createRadialGradient(w/2, h/2, h * 0.3, w/2, h/2, h);
+    vignetteGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vignetteGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+    ctx.fillStyle = vignetteGrad;
+    ctx.fillRect(0, 0, w, h);
+}
+
+// ===== PANNEAU DE NUMÉRO DE CHAMBRE (style Portal) =====
+function drawChamberSign(ctx, x, y, number) {
+    const signWidth = 80;
+    const signHeight = 50;
+
+    ctx.save();
+
+    // Fond du panneau (gris foncé)
+    ctx.fillStyle = '#2A2A2A';
+    ctx.fillRect(x, y, signWidth, signHeight);
+
+    // Bordure orange
+    ctx.strokeStyle = '#FF6600';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + 2, y + 2, signWidth - 4, signHeight - 4);
+
+    // Texte "CHAMBRE"
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 8px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('CHAMBRE', x + signWidth / 2, y + 15);
+
+    // Numéro de chambre (grand)
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#FF6600';
+    ctx.fillText(number, x + signWidth / 2, y + 40);
+
+    // Petite icône d'avertissement si chambre avancée
+    if (parseInt(number) >= 3) {
+        ctx.fillStyle = '#FF0000';
+        ctx.font = '10px Arial';
+        ctx.fillText('⚠', x + signWidth - 12, y + 12);
+    }
+
+    ctx.restore();
 }
 
 // Nébuleuse colorée
@@ -6896,6 +7029,154 @@ window.drawMinecraftBlazePremium = drawMinecraftBlazePremium;
 window.drawMinecraftGhastPremium = drawMinecraftGhastPremium;
 window.drawMinecraftMagmaCubePremium = drawMinecraftMagmaCubePremium;
 window.drawMinecraftEndermanPremium = drawMinecraftEndermanPremium;
+
+// ============================================================
+// TOURELLE APERTURE - NIVEAU 6 (style Portal)
+// ============================================================
+
+function drawApertureTurret(ctx, e, frameTick) {
+    const dir = e.dir || 1;
+    const centerX = e.x + e.w / 2;
+    const centerY = e.y + e.h / 2;
+
+    // Animation de scan
+    const scanAngle = Math.sin(frameTick * 0.05) * 0.3;
+    const eyePulse = Math.sin(frameTick * 0.1) * 0.2 + 0.8;
+
+    ctx.save();
+    ctx.translate(centerX, e.y + e.h);
+
+    // ===== PATTES (tripode) =====
+    ctx.fillStyle = '#2A2A2A';
+    ctx.strokeStyle = '#1A1A1A';
+    ctx.lineWidth = 2;
+
+    // Patte arrière (centrale)
+    ctx.beginPath();
+    ctx.moveTo(0, -e.h * 0.3);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(-5, 8);
+    ctx.lineTo(5, 8);
+    ctx.lineTo(0, 0);
+    ctx.fill();
+    ctx.stroke();
+
+    // Patte gauche
+    ctx.beginPath();
+    ctx.moveTo(-e.w * 0.3, -e.h * 0.4);
+    ctx.lineTo(-e.w * 0.4, 0);
+    ctx.lineTo(-e.w * 0.5, 5);
+    ctx.stroke();
+
+    // Patte droite
+    ctx.beginPath();
+    ctx.moveTo(e.w * 0.3, -e.h * 0.4);
+    ctx.lineTo(e.w * 0.4, 0);
+    ctx.lineTo(e.w * 0.5, 5);
+    ctx.stroke();
+
+    // ===== CORPS PRINCIPAL (œuf blanc) =====
+    const bodyGrad = ctx.createRadialGradient(0, -e.h * 0.5, 0, 0, -e.h * 0.5, e.w * 0.6);
+    bodyGrad.addColorStop(0, '#FFFFFF');
+    bodyGrad.addColorStop(0.7, '#E8E8E8');
+    bodyGrad.addColorStop(1, '#CCCCCC');
+    ctx.fillStyle = bodyGrad;
+
+    // Forme ovoïde
+    ctx.beginPath();
+    ctx.ellipse(0, -e.h * 0.5, e.w * 0.45, e.h * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bordure subtile
+    ctx.strokeStyle = '#AAAAAA';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // ===== ŒIL ROUGE (laser) =====
+    ctx.save();
+    ctx.translate(0, -e.h * 0.5);
+    ctx.rotate(scanAngle * dir);
+
+    // Lueur de l'œil
+    ctx.shadowColor = '#FF0000';
+    ctx.shadowBlur = 15 * eyePulse;
+
+    // Œil principal
+    const eyeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 12);
+    eyeGrad.addColorStop(0, '#FF0000');
+    eyeGrad.addColorStop(0.5, '#CC0000');
+    eyeGrad.addColorStop(1, '#660000');
+    ctx.fillStyle = eyeGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pupille/iris
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflet
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.beginPath();
+    ctx.arc(-3, -3, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    // ===== LASER DE VISÉE =====
+    if (frameTick % 60 < 40) {
+        ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 + eyePulse * 0.2})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(0, 10);
+        ctx.lineTo(0, 100);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    ctx.restore();
+
+    // ===== DÉTAILS DU CORPS =====
+    // Lignes de séparation des panneaux
+    ctx.strokeStyle = '#BBBBBB';
+    ctx.lineWidth = 1;
+
+    // Ligne verticale centrale
+    ctx.beginPath();
+    ctx.moveTo(0, -e.h * 0.9);
+    ctx.lineTo(0, -e.h * 0.15);
+    ctx.stroke();
+
+    // Lignes latérales
+    ctx.beginPath();
+    ctx.moveTo(-e.w * 0.2, -e.h * 0.85);
+    ctx.lineTo(-e.w * 0.35, -e.h * 0.2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.w * 0.2, -e.h * 0.85);
+    ctx.lineTo(e.w * 0.35, -e.h * 0.2);
+    ctx.stroke();
+
+    // ===== LOGO APERTURE (petit cercle segmenté) =====
+    ctx.strokeStyle = '#FF6600';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const nextAngle = ((i + 0.7) / 8) * Math.PI * 2;
+        ctx.arc(0, -e.h * 0.75, 6, angle, nextAngle);
+        ctx.moveTo(0, 0);
+    }
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+// Export Tourelle Aperture
+window.drawApertureTurret = drawApertureTurret;
 
 // Export des fonctions
 window.drawEnhancedLevelBackground = drawEnhancedLevelBackground;
