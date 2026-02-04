@@ -50,10 +50,31 @@ const LEVELS = {
             let floorY = h - unit * 1.5;
             level.ladders.push({ x: ladderX, y: zombiePlatY, w: 60, h: floorY - zombiePlatY });
             level.platforms.push({ x: ladderX - 500, y: floorY, w: w + 1000, h: unit * 2 });
-            
+
             level.enemies.push({ x: ladderX - 200, y: floorY - 60, w: 60, h: 60, type: 'chest_monster', patrolStart: ladderX - 350, patrolEnd: ladderX - 100, dir: 1, speed: 2 * state.difficulty });
-            
+
             level.keyItem = { x: ladderX - 400, y: floorY - 50, w: 40, h: 40 };
+
+            // ===== AMÉLIORATIONS PLATEFORME FINALE (Game Design) =====
+            // Trail de pièces menant vers la sortie
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({ x: ladderX + 20 + i * 70, y: floorY - 50, w: 20, h: 20 });
+            }
+
+            // Pièces bonus en arc (récompense visuelle)
+            for (let i = 0; i < 5; i++) {
+                const arcHeight = Math.sin((i / 4) * Math.PI) * 60;
+                level.coins.push({ x: ladderX + 80 + i * 50, y: floorY - 100 - arcHeight, w: 20, h: 20 });
+            }
+
+            // Power-up magnet pour faciliter la collection avant la sortie
+            level.powerups.push({ x: ladderX + 180, y: floorY - 120, w: 35, h: 35, type: 'magnet' });
+
+            // Pièces secrètes bonus (valeur 3) en hauteur pour les explorateurs
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: ladderX + 100 + i * 60, y: floorY - 180, w: 25, h: 25, value: 3, secret: true });
+            }
+
             level.goal = { x: ladderX + 300, y: floorY - 80, w: 70, h: 80 };
             level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
 
@@ -98,6 +119,26 @@ const LEVELS = {
             // Pièces pour indiquer l'ascenseur
             level.coins.push({ x: returnLiftX + 40, y: exitY - 50, w: 20, h: 20 });
             level.coins.push({ x: returnLiftX + 40, y: unit * 2 - 30, w: 20, h: 20 }); // Pièce en haut pour montrer qu'il monte!
+
+            // ===== AMÉLIORATIONS PLATEFORME FINALE (Game Design) =====
+            // Trail de pièces menant vers la sortie après avoir pris la clé
+            for (let i = 0; i < 10; i++) {
+                level.coins.push({ x: returnLiftX + 120 + i * 60, y: exitY - 50, w: 20, h: 20 });
+            }
+
+            // Pièces bonus en zigzag (pattern ludique)
+            for (let i = 0; i < 6; i++) {
+                const zigzag = (i % 2 === 0) ? -30 : -90;
+                level.coins.push({ x: returnLiftX + 180 + i * 50, y: exitY + zigzag, w: 20, h: 20 });
+            }
+
+            // Power-up shield final pour se protéger avant la sortie
+            level.powerups.push({ x: returnLiftX + 350, y: exitY - 80, w: 35, h: 35, type: 'shield' });
+
+            // Pièces secrètes bonus (valeur 3) en hauteur
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: returnLiftX + 200 + i * 70, y: exitY - 140, w: 25, h: 25, value: 3, secret: true });
+            }
 
             level.goal = { x: topX + 400, y: exitY - 80, w: 70, h: 80 };
             level.hazards.push({ x: -1000, y: h + 50, w: w * 30, h: 100, type: 'void' });
@@ -242,8 +283,8 @@ const LEVELS = {
             // Pièces finales
             for (let i = 0; i < 5; i++) level.coins.push({ x: throneX + 70 + i * 50, y: unit * 7 - (i + 1) * 35 - 30, w: 20, h: 20 });
 
-            // Sol de lave en-dessous de tout
-            level.hazards.push({ x: -1000, y: h - 50, w: w * 30, h: 100, type: 'lava_floor' });
+            // Sol de lave en-dessous de tout (CORRIGÉ : était à h-50, traversait le sol!)
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'lava_floor' });
 
             return level;
         }
