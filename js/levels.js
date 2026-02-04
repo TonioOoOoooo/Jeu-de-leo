@@ -56,23 +56,23 @@ const LEVELS = {
             level.keyItem = { x: ladderX - 400, y: floorY - 50, w: 40, h: 40 };
 
             // ===== AMÉLIORATIONS PLATEFORME FINALE (Game Design) =====
-            // Trail de pièces menant vers la sortie
-            for (let i = 0; i < 8; i++) {
-                level.coins.push({ x: ladderX + 20 + i * 70, y: floorY - 50, w: 20, h: 20 });
+            // Trail de pièces APRÈS l'échelle, menant vers la sortie (au bout de la plateforme!)
+            for (let i = 0; i < 10; i++) {
+                level.coins.push({ x: ladderX + 350 + i * 60, y: floorY - 50, w: 20, h: 20 });
             }
 
-            // Pièces bonus en arc (récompense visuelle)
+            // Pièces bonus en arc (récompense visuelle au bout)
             for (let i = 0; i < 5; i++) {
                 const arcHeight = Math.sin((i / 4) * Math.PI) * 60;
-                level.coins.push({ x: ladderX + 80 + i * 50, y: floorY - 100 - arcHeight, w: 20, h: 20 });
+                level.coins.push({ x: ladderX + 400 + i * 50, y: floorY - 100 - arcHeight, w: 20, h: 20 });
             }
 
-            // Power-up magnet pour faciliter la collection avant la sortie
-            level.powerups.push({ x: ladderX + 180, y: floorY - 120, w: 35, h: 35, type: 'magnet' });
+            // Power-up magnet au bout de la plateforme
+            level.powerups.push({ x: ladderX + 550, y: floorY - 120, w: 35, h: 35, type: 'magnet' });
 
-            // Pièces secrètes bonus (valeur 3) en hauteur pour les explorateurs
+            // Pièces secrètes bonus en hauteur (au bout)
             for (let i = 0; i < 3; i++) {
-                level.coins.push({ x: ladderX + 100 + i * 60, y: floorY - 180, w: 25, h: 25, value: 3, secret: true });
+                level.coins.push({ x: ladderX + 450 + i * 60, y: floorY - 180, w: 25, h: 25, value: 3, secret: true });
             }
 
             level.goal = { x: ladderX + 300, y: floorY - 80, w: 70, h: 80 };
@@ -121,23 +121,24 @@ const LEVELS = {
             level.coins.push({ x: returnLiftX + 40, y: unit * 2 - 30, w: 20, h: 20 }); // Pièce en haut pour montrer qu'il monte!
 
             // ===== AMÉLIORATIONS PLATEFORME FINALE (Game Design) =====
-            // Trail de pièces menant vers la sortie après avoir pris la clé
-            for (let i = 0; i < 10; i++) {
-                level.coins.push({ x: returnLiftX + 120 + i * 60, y: exitY - 50, w: 20, h: 20 });
+            // Trail de pièces menant vers la sortie (APRÈS l'ascenseur, AVANT la porte!)
+            // Goal est à topX + 400, donc pièces entre returnLiftX + 120 et topX + 350
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({ x: topX + 250 + i * 50, y: exitY - 50, w: 20, h: 20 });
             }
 
-            // Pièces bonus en zigzag (pattern ludique)
-            for (let i = 0; i < 6; i++) {
-                const zigzag = (i % 2 === 0) ? -30 : -90;
-                level.coins.push({ x: returnLiftX + 180 + i * 50, y: exitY + zigzag, w: 20, h: 20 });
+            // Pièces bonus en zigzag (pattern ludique) - SUR la plateforme
+            for (let i = 0; i < 5; i++) {
+                const zigzag = (i % 2 === 0) ? -50 : -100;
+                level.coins.push({ x: topX + 280 + i * 45, y: exitY + zigzag, w: 20, h: 20 });
             }
 
-            // Power-up shield final pour se protéger avant la sortie
-            level.powerups.push({ x: returnLiftX + 350, y: exitY - 80, w: 35, h: 35, type: 'shield' });
+            // Power-up shield final AVANT la sortie
+            level.powerups.push({ x: topX + 500, y: exitY - 80, w: 35, h: 35, type: 'shield' });
 
-            // Pièces secrètes bonus (valeur 3) en hauteur
+            // Pièces secrètes bonus (valeur 3) en hauteur - AVANT la porte
             for (let i = 0; i < 3; i++) {
-                level.coins.push({ x: returnLiftX + 200 + i * 70, y: exitY - 140, w: 25, h: 25, value: 3, secret: true });
+                level.coins.push({ x: topX + 320 + i * 50, y: exitY - 140, w: 25, h: 25, value: 3, secret: true });
             }
 
             level.goal = { x: topX + 400, y: exitY - 80, w: 70, h: 80 };
@@ -197,10 +198,12 @@ const LEVELS = {
             // Grande plateforme centrale
             level.platforms.push({ x: fireRoomX, y: unit * 7, w: 500, h: unit * 3, type: 'stone' });
 
-            // Trois barres de feu tournantes en séquence
-            level.fireBars.push({ cx: fireRoomX + 100, cy: unit * 7 + 10, length: 140, angle: 0, speed: 0.05 * state.difficulty });
-            level.fireBars.push({ cx: fireRoomX + 250, cy: unit * 7 + 10, length: 150, angle: Math.PI, speed: -0.06 * state.difficulty });
-            level.fireBars.push({ cx: fireRoomX + 400, cy: unit * 7 + 10, length: 140, angle: Math.PI/2, speed: 0.07 * state.difficulty });
+            // Trois barres de feu tournantes MONTÉES (ne touchent plus le sol!)
+            // CORRIGÉ: cy était à unit*7+10 avec rayon 140-150 = touchait le sol et tuait le joueur
+            // NOUVEAU: cy à unit*6.5 avec rayon 80-90 = espace sécurisé de ~70px au-dessus du sol
+            level.fireBars.push({ cx: fireRoomX + 100, cy: unit * 6.5, length: 85, angle: 0, speed: 0.05 * state.difficulty });
+            level.fireBars.push({ cx: fireRoomX + 250, cy: unit * 6.5, length: 90, angle: Math.PI, speed: -0.06 * state.difficulty });
+            level.fireBars.push({ cx: fireRoomX + 400, cy: unit * 6.5, length: 85, angle: Math.PI/2, speed: 0.07 * state.difficulty });
 
             // Plateformes pour naviguer au-dessus
             level.platforms.push({ x: fireRoomX + 40, y: unit * 5.5, w: 70, h: 20, type: 'wood' });
@@ -753,6 +756,7 @@ const LEVELS = {
         name: "🌀 Labyrinthe des Portails 🌀",
         bgColor: "#1a1a2e",
         playerStart: { x: 50, y: 300 },
+        needsKey: true, // Clé obligatoire pour finir le niveau
         setup: (w, h) => {
             const unit = h / 10;
             const level = createEmptyLevel();
