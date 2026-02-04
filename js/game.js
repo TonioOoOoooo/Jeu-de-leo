@@ -1190,8 +1190,8 @@ function updatePortals() {
     if (state.level === 4 && !state.inSubLevel && keys.down && player.grounded) {
         // Vérifier si le joueur est sur une plateforme de type 'pipe'
         if (player.currentPlatform && player.currentPlatform.type === 'pipe') {
-            // Vérifier que c'est le BON tuyau (le premier, pas le deuxième)
-            if (player.currentPlatform.x === 450) {
+            // Vérifier que c'est le BON tuyau (tuyau d'entrée à x=700)
+            if (player.currentPlatform.x === 700) {
                 enterUnderground();
                 return;
             }
@@ -1368,26 +1368,21 @@ function exitUnderground() {
         showMessage('✅ CLÉ TROUVÉE !', 'Tu peux maintenant finir le niveau !', 3000);
     }
 
-    // Créer le portail de retour dans le monde principal
-    const returnPos = currentLevelData.returnPortalPos;
-    if (returnPos && !currentLevelData.portals.find(p => p.isReturnFromUnderground)) {
-        currentLevelData.portals.push({
-            x: returnPos.x,
-            y: returnPos.y,
-            w: 60,
-            h: 100,
-            color: '#00FF00',
-            destX: returnPos.x + 80,
-            destY: returnPos.y + 50,
-            isReturnFromUnderground: true,
-            isPipe: true
-        });
-    }
+    // ===== MÉCANIQUE SMB1 : Sortir d'un tuyau existant =====
+    // Trouver le tuyau de sortie dans le niveau principal (celui créé dans le niveau)
+    const exitPipe = currentLevelData.platforms.find(p => p.type === 'pipe' && p.isExitPipe);
 
-    // Téléporter le joueur à côté du portail de retour
-    if (returnPos) {
-        player.x = returnPos.x + 80;
-        player.y = returnPos.y + 50;
+    if (exitPipe) {
+        // Placer le joueur AU-DESSUS du tuyau (comme dans SMB1)
+        player.x = exitPipe.x + (exitPipe.w / 2) - (player.w / 2); // Centré sur le tuyau
+        player.y = exitPipe.y - player.h - 10; // Au-dessus du tuyau
+    } else {
+        // Fallback : utiliser returnPortalPos si le tuyau n'existe pas
+        const returnPos = currentLevelData.returnPortalPos;
+        if (returnPos) {
+            player.x = returnPos.x;
+            player.y = returnPos.y - player.h - 20; // Un peu au-dessus pour sécurité
+        }
     }
 
     player.vx = 0;
@@ -1396,6 +1391,9 @@ function exitUnderground() {
 
     // Restaurer le fond normal
     document.body.style.backgroundColor = LEVELS[4].bgColor;
+
+    // Effet visuel de sortie du tuyau
+    ParticleSystem.emit(player.x + player.w/2, player.y + player.h, 'sparkle', 20);
 
     // Message de retour avec bonus !
     showMessage('✅ RETOUR !', 'Bonus de pièces collecté !', 3000);

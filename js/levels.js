@@ -349,17 +349,29 @@ const LEVELS = {
             level.coins.push({ x: pipeX + 30, y: groundY - 140, w: 20, h: 20 });
 
             // ===== SOL APRÈS LE TUYAU =====
-            level.platforms.push({ x: 800, y: groundY, w: 400, h: unit, type: 'brick_floor' });
+            level.platforms.push({ x: 800, y: groundY, w: 700, h: unit, type: 'brick_floor' });
 
-            // ===== ZONE DE RETOUR DU SOUS-SOL =====
-            // Position où apparaîtra le portail de retour du sous-sol
-            level.returnPortalPos = { x: 900, y: groundY - 100 };
+            // ===== TUYAU DE SORTIE DU SOUS-SOL (Mécanique SMB1) =====
+            // Ce tuyau permet au joueur de ressortir du sous-sol
+            let exitPipeX = 950;
+            level.platforms.push({
+                x: exitPipeX,
+                y: groundY - 80,
+                w: 60,
+                h: 80 + unit,
+                type: 'pipe',
+                isExitPipe: true // Marqueur pour la sortie du sous-sol
+            });
+
+            // Pièces autour du tuyau de sortie (indicateurs visuels)
+            level.coins.push({ x: exitPipeX - 40, y: groundY - 60, w: 20, h: 20 });
+            level.coins.push({ x: exitPipeX + 100, y: groundY - 60, w: 20, h: 20 });
 
             // Power-up magnet pour collecter les pièces facilement
-            level.powerups.push({ x: 1050, y: groundY - 60, w: 35, h: 35, type: 'magnet' });
+            level.powerups.push({ x: 1150, y: groundY - 60, w: 35, h: 35, type: 'magnet' });
 
             // ===== DEUXIÈME PLATEFORME FLOTTANTE (bonus) =====
-            let plat2X = 1100;
+            let plat2X = 1250;
             level.platforms.push({ x: plat2X, y: groundY - 180, w: 80, h: 40, type: 'gold_block' });
             // Pièces bonus en or
             for (let i = 0; i < 2; i++) {
@@ -367,10 +379,10 @@ const LEVELS = {
             }
 
             // ===== SOL VERS LA SORTIE =====
-            level.platforms.push({ x: 1200, y: groundY, w: 600, h: unit, type: 'brick_floor' });
+            level.platforms.push({ x: 1500, y: groundY, w: 500, h: unit, type: 'brick_floor' });
 
             // ===== ESCALIER DE BRIQUES (5 marches style Super Mario Bros) =====
-            let stairsX = 1450;
+            let stairsX = 1600;
             for (let i = 0; i < 5; i++) {
                 level.platforms.push({
                     x: stairsX + (i * 40),
