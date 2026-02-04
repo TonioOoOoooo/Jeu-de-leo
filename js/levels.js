@@ -556,200 +556,435 @@ const LEVELS = {
             const blockSize = 40;
             const level = createEmptyLevel();
 
-            // ===== MONDE PRINCIPAL (Overworld amélioré) =====
+            // ===== MONDE PRINCIPAL (Overworld PREMIUM) =====
             level.clouds = [];
-            // Nuages stylisés Minecraft (carrés)
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 15; i++) {
                 level.clouds.push({
-                    x: i * 150 + Math.random() * 50,
-                    y: 40 + Math.random() * 100,
-                    w: 70 + Math.random() * 30
+                    x: i * 120 + Math.random() * 40,
+                    y: 30 + Math.random() * 80,
+                    w: 60 + Math.random() * 40
                 });
             }
 
-            // ===== SECTION 1 : PLAINE DE DÉPART =====
-            // Sol de départ avec variété
-            for (let i = 0; i < 18; i++) {
+            // ============================================================
+            // SECTION 1 : VILLAGE DE DÉPART
+            // Ambiance paisible, tutoriel implicite
+            // ============================================================
+
+            // Sol du village
+            for (let i = 0; i < 20; i++) {
                 level.platforms.push({ x: i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
                 level.platforms.push({ x: i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
             }
 
-            // Trail de pièces dorées (comme des lingots d'or Minecraft)
-            for (let i = 0; i < 8; i++) {
+            // Première maison (abri du joueur)
+            level.platforms.push({ x: 80, y: h - blockSize * 5, w: blockSize * 3, h: blockSize * 3, type: 'wood' });
+            level.platforms.push({ x: 80, y: h - blockSize * 6, w: blockSize * 3, h: blockSize, type: 'wood' }); // Toit
+
+            // Pièces de bienvenue (guide le joueur vers la droite)
+            for (let i = 0; i < 10; i++) {
                 level.coins.push({
-                    x: 80 + i * 70,
-                    y: h - blockSize * 2 - 50,
-                    w: 20,
-                    h: 20
+                    x: 180 + i * 50,
+                    y: h - blockSize * 2 - 40 - Math.sin(i * 0.5) * 20,
+                    w: 20, h: 20
                 });
             }
 
-            // Pièces secrètes en hauteur (diamants cachés)
+            // Puits du village (avec pièces secrètes en profondeur simulée)
+            let wellX = 350;
+            level.platforms.push({ x: wellX, y: h - blockSize * 3, w: blockSize, h: blockSize, type: 'stone' });
+            level.platforms.push({ x: wellX + blockSize * 2, y: h - blockSize * 3, w: blockSize, h: blockSize, type: 'stone' });
+            // Pièces "dans" le puits
             for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: wellX + 50, y: h - blockSize * 2 - 30 - i * 25, w: 25, h: 25, value: 2, secret: true });
+            }
+
+            // Arbre géant avec power-up
+            let treeX = 500;
+            // Tronc
+            level.platforms.push({ x: treeX, y: h - blockSize * 6, w: blockSize, h: blockSize * 4, type: 'wood' });
+            // Feuillage en forme de croix
+            level.platforms.push({ x: treeX - blockSize, y: h - blockSize * 8, w: blockSize * 3, h: blockSize * 2, type: 'leaves' });
+            level.platforms.push({ x: treeX, y: h - blockSize * 9, w: blockSize, h: blockSize, type: 'leaves' });
+            level.platforms.push({ x: treeX - blockSize * 2, y: h - blockSize * 7, w: blockSize, h: blockSize, type: 'leaves' });
+            level.platforms.push({ x: treeX + blockSize * 2, y: h - blockSize * 7, w: blockSize, h: blockSize, type: 'leaves' });
+            // Shield sur l'arbre
+            level.powerups.push({ x: treeX + 5, y: h - blockSize * 9 - 35, w: 35, h: 35, type: 'shield' });
+
+            // ============================================================
+            // SECTION 2 : FORÊT MYSTÉRIEUSE
+            // Tension croissante, premiers Creepers
+            // ============================================================
+
+            let forestX = 750;
+
+            // Transition : petit gouffre avec pont de bois
+            level.platforms.push({ x: forestX - 60, y: h - blockSize * 3, w: blockSize * 3, h: blockSize / 2, type: 'wood' });
+            level.hazards.push({ x: forestX - 80, y: h - blockSize, w: 140, h: blockSize, type: 'void' });
+
+            // Sol de la forêt (plus sombre)
+            for (let i = 0; i < 15; i++) {
+                level.platforms.push({ x: forestX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
+                level.platforms.push({ x: forestX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
+            }
+
+            // Arbres de la forêt (cachettes pour Creepers)
+            for (let t = 0; t < 3; t++) {
+                let tx = forestX + 80 + t * 180;
+                level.platforms.push({ x: tx, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'wood' });
+                level.platforms.push({ x: tx - blockSize, y: h - blockSize * 6, w: blockSize * 3, h: blockSize * 2, type: 'leaves' });
+            }
+
+            // CREEPER EMBUSQUÉ #1 (surgit de derrière l'arbre!)
+            level.enemies.push({
+                x: forestX + 120, y: h - blockSize * 2 - 60, w: 40, h: 60,
+                type: 'creeper', patrolStart: forestX + 80, patrolEnd: forestX + 200,
+                dir: 1, speed: 1.8 * state.difficulty
+            });
+
+            // Pièces en arc dans la forêt
+            for (let i = 0; i < 6; i++) {
                 level.coins.push({
-                    x: 150 + i * 80,
-                    y: h - blockSize * 2 - 140,
-                    w: 25,
-                    h: 25,
-                    value: 3,
-                    secret: true
+                    x: forestX + 50 + i * 80,
+                    y: h - blockSize * 2 - 60 - Math.abs(i - 2.5) * 15,
+                    w: 20, h: 20
                 });
             }
 
-            // Arbre avec power-up
-            let treeX = 280;
-            level.platforms.push({ x: treeX, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'wood' });
-            level.platforms.push({ x: treeX - blockSize, y: h - blockSize * 7, w: blockSize * 3, h: blockSize * 2, type: 'leaves' });
-            level.platforms.push({ x: treeX, y: h - blockSize * 8, w: blockSize, h: blockSize, type: 'leaves' });
-            level.powerups.push({ x: treeX, y: h - blockSize * 8 - 40, w: 35, h: 35, type: 'shield' });
-            level.coins.push({ x: treeX, y: h - blockSize * 7 - 30, w: 20, h: 20 });
+            // SPIDER sur sa toile (entre les arbres)
+            level.enemies.push({
+                x: forestX + 350, y: h - blockSize * 4 - 30, w: 55, h: 45,
+                type: 'spider', patrolStart: forestX + 280, patrolEnd: forestX + 420,
+                dir: -1, speed: 2.8 * state.difficulty
+            });
 
-            // Creeper caché près de l'arbre !
-            level.enemies.push({ x: treeX + 80, y: h - blockSize * 2 - 60, w: 40, h: 60, type: 'creeper', patrolStart: treeX + 60, patrolEnd: treeX + 140, dir: 1, speed: 1.5 * state.difficulty });
+            // ============================================================
+            // SECTION 3 : MINE ABANDONNÉE
+            // Descente, rails, lave, spiders
+            // ============================================================
 
-            // Mini-saut vers la mine
-            let gapX = treeX + 180;
-            level.platforms.push({ x: gapX, y: h - blockSize * 3, w: blockSize, h: blockSize, type: 'stone' });
-            level.coins.push({ x: gapX + 5, y: h - blockSize * 3 - 40, w: 20, h: 20 });
+            let mineX = forestX + 620;
 
-            // Mine avec lave
-            let caveX = gapX + 150;
-            for (let i = 0; i < 3; i++) {
-                level.platforms.push({ x: caveX + i * blockSize, y: h - blockSize * 4, w: blockSize, h: blockSize, type: 'stone' });
+            // Entrée de la mine (arche de pierre)
+            level.platforms.push({ x: mineX, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'stone' });
+            level.platforms.push({ x: mineX + blockSize * 3, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'stone' });
+            level.platforms.push({ x: mineX, y: h - blockSize * 6, w: blockSize * 4, h: blockSize, type: 'stone' });
+
+            // Sol de la mine (pierre)
+            for (let i = 0; i < 12; i++) {
+                level.platforms.push({ x: mineX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'stone' });
+                level.platforms.push({ x: mineX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'stone' });
             }
-            level.hazards.push({ x: caveX - 50, y: h - 30, w: 250, h: 30, type: 'lava_floor' });
-            level.coins.push({ x: caveX + 50, y: h - blockSize * 4 - 40, w: 20, h: 20 });
 
-            // Spider dans la mine !
-            level.enemies.push({ x: caveX + 60, y: h - blockSize * 4 - 50, w: 50, h: 50, type: 'spider', patrolStart: caveX, patrolEnd: caveX + 120, dir: -1, speed: 2.5 * state.difficulty });
+            // Lac de lave dans la mine
+            level.hazards.push({ x: mineX + blockSize * 4, y: h - blockSize, w: blockSize * 4, h: blockSize, type: 'lava_floor' });
 
-            // Plateforme vers le portail Nether
-            let portalAreaX = caveX + 300;
-            for (let i = 0; i < 8; i++) {
+            // Pont au-dessus de la lave
+            level.platforms.push({ x: mineX + blockSize * 4.5, y: h - blockSize * 3, w: blockSize * 3, h: blockSize / 2, type: 'wood' });
+
+            // Pièces au-dessus de la lave (risque/récompense)
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({ x: mineX + blockSize * 5 + i * 30, y: h - blockSize * 3 - 40, w: 20, h: 20 });
+            }
+
+            // Diamants cachés dans un recoin de la mine
+            level.coins.push({ x: mineX + blockSize * 2, y: h - blockSize * 4, w: 30, h: 30, value: 5, secret: true });
+
+            // SKELETON archer dans la mine
+            level.enemies.push({
+                x: mineX + blockSize * 8, y: h - blockSize * 2 - 60, w: 40, h: 60,
+                type: 'skeleton', patrolStart: mineX + blockSize * 6, patrolEnd: mineX + blockSize * 10,
+                dir: -1, speed: 1.5 * state.difficulty
+            });
+
+            // Super Jump power-up (pour atteindre la section suivante)
+            level.powerups.push({ x: mineX + blockSize * 10, y: h - blockSize * 4, w: 35, h: 35, type: 'superJump' });
+
+            // ============================================================
+            // SECTION 4 : ARÈNE DE L'ENDERMAN (Mini-boss surprise!)
+            // ============================================================
+
+            let arenaX = mineX + blockSize * 14;
+
+            // Plateforme d'arène isolée
+            for (let i = 0; i < 10; i++) {
+                level.platforms.push({ x: arenaX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'stone' });
+                level.platforms.push({ x: arenaX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'stone' });
+            }
+
+            // Piliers d'obsidienne décoratifs
+            level.platforms.push({ x: arenaX + blockSize, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'netherrack' });
+            level.platforms.push({ x: arenaX + blockSize * 8, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'netherrack' });
+
+            // L'ENDERMAN - Mini-boss surprenant!
+            level.enemies.push({
+                x: arenaX + blockSize * 4.5, y: h - blockSize * 2 - 90, w: 35, h: 90,
+                type: 'enderman', patrolStart: arenaX + blockSize * 2, patrolEnd: arenaX + blockSize * 7,
+                dir: 1, speed: 2.5 * state.difficulty,
+                holdingBlock: true
+            });
+
+            // Trésor gardé par l'Enderman
+            level.coins.push({ x: arenaX + blockSize * 4.5, y: h - blockSize * 4, w: 30, h: 30, value: 5, secret: true });
+
+            // Magnet power-up après l'arène
+            level.powerups.push({ x: arenaX + blockSize * 9, y: h - blockSize * 3, w: 35, h: 35, type: 'magnet' });
+
+            // ============================================================
+            // SECTION 5 : PORTAIL DU NETHER
+            // Zone de transition épique
+            // ============================================================
+
+            let portalAreaX = arenaX + blockSize * 12;
+
+            // Sol de netherrack (transition vers le Nether)
+            for (let i = 0; i < 10; i++) {
                 level.platforms.push({ x: portalAreaX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'netherrack' });
                 level.platforms.push({ x: portalAreaX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'netherrack' });
             }
 
-            // ===== PORTAIL VERS LE NETHER (pas la sortie!) =====
-            let netherPortalX = portalAreaX + blockSize * 2;
+            // Cadre du portail en "obsidienne"
+            let netherPortalX = portalAreaX + blockSize * 3;
+            level.platforms.push({ x: netherPortalX - 15, y: h - blockSize * 2 - 120, w: 15, h: 120, type: 'netherrack' });
+            level.platforms.push({ x: netherPortalX + 65, y: h - blockSize * 2 - 120, w: 15, h: 120, type: 'netherrack' });
+            level.platforms.push({ x: netherPortalX - 15, y: h - blockSize * 2 - 135, w: 95, h: 15, type: 'netherrack' });
+
+            // PORTAIL VERS LE NETHER
             level.portals.push({
                 x: netherPortalX,
-                y: h - blockSize * 2 - 100,
-                w: 60,
-                h: 100,
+                y: h - blockSize * 2 - 110,
+                w: 65,
+                h: 110,
                 color: '#8B00FF',
-                destX: -999, // Code spécial pour aller au Nether
+                destX: -999,
                 destY: -999,
                 isNetherPortal: true
             });
 
-            // Obsidienne autour du portail (décoratif)
-            level.platforms.push({ x: netherPortalX - 10, y: h - blockSize * 2, w: 10, h: 100, type: 'netherrack' });
-            level.platforms.push({ x: netherPortalX + 60, y: h - blockSize * 2, w: 10, h: 100, type: 'netherrack' });
+            // Gardiens du portail
+            level.enemies.push({
+                x: netherPortalX - 80, y: h - blockSize * 2 - 60, w: 50, h: 60,
+                type: 'zombie', patrolStart: portalAreaX, patrolEnd: netherPortalX - 20,
+                dir: 1, speed: 2 * state.difficulty
+            });
+            level.enemies.push({
+                x: netherPortalX + 100, y: h - blockSize * 2 - 60, w: 40, h: 60,
+                type: 'skeleton', patrolStart: netherPortalX + 80, patrolEnd: portalAreaX + blockSize * 9,
+                dir: -1, speed: 1.8 * state.difficulty
+            });
 
-            // Gardiens du portail Nether
-            level.enemies.push({ x: netherPortalX + 100, y: h - blockSize * 2 - 60, w: 50, h: 60, type: 'zombie', patrolStart: portalAreaX, patrolEnd: portalAreaX + 180, dir: -1, speed: 2 * state.difficulty });
-            level.enemies.push({ x: netherPortalX - 80, y: h - blockSize * 2 - 60, w: 40, h: 60, type: 'skeleton', patrolStart: portalAreaX, patrolEnd: portalAreaX + 280, dir: 1, speed: 1.8 * state.difficulty });
+            // Pièces autour du portail
+            for (let i = 0; i < 5; i++) {
+                level.coins.push({ x: portalAreaX + 30 + i * 70, y: h - blockSize * 2 - 50, w: 20, h: 20 });
+            }
 
-            // ===== ZONE DE RETOUR DU NETHER =====
-            let returnX = portalAreaX + 450;
-            for (let i = 0; i < 6; i++) {
+            // ============================================================
+            // SECTION 6 : ZONE DE RETOUR
+            // Après le Nether, dernière ligne droite
+            // ============================================================
+
+            let returnX = portalAreaX + blockSize * 12;
+
+            // Sol de retour (herbe = soulagement)
+            for (let i = 0; i < 8; i++) {
                 level.platforms.push({ x: returnX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
                 level.platforms.push({ x: returnX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
             }
 
-            // Portail de retour du Nether (apparaîtra ici)
-            level.returnPortalPos = { x: returnX + 40, y: h - blockSize * 2 - 100 };
+            // Position du portail de retour
+            level.returnPortalPos = { x: returnX + 50, y: h - blockSize * 2 - 100 };
 
-            // Ennemis qui apparaissent après le retour du Nether !
-            level.enemies.push({ x: returnX + 150, y: h - blockSize * 2 - 60, w: 40, h: 60, type: 'creeper', patrolStart: returnX + 100, patrolEnd: returnX + 200, dir: 1, speed: 1.5 * state.difficulty });
+            // Derniers ennemis avant la sortie
+            level.enemies.push({
+                x: returnX + blockSize * 5, y: h - blockSize * 2 - 60, w: 40, h: 60,
+                type: 'creeper', patrolStart: returnX + blockSize * 3, patrolEnd: returnX + blockSize * 7,
+                dir: 1, speed: 2 * state.difficulty
+            });
 
-            // ===== SORTIE FINALE (nécessite la clé du Nether!) =====
-            let exitX = returnX + 300;
+            // ============================================================
+            // SORTIE FINALE
+            // ============================================================
+
+            let exitX = returnX + blockSize * 10;
+
             for (let i = 0; i < 6; i++) {
                 level.platforms.push({ x: exitX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
                 level.platforms.push({ x: exitX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
             }
 
-            // Spider hostile qui garde la sortie !
-            level.enemies.push({ x: exitX + 80, y: h - blockSize * 2 - 50, w: 50, h: 50, type: 'spider', patrolStart: exitX, patrolEnd: exitX + 180, dir: -1, speed: 2.5 * state.difficulty });
+            // Maison de sortie stylisée
+            level.platforms.push({ x: exitX + blockSize * 2, y: h - blockSize * 5, w: blockSize * 3, h: blockSize * 3, type: 'wood' });
+            level.platforms.push({ x: exitX + blockSize * 1.5, y: h - blockSize * 6, w: blockSize * 4, h: blockSize, type: 'wood' });
 
-            // Maison de sortie
-            level.platforms.push({ x: exitX + 200, y: h - blockSize * 2 - 120, w: 100, h: 120, type: 'wood' });
-            level.goal = { x: exitX + 230, y: h - blockSize * 2 - 80, w: 40, h: 80, type: 'nether_portal' };
+            level.goal = { x: exitX + blockSize * 3, y: h - blockSize * 2 - 80, w: 40, h: 80, type: 'nether_portal' };
 
-            // Vide
-            level.hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
+            // Vide mortel
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 50, h: 100, type: 'void' });
 
             return level;
         },
 
-        // ===== SOUS-NIVEAU : LE NETHER ! =====
+        // ============================================================
+        // SOUS-NIVEAU : LE NETHER (Version Premium)
+        // ============================================================
         setupNether: (w, h) => {
             const blockSize = 40;
             const level = createEmptyLevel();
-
-            // Pas de clés, pas de nuages dans le Nether !
             level.clouds = [];
 
-            // Sol de Netherrack partout
-            for (let i = 0; i < 25; i++) {
+            // ============================================================
+            // ZONE 1 : ENTRÉE INFERNALE
+            // ============================================================
+
+            // Plateforme de spawn
+            for (let i = 0; i < 6; i++) {
                 level.platforms.push({ x: i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'netherrack' });
                 level.platforms.push({ x: i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'netherrack' });
             }
 
-            // Lave au sol (danger!)
-            level.hazards.push({ x: 0, y: h - 30, w: 100, h: 30, type: 'lava_floor' });
-            level.hazards.push({ x: 250, y: h - 30, w: 150, h: 30, type: 'lava_floor' });
-            level.hazards.push({ x: 550, y: h - 30, w: 200, h: 30, type: 'lava_floor' });
+            // Premier lac de lave
+            level.hazards.push({ x: blockSize * 6, y: h - blockSize, w: blockSize * 4, h: blockSize, type: 'lava_floor' });
 
-            // Parcours avec plateformes
-            let platformsY = h - blockSize * 4;
-            level.platforms.push({ x: 120, y: platformsY, w: blockSize * 2, h: blockSize, type: 'netherrack' });
-            level.coins.push({ x: 135, y: platformsY - 40, w: 20, h: 20 });
+            // Plateformes au-dessus de la lave
+            level.platforms.push({ x: blockSize * 7, y: h - blockSize * 4, w: blockSize * 2, h: blockSize, type: 'netherrack' });
+            level.coins.push({ x: blockSize * 7.5, y: h - blockSize * 4 - 35, w: 20, h: 20 });
 
-            // Magma Cube qui rebondit !
-            level.enemies.push({ x: 160, y: platformsY - 50, w: 45, h: 50, type: 'magma_cube', patrolStart: 120, patrolEnd: 200, dir: 1, speed: 2 * state.difficulty });
+            // MAGMA CUBE rebondissant
+            level.enemies.push({
+                x: blockSize * 7.5, y: h - blockSize * 4 - 50, w: 45, h: 50,
+                type: 'magma_cube', patrolStart: blockSize * 7, patrolEnd: blockSize * 8.5,
+                dir: 1, speed: 2.2 * state.difficulty
+            });
 
-            level.platforms.push({ x: 280, y: platformsY - 60, w: blockSize * 2, h: blockSize, type: 'netherrack' });
-            level.powerups.push({ x: 295, y: platformsY - 100, w: 35, h: 35, type: 'star' }); // Étoile d'invincibilité!
+            // ============================================================
+            // ZONE 2 : CORRIDOR DE FEU
+            // ============================================================
 
-            // Blaze flottant dangereux !
-            level.enemies.push({ x: 320, y: platformsY - 150, w: 50, h: 60, type: 'blaze', patrolStart: 280, patrolEnd: 380, dir: -1, speed: 1.5 * state.difficulty });
+            let corridorX = blockSize * 10;
 
-            level.platforms.push({ x: 420, y: platformsY, w: blockSize * 2, h: blockSize, type: 'netherrack' });
+            // Long corridor de netherrack
+            for (let i = 0; i < 15; i++) {
+                level.platforms.push({ x: corridorX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'netherrack' });
+                level.platforms.push({ x: corridorX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'netherrack' });
+            }
 
-            // Zombie Pigman hostile !
-            level.enemies.push({ x: 450, y: platformsY - 60, w: 50, h: 60, type: 'zombie', patrolStart: 420, patrolEnd: 500, dir: 1, speed: 3 * state.difficulty });
+            // Lave intermittente (danger!)
+            level.hazards.push({ x: corridorX + blockSize * 3, y: h - blockSize, w: blockSize * 2, h: blockSize, type: 'lava_floor' });
+            level.hazards.push({ x: corridorX + blockSize * 8, y: h - blockSize, w: blockSize * 2, h: blockSize, type: 'lava_floor' });
 
-            // Plateforme avec LA CLÉ !
-            let keyPlatformX = 650;
-            level.platforms.push({ x: keyPlatformX, y: platformsY - 120, w: blockSize * 3, h: blockSize, type: 'netherrack' });
-            level.keyItem = { x: keyPlatformX + 40, y: platformsY - 180, w: 40, h: 40, type: 'diamond' }; // Diamant du Nether!
-            level.coins.push({ x: keyPlatformX + 10, y: platformsY - 160, w: 20, h: 20 });
-            level.coins.push({ x: keyPlatformX + 90, y: platformsY - 160, w: 20, h: 20 });
+            // BLAZE flottant (patrouille aérienne)
+            level.enemies.push({
+                x: corridorX + blockSize * 5, y: h - blockSize * 5, w: 50, h: 60,
+                type: 'blaze', patrolStart: corridorX + blockSize * 2, patrolEnd: corridorX + blockSize * 8,
+                dir: -1, speed: 1.5 * state.difficulty
+            });
 
-            // Ghast gardien de la clé du Nether !
-            level.enemies.push({ x: keyPlatformX - 50, y: platformsY - 250, w: 60, h: 60, type: 'ghast', patrolStart: keyPlatformX - 100, patrolEnd: keyPlatformX + 150, dir: 1, speed: 1.2 * state.difficulty });
+            // Pièces sur le parcours
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({ x: corridorX + blockSize + i * 60, y: h - blockSize * 2 - 50, w: 20, h: 20 });
+            }
 
-            // Portail de retour vers le monde principal
-            let returnPortalX = 850;
-            level.platforms.push({ x: returnPortalX - 50, y: h - blockSize * 2, w: blockSize * 4, h: blockSize, type: 'netherrack' });
+            // Étoile d'invincibilité (aide pour la suite)
+            level.powerups.push({ x: corridorX + blockSize * 6, y: h - blockSize * 3 - 30, w: 35, h: 35, type: 'star' });
 
-            // Portail magique de retour
+            // Zombie Pigman
+            level.enemies.push({
+                x: corridorX + blockSize * 11, y: h - blockSize * 2 - 60, w: 50, h: 60,
+                type: 'zombie', patrolStart: corridorX + blockSize * 10, patrolEnd: corridorX + blockSize * 14,
+                dir: 1, speed: 2.5 * state.difficulty
+            });
+
+            // ============================================================
+            // ZONE 3 : SALLE DU GHAST
+            // ============================================================
+
+            let ghastRoomX = corridorX + blockSize * 16;
+
+            // Grande salle ouverte
+            for (let i = 0; i < 12; i++) {
+                level.platforms.push({ x: ghastRoomX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'netherrack' });
+                level.platforms.push({ x: ghastRoomX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'netherrack' });
+            }
+
+            // Piliers pour se protéger
+            level.platforms.push({ x: ghastRoomX + blockSize * 2, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'netherrack' });
+            level.platforms.push({ x: ghastRoomX + blockSize * 6, y: h - blockSize * 6, w: blockSize, h: blockSize * 4, type: 'netherrack' });
+            level.platforms.push({ x: ghastRoomX + blockSize * 9, y: h - blockSize * 5, w: blockSize, h: blockSize * 3, type: 'netherrack' });
+
+            // LE GHAST - Gardien redoutable!
+            level.enemies.push({
+                x: ghastRoomX + blockSize * 5, y: h - blockSize * 8, w: 70, h: 70,
+                type: 'ghast', patrolStart: ghastRoomX + blockSize * 2, patrolEnd: ghastRoomX + blockSize * 9,
+                dir: 1, speed: 1.3 * state.difficulty
+            });
+
+            // Second Magma Cube (renfort)
+            level.enemies.push({
+                x: ghastRoomX + blockSize * 8, y: h - blockSize * 2 - 50, w: 40, h: 45,
+                type: 'magma_cube', patrolStart: ghastRoomX + blockSize * 7, patrolEnd: ghastRoomX + blockSize * 10,
+                dir: -1, speed: 2 * state.difficulty
+            });
+
+            // Pièces bonus sur les piliers
+            level.coins.push({ x: ghastRoomX + blockSize * 2.2, y: h - blockSize * 5 - 35, w: 25, h: 25, value: 3 });
+            level.coins.push({ x: ghastRoomX + blockSize * 6.2, y: h - blockSize * 6 - 35, w: 25, h: 25, value: 3 });
+            level.coins.push({ x: ghastRoomX + blockSize * 9.2, y: h - blockSize * 5 - 35, w: 25, h: 25, value: 3 });
+
+            // ============================================================
+            // ZONE 4 : CHAMBRE DE LA CLÉ
+            // ============================================================
+
+            let keyRoomX = ghastRoomX + blockSize * 14;
+
+            // Petite plateforme isolée
+            for (let i = 0; i < 5; i++) {
+                level.platforms.push({ x: keyRoomX + i * blockSize, y: h - blockSize * 4, w: blockSize, h: blockSize, type: 'netherrack' });
+            }
+
+            // LA CLÉ DU NETHER (DIAMANT!)
+            level.keyItem = { x: keyRoomX + blockSize * 2, y: h - blockSize * 4 - 50, w: 45, h: 45, type: 'diamond' };
+
+            // Pièces autour de la clé
+            level.coins.push({ x: keyRoomX + blockSize * 0.5, y: h - blockSize * 4 - 35, w: 20, h: 20 });
+            level.coins.push({ x: keyRoomX + blockSize * 3.5, y: h - blockSize * 4 - 35, w: 20, h: 20 });
+
+            // Dernier Blaze gardien
+            level.enemies.push({
+                x: keyRoomX + blockSize * 2.5, y: h - blockSize * 6, w: 45, h: 55,
+                type: 'blaze', patrolStart: keyRoomX + blockSize, patrolEnd: keyRoomX + blockSize * 4,
+                dir: 1, speed: 1.8 * state.difficulty
+            });
+
+            // ============================================================
+            // ZONE 5 : PORTAIL DE RETOUR
+            // ============================================================
+
+            let returnPortalX = keyRoomX + blockSize * 7;
+
+            // Plateforme du portail
+            for (let i = 0; i < 5; i++) {
+                level.platforms.push({ x: returnPortalX + i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'netherrack' });
+                level.platforms.push({ x: returnPortalX + i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'netherrack' });
+            }
+
+            // Cadre du portail
+            level.platforms.push({ x: returnPortalX + blockSize - 10, y: h - blockSize * 2 - 110, w: 10, h: 110, type: 'netherrack' });
+            level.platforms.push({ x: returnPortalX + blockSize * 3, y: h - blockSize * 2 - 110, w: 10, h: 110, type: 'netherrack' });
+
+            // PORTAIL DE RETOUR
             level.portals.push({
-                x: returnPortalX,
+                x: returnPortalX + blockSize,
                 y: h - blockSize * 2 - 100,
-                w: 60,
+                w: blockSize * 2,
                 h: 100,
-                color: '#00FF00', // Vert pour le retour!
-                destX: -998, // Code spécial pour retourner au monde principal
+                color: '#00FF00',
+                destX: -998,
                 destY: -998,
                 isReturnPortal: true
             });
 
-            // Vide mortel partout
-            level.hazards.push({ x: -1000, y: h + 100, w: w * 30, h: 100, type: 'void' });
+            // Vide mortel
+            level.hazards.push({ x: -1000, y: h + 100, w: w * 50, h: 100, type: 'void' });
 
             return level;
         }

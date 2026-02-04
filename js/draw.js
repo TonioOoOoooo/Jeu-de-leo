@@ -1494,72 +1494,15 @@ function drawEnemies() {
                 break;
 
             case 'creeper':
-                // Le fameux Creeper de Minecraft - Vert avec visage pixelisé
-                ctx.fillStyle = "#0d9e00";
-                ctx.fillRect(e.x, e.y, e.w, e.h);
-
-                // Tête carrée
-                ctx.fillRect(e.x + 5, e.y - 25, e.w - 10, 25);
-
-                // Visage pixelisé du Creeper
-                ctx.fillStyle = "#000";
-                // Yeux
-                ctx.fillRect(e.x + 12, e.y - 18, 8, 8);
-                ctx.fillRect(e.x + e.w - 20, e.y - 18, 8, 8);
-                // Bouche/nez
-                ctx.fillRect(e.x + e.w/2 - 4, e.y - 12, 8, 4);
-                ctx.fillRect(e.x + e.w/2 - 6, e.y - 8, 4, 8);
-                ctx.fillRect(e.x + e.w/2 + 2, e.y - 8, 4, 8);
-
-                // Pieds
-                ctx.fillStyle = "#0a7a00";
-                ctx.fillRect(e.x + 5, e.y + e.h, 12, 8);
-                ctx.fillRect(e.x + e.w - 17, e.y + e.h, 12, 8);
-
-                // Effet de clignotement si proche (danger d'explosion)
-                if (Math.abs(e.x - player.x) < 100) {
-                    if (state.frameTick % 10 < 5) {
-                        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-                        ctx.fillRect(e.x, e.y - 25, e.w, e.h + 25);
-                    }
-                }
+                // ========== CREEPER MINECRAFT PREMIUM ==========
+                // Inspiration: Le monstre iconique de Minecraft avec texture authentique
+                drawMinecraftCreeperPremium(ctx, e, state.frameTick, player);
                 break;
 
             case 'spider':
-                // Araignée de Minecraft - Noire avec yeux rouges
-                // Corps principal
-                ctx.fillStyle = "#1a1a1a";
-                ctx.fillRect(e.x + e.w/4, e.y + e.h/3, e.w/2, e.h/2);
-
-                // Tête
-                ctx.fillRect(e.x + e.w/3, e.y + e.h/4, e.w/3, e.h/3);
-
-                // Yeux rouges lumineux
-                ctx.fillStyle = "#ff0000";
-                const eyeGlow = Math.sin(state.frameTick * 0.1) * 0.3 + 0.7;
-                ctx.globalAlpha = eyeGlow;
-                ctx.fillRect(e.x + e.w/3 + 3, e.y + e.h/4 + 3, 6, 6);
-                ctx.fillRect(e.x + e.w/3 + e.w/3 - 9, e.y + e.h/4 + 3, 6, 6);
-                ctx.globalAlpha = 1;
-
-                // Pattes (4 de chaque côté)
-                ctx.strokeStyle = "#1a1a1a";
-                ctx.lineWidth = 3;
-                const legBounce = Math.sin(state.frameTick * 0.15 + e.x) * 5;
-                for (let i = 0; i < 4; i++) {
-                    // Pattes gauches
-                    ctx.beginPath();
-                    ctx.moveTo(e.x + e.w/4, e.y + e.h/2);
-                    ctx.lineTo(e.x - 10, e.y + e.h/2 + legBounce + i * 5);
-                    ctx.lineTo(e.x - 15, e.y + e.h + i * 3);
-                    ctx.stroke();
-                    // Pattes droites
-                    ctx.beginPath();
-                    ctx.moveTo(e.x + 3*e.w/4, e.y + e.h/2);
-                    ctx.lineTo(e.x + e.w + 10, e.y + e.h/2 - legBounce + i * 5);
-                    ctx.lineTo(e.x + e.w + 15, e.y + e.h + i * 3);
-                    ctx.stroke();
-                }
+                // ========== SPIDER MINECRAFT PREMIUM ==========
+                // Araignée massive avec 8 yeux lumineux et pattes articulées
+                drawMinecraftSpiderPremium(ctx, e, state.frameTick);
                 break;
 
             case 'skeleton':
@@ -1576,105 +1519,35 @@ function drawEnemies() {
                 break;
 
             case 'blaze':
-                // Blaze du Nether - Monstre de feu flottant
-                const blazeFloat = Math.sin(state.frameTick * 0.1) * 8;
-
-                // Corps central doré
-                ctx.fillStyle = "#ffaa00";
-                ctx.fillRect(e.x + e.w/4, e.y + blazeFloat, e.w/2, e.h/2);
-
-                // Tête
-                ctx.fillStyle = "#ffcc00";
-                ctx.fillRect(e.x + e.w/4, e.y - 15 + blazeFloat, e.w/2, 15);
-
-                // Yeux de feu
-                ctx.fillStyle = "#ff0000";
-                ctx.fillRect(e.x + e.w/4 + 3, e.y - 10 + blazeFloat, 6, 6);
-                ctx.fillRect(e.x + 3*e.w/4 - 9, e.y - 10 + blazeFloat, 6, 6);
-
-                // Bâtons de feu tournants
-                const rotation = state.frameTick * 0.05;
-                ctx.fillStyle = "#ff6600";
-                for (let i = 0; i < 8; i++) {
-                    const angle = rotation + (i * Math.PI / 4);
-                    const rx = Math.cos(angle) * 25;
-                    const ry = Math.sin(angle) * 10;
-                    ctx.save();
-                    ctx.translate(e.x + e.w/2, e.y + e.h/2 + blazeFloat);
-                    ctx.rotate(angle);
-                    ctx.fillRect(-3, 15, 6, 20);
-                    ctx.restore();
-                }
-
-                // Particules de feu
-                if (state.frameTick % 5 === 0) {
-                    ctx.fillStyle = `rgba(255, ${100 + Math.random() * 100}, 0, 0.6)`;
-                    for (let i = 0; i < 3; i++) {
-                        const px = e.x + Math.random() * e.w;
-                        const py = e.y + blazeFloat + Math.random() * e.h;
-                        ctx.fillRect(px, py, 4, 4);
-                    }
-                }
+                // ========== BLAZE MINECRAFT PREMIUM ==========
+                // Monstre de feu flottant avec bâtons en lévitation et flammes
+                drawMinecraftBlazePremium(ctx, e, state.frameTick);
                 break;
 
             case 'ghast':
-                // Ghast - Grosse méduse blanche du Nether
-                const ghastFloat = Math.sin(state.frameTick * 0.08) * 10;
-
-                // Corps carré blanc
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(e.x, e.y + ghastFloat, e.w, e.w);
-
-                // Yeux rouges tristes
-                ctx.fillStyle = "#ff0000";
-                ctx.fillRect(e.x + 10, e.y + 15 + ghastFloat, 12, 18);
-                ctx.fillRect(e.x + e.w - 22, e.y + 15 + ghastFloat, 12, 18);
-
-                // Pupilles noires
-                ctx.fillStyle = "#000";
-                ctx.fillRect(e.x + 14, e.y + 20 + ghastFloat, 4, 8);
-                ctx.fillRect(e.x + e.w - 18, e.y + 20 + ghastFloat, 4, 8);
-
-                // Bouche triste
-                ctx.fillStyle = "#000";
-                ctx.fillRect(e.x + e.w/2 - 10, e.y + 45 + ghastFloat, 20, 8);
-
-                // Tentacules qui ondulent
-                ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-                for (let i = 0; i < 9; i++) {
-                    const wave = Math.sin(state.frameTick * 0.1 + i) * 3;
-                    ctx.fillRect(e.x + 5 + i * 8, e.y + e.w + ghastFloat, 6, 20 + wave);
-                }
+                // ========== GHAST MINECRAFT PREMIUM ==========
+                // Créature géante flottante avec tentacules ondulants et expressions
+                drawMinecraftGhastPremium(ctx, e, state.frameTick, player);
                 break;
 
             case 'magma_cube':
-                // Magma Cube - Cube de magma qui rebondit
-                const bounce = Math.abs(Math.sin(state.frameTick * 0.15)) * 15;
+                // ========== MAGMA CUBE MINECRAFT PREMIUM ==========
+                // Cube de magma rebondissant avec couches de lave et éclaboussures
+                drawMinecraftMagmaCubePremium(ctx, e, state.frameTick);
+                break;
 
-                // Corps de magma
-                ctx.fillStyle = "#ff4400";
-                ctx.fillRect(e.x, e.y + e.h - e.w + bounce, e.w, e.w - bounce);
-
-                // Effet de lave interne
-                ctx.fillStyle = "#ffaa00";
-                ctx.fillRect(e.x + 8, e.y + e.h - e.w + 8 + bounce, e.w - 16, e.w - 16 - bounce);
-
-                // Bordures noires
-                ctx.strokeStyle = "#000";
-                ctx.lineWidth = 2;
-                ctx.strokeRect(e.x, e.y + e.h - e.w + bounce, e.w, e.w - bounce);
-
-                // Yeux
-                ctx.fillStyle = "#000";
-                ctx.fillRect(e.x + 10, e.y + e.h - e.w + 12 + bounce, 8, 8);
-                ctx.fillRect(e.x + e.w - 18, e.y + e.h - e.w + 12 + bounce, 8, 8);
-
-                // Particules de lave
-                if (bounce < 5) {
-                    ctx.fillStyle = "rgba(255, 100, 0, 0.7)";
-                    for (let i = 0; i < 4; i++) {
-                        ctx.fillRect(e.x + Math.random() * e.w, e.y + e.h - 3, 3, 3);
-                    }
+            case 'enderman':
+                // ========== ENDERMAN MINECRAFT PREMIUM ==========
+                // Créature grande et mystérieuse avec téléportation
+                if (typeof drawMinecraftEndermanPremium === 'function') {
+                    drawMinecraftEndermanPremium(ctx, e, state.frameTick, player);
+                } else {
+                    // Fallback simple
+                    ctx.fillStyle = '#0A0A0A';
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    ctx.fillStyle = '#9400D3';
+                    ctx.fillRect(e.x + 5, e.y + 10, 8, 3);
+                    ctx.fillRect(e.x + e.w - 13, e.y + 10, 8, 3);
                 }
                 break;
         }
