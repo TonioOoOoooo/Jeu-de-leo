@@ -750,37 +750,96 @@ const LEVELS = {
     },
     
     6: {
-        name: "Labyrinthe des Portails",
+        name: "🌀 Labyrinthe des Portails 🌀",
         bgColor: "#1a1a2e",
         playerStart: { x: 50, y: 300 },
         setup: (w, h) => {
             const unit = h / 10;
             const level = createEmptyLevel();
 
-            // ===== ZONE 1 : DÉPART =====
-            level.platforms.push({ x: -50, y: h - unit * 2, w: 350, h: unit, type: 'metal' });
-            for (let i = 0; i < 6; i++) level.coins.push({ x: 50 + i * 40, y: h - unit * 2 - 50, w: 20, h: 20 });
-            // Pièces bonus en hauteur
-            for (let i = 0; i < 3; i++) level.coins.push({ x: 80 + i * 60, y: h - unit * 2 - 120, w: 20, h: 20 });
+            // ===== ZONE 1 : DÉPART (Améliorée) =====
+            level.platforms.push({ x: -50, y: h - unit * 2, w: 400, h: unit, type: 'metal' });
 
-            // Premier défi : pièges !
+            // Trail de pièces guidant vers le portail
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({ x: 40 + i * 40, y: h - unit * 2 - 50, w: 20, h: 20 });
+            }
+
+            // Pièces secrètes en hauteur (récompense exploration)
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: 80 + i * 60, y: h - unit * 2 - 140, w: 25, h: 25, value: 3, secret: true });
+            }
+
+            // Piège avec warning visuel
             level.hazards.push({ x: 250, y: h - unit * 2 - 25, w: 25, h: 25, type: 'spike' });
+            // Pièce danger (incite à sauter par-dessus)
+            level.coins.push({ x: 260, y: h - unit * 2 - 90, w: 20, h: 20 });
 
-            // PORTAIL 1 : CYAN → Zone haute gauche
-            level.portals.push({ x: 260, y: h - unit * 2 - 80, w: 50, h: 80, color: '#00FFFF', destX: 150, destY: unit * 2 - 58 });
+            // ===== PORTAIL CYAN A (Départ → Zone haute gauche) =====
+            level.portals.push({
+                x: 310,
+                y: h - unit * 2 - 80,
+                w: 50,
+                h: 80,
+                color: '#00FFFF',
+                destX: 150,
+                destY: unit * 2 - 60,
+                portalPair: 'cyan_B' // Marqueur pour le jumeau
+            });
 
-            // ===== ZONE 2 : HAUTE GAUCHE (après portail cyan) =====
-            level.platforms.push({ x: 50, y: unit * 2, w: 300, h: 20, type: 'metal' });
-            level.enemies.push({ x: 150, y: unit * 2 - 60, w: 50, h: 60, type: 'zombie', patrolStart: 50, patrolEnd: 300, dir: 1, speed: 2 * state.difficulty });
-            for (let i = 0; i < 5; i++) level.coins.push({ x: 70 + i * 50, y: unit * 2 - 50, w: 20, h: 20 });
-            // Pièces bonus en arc au-dessus du zombie
-            for (let i = 0; i < 4; i++) level.coins.push({ x: 110 + i * 50, y: unit * 2 - 100, w: 20, h: 20 });
+            // ===== ZONE 2 : HAUTE GAUCHE (Améliorée) =====
+            level.platforms.push({ x: 50, y: unit * 2, w: 350, h: 20, type: 'metal' });
 
-            // Power-up bouclier
-            level.powerups.push({ x: 280, y: unit * 2 - 60, w: 35, h: 35, type: 'shield' });
+            // PORTAIL CYAN B (Retour → Zone départ) - BIDIRECTIONNEL !
+            level.portals.push({
+                x: 70,
+                y: unit * 2 - 80,
+                w: 50,
+                h: 80,
+                color: '#00FFFF',
+                destX: 310,
+                destY: h - unit * 2 - 80,
+                portalPair: 'cyan_A' // Retour au départ
+            });
 
-            // PORTAIL 2 : ORANGE → Zone milieu droit
-            level.portals.push({ x: 280, y: unit * 2 - 80, w: 50, h: 80, color: '#FF9900', destX: w - 250, destY: unit * 5 - 58 });
+            // Zombie en patrouille
+            level.enemies.push({
+                x: 200,
+                y: unit * 2 - 60,
+                w: 50,
+                h: 60,
+                type: 'zombie',
+                patrolStart: 130,
+                patrolEnd: 330,
+                dir: 1,
+                speed: 2 * state.difficulty
+            });
+
+            // Trail de pièces le long de la plateforme
+            for (let i = 0; i < 6; i++) {
+                level.coins.push({ x: 140 + i * 40, y: unit * 2 - 50, w: 20, h: 20 });
+            }
+
+            // Pièces bonus en arc (éviter le zombie)
+            for (let i = 0; i < 4; i++) {
+                const arcHeight = Math.sin((i / 3) * Math.PI) * 40;
+                level.coins.push({ x: 150 + i * 50, y: unit * 2 - 100 - arcHeight, w: 20, h: 20 });
+            }
+
+            // Power-up bouclier stratégique
+            level.powerups.push({ x: 330, y: unit * 2 - 60, w: 35, h: 35, type: 'shield' });
+
+            // ===== PORTAIL ORANGE A (Haute gauche → Milieu droit) =====
+            level.portals.push({
+                x: 330,
+                y: unit * 2 - 80,
+                w: 50,
+                h: 80,
+                color: '#FF9900',
+                destX: w - 250,
+                destY: unit * 5 - 60,
+                portalPair: 'orange_B'
+            });
 
             // ===== ZONE 3 : MILIEU DROIT (après portail orange) =====
             level.platforms.push({ x: w - 400, y: unit * 5, w: 400, h: 20, type: 'metal' });
