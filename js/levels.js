@@ -991,279 +991,641 @@ const LEVELS = {
     },
     
     6: {
-        name: "🌀 Labyrinthe des Portails 🌀",
-        bgColor: "#1a1a2e",
-        playerStart: { x: 50, y: 300 },
-        needsKey: true, // Clé obligatoire pour finir le niveau
+        name: "🧪 Centre de Test Aperture 🧪",
+        bgColor: "#E8E8E8",
+        playerStart: { x: 80, y: 300 },
+        needsKey: true,
         setup: (w, h) => {
-            const unit = h / 10;
+            const unit = 40; // Taille de bloc standard
             const level = createEmptyLevel();
 
-            // ===== ZONE 1 : DÉPART (Améliorée) =====
-            level.platforms.push({ x: -50, y: h - unit * 2, w: 400, h: unit, type: 'metal' });
+            // ============================================================
+            // STRUCTURE : 5 CHAMBRES DE TEST + SORTIE
+            // Inspiré de Portal 2 : progression, apprentissage, maîtrise
+            // ============================================================
 
-            // Trail de pièces guidant vers le portail
+            // Variables de positionnement des chambres
+            const chamberWidth = 500;
+            const chamberGap = 80;
+            let currentX = 0;
+
+            // ============================================================
+            // CHAMBRE 00 : SAS D'ENTRÉE
+            // "Bienvenue au Centre de Test Aperture"
+            // ============================================================
+
+            // Sol du SAS
             for (let i = 0; i < 8; i++) {
-                level.coins.push({ x: 40 + i * 40, y: h - unit * 2 - 50, w: 20, h: 20 });
+                level.platforms.push({
+                    x: currentX + i * unit,
+                    y: h - unit * 2,
+                    w: unit, h: unit * 2,
+                    type: 'test_chamber_floor'
+                });
             }
 
-            // Pièces secrètes en hauteur (récompense exploration)
-            for (let i = 0; i < 3; i++) {
-                level.coins.push({ x: 80 + i * 60, y: h - unit * 2 - 140, w: 25, h: 25, value: 3, secret: true });
+            // Mur gauche du SAS
+            level.platforms.push({
+                x: currentX - unit,
+                y: h - unit * 8,
+                w: unit, h: unit * 8,
+                type: 'test_chamber_wall'
+            });
+
+            // Plafond du SAS
+            level.platforms.push({
+                x: currentX,
+                y: h - unit * 8,
+                w: unit * 8, h: unit,
+                type: 'test_chamber_wall'
+            });
+
+            // Pièces d'introduction (guide vers la droite)
+            for (let i = 0; i < 5; i++) {
+                level.coins.push({
+                    x: currentX + 50 + i * 50,
+                    y: h - unit * 2 - 50,
+                    w: 20, h: 20
+                });
             }
 
-            // Piège avec warning visuel
-            level.hazards.push({ x: 250, y: h - unit * 2 - 25, w: 25, h: 25, type: 'spike' });
-            // Pièce danger (incite à sauter par-dessus)
-            level.coins.push({ x: 260, y: h - unit * 2 - 90, w: 20, h: 20 });
+            // Signalétique "00" (visuel, pas de collision)
+            level.decorations = level.decorations || [];
+            level.decorations.push({
+                type: 'chamber_sign',
+                x: currentX + 20,
+                y: h - unit * 7,
+                number: '00'
+            });
 
-            // ===== PORTAIL CYAN A (Départ → Zone haute gauche) =====
+            currentX += chamberWidth;
+
+            // ============================================================
+            // CHAMBRE 01 : INTRODUCTION AUX PORTAILS
+            // Objectif : Comprendre que les portails téléportent
+            // ============================================================
+
+            // Sol de la chambre 01
+            for (let i = 0; i < 12; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit,
+                    y: h - unit * 2,
+                    w: unit, h: unit * 2,
+                    type: 'test_chamber_floor'
+                });
+            }
+
+            // MUR SÉPARATEUR (impossible à franchir sans portail)
+            level.platforms.push({
+                x: currentX + unit * 5,
+                y: h - unit * 7,
+                w: unit, h: unit * 5,
+                type: 'test_chamber_wall'
+            });
+
+            // Plafond
+            level.platforms.push({
+                x: currentX,
+                y: h - unit * 8,
+                w: unit * 12, h: unit,
+                type: 'test_chamber_wall'
+            });
+
+            // PORTAIL BLEU A (entrée) - Sur le mur gauche
             level.portals.push({
-                x: 310,
+                x: currentX + unit,
                 y: h - unit * 2 - 80,
-                w: 50,
-                h: 80,
-                color: '#00FFFF',
-                destX: 150,
-                destY: unit * 2 - 60,
-                portalPair: 'cyan_B' // Marqueur pour le jumeau
-            });
-
-            // ===== ZONE 2 : HAUTE GAUCHE (Améliorée) =====
-            level.platforms.push({ x: 50, y: unit * 2, w: 350, h: 20, type: 'metal' });
-
-            // PORTAIL CYAN B (Retour → Zone départ) - BIDIRECTIONNEL !
-            level.portals.push({
-                x: 70,
-                y: unit * 2 - 80,
-                w: 50,
-                h: 80,
-                color: '#00FFFF',
-                destX: 310,
+                w: 50, h: 80,
+                color: '#00AAFF',
+                destX: currentX + unit * 7,
                 destY: h - unit * 2 - 80,
-                portalPair: 'cyan_A' // Retour au départ
+                portalPair: 'blue_01_B'
             });
 
-            // Zombie en patrouille
+            // PORTAIL BLEU B (sortie) - De l'autre côté du mur
+            level.portals.push({
+                x: currentX + unit * 7,
+                y: h - unit * 2 - 80,
+                w: 50, h: 80,
+                color: '#00AAFF',
+                destX: currentX + unit,
+                destY: h - unit * 2 - 80,
+                portalPair: 'blue_01_A'
+            });
+
+            // Pièces après le mur (récompense)
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({
+                    x: currentX + unit * 8 + i * 40,
+                    y: h - unit * 2 - 50,
+                    w: 20, h: 20
+                });
+            }
+
+            // Signalétique "01"
+            level.decorations.push({
+                type: 'chamber_sign',
+                x: currentX + 20,
+                y: h - unit * 7,
+                number: '01'
+            });
+
+            currentX += chamberWidth + chamberGap;
+
+            // ============================================================
+            // CHAMBRE 02 : CONSERVATION DU MOMENTUM (FLING!)
+            // Objectif : Apprendre que la vitesse est conservée
+            // "Speedy thing goes in, speedy thing comes out"
+            // ============================================================
+
+            // Sol de la chambre (avec trou au milieu pour le portail)
+            for (let i = 0; i < 5; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit,
+                    y: h - unit * 2,
+                    w: unit, h: unit * 2,
+                    type: 'test_chamber_floor'
+                });
+            }
+            // Trou pour le portail au sol (entre x+5 et x+7)
+            for (let i = 8; i < 14; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit,
+                    y: h - unit * 2,
+                    w: unit, h: unit * 2,
+                    type: 'test_chamber_floor'
+                });
+            }
+
+            // PLATEFORME HAUTE pour prendre de l'élan
+            level.platforms.push({
+                x: currentX + unit * 2,
+                y: h - unit * 6,
+                w: unit * 3, h: unit,
+                type: 'test_chamber_platform'
+            });
+
+            // Échelle pour monter sur la plateforme haute
+            level.ladders.push({
+                x: currentX + unit,
+                y: h - unit * 6,
+                w: 30, h: unit * 4
+            });
+
+            // PORTAIL ORANGE A (au "sol" du trou) - Entrée de chute
+            level.portals.push({
+                x: currentX + unit * 5.5,
+                y: h - unit,
+                w: 80, h: 40,
+                color: '#FF6600',
+                destX: currentX + unit * 8,
+                destY: h - unit * 5,
+                portalPair: 'orange_02_B',
+                isFloorPortal: true,
+                exitDirection: 'right' // Projection horizontale
+            });
+
+            // PORTAIL ORANGE B (sur le mur) - Sortie horizontale
+            level.portals.push({
+                x: currentX + unit * 8,
+                y: h - unit * 5 - 40,
+                w: 50, h: 80,
+                color: '#FF6600',
+                destX: currentX + unit * 5.5,
+                destY: h - unit - 40,
+                portalPair: 'orange_02_A',
+                isWallPortal: true
+            });
+
+            // PLATEFORME CIBLE (accessible uniquement via fling)
+            level.platforms.push({
+                x: currentX + unit * 11,
+                y: h - unit * 5,
+                w: unit * 3, h: unit,
+                type: 'test_chamber_platform'
+            });
+
+            // PIÈCES EN L'AIR (à attraper pendant le fling!)
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({
+                    x: currentX + unit * 9 + i * 35,
+                    y: h - unit * 5 - 30,
+                    w: 25, h: 25,
+                    value: 2
+                });
+            }
+
+            // Shield sur la plateforme cible (récompense)
+            level.powerups.push({
+                x: currentX + unit * 12,
+                y: h - unit * 5 - 40,
+                w: 35, h: 35,
+                type: 'shield'
+            });
+
+            // Danger en bas du trou (punition si raté)
+            level.hazards.push({
+                x: currentX + unit * 5,
+                y: h - unit * 0.5,
+                w: unit * 3, h: unit / 2,
+                type: 'energy_field'
+            });
+
+            // Plafond
+            level.platforms.push({
+                x: currentX,
+                y: h - unit * 8,
+                w: unit * 14, h: unit,
+                type: 'test_chamber_wall'
+            });
+
+            // Signalétique "02"
+            level.decorations.push({
+                type: 'chamber_sign',
+                x: currentX + 20,
+                y: h - unit * 7,
+                number: '02'
+            });
+
+            currentX += chamberWidth + chamberGap + 100;
+
+            // ============================================================
+            // CHAMBRE 03 : PUZZLE D'ACTIVATION
+            // Objectif : Comprendre les boutons et mécanismes
+            // ============================================================
+
+            // Sol en plusieurs sections
+            for (let i = 0; i < 6; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit,
+                    y: h - unit * 2,
+                    w: unit, h: unit * 2,
+                    type: 'test_chamber_floor'
+                });
+            }
+
+            // Fosse avec plateforme de pression
+            level.platforms.push({
+                x: currentX + unit * 6,
+                y: h - unit,
+                w: unit * 2, h: unit,
+                type: 'pressure_plate'
+            });
+
+            for (let i = 8; i < 16; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit,
+                    y: h - unit * 2,
+                    w: unit, h: unit * 2,
+                    type: 'test_chamber_floor'
+                });
+            }
+
+            // PLATEFORME MOBILE (activée conceptuellement par la zone)
+            level.platforms.push({
+                x: currentX + unit * 9,
+                y: h - unit * 4,
+                w: unit * 3, h: unit / 2,
+                type: 'moving',
+                vx: 0,
+                vy: 1.5 * state.difficulty,
+                minY: h - unit * 6,
+                maxY: h - unit * 3
+            });
+
+            // TOURELLE (ennemi style Portal)
             level.enemies.push({
-                x: 200,
-                y: unit * 2 - 60,
-                w: 50,
-                h: 60,
-                type: 'zombie',
-                patrolStart: 130,
-                patrolEnd: 330,
-                dir: 1,
+                x: currentX + unit * 12,
+                y: h - unit * 2 - 50,
+                w: 40, h: 50,
+                type: 'turret',
+                patrolStart: currentX + unit * 10,
+                patrolEnd: currentX + unit * 14,
+                dir: -1,
+                speed: 1.5 * state.difficulty
+            });
+
+            // Portail CYAN pour passer au-dessus de la tourelle
+            level.portals.push({
+                x: currentX + unit * 5,
+                y: h - unit * 2 - 80,
+                w: 50, h: 80,
+                color: '#00FFFF',
+                destX: currentX + unit * 14,
+                destY: h - unit * 5,
+                portalPair: 'cyan_03_B'
+            });
+
+            // Portail CYAN B (en hauteur, sortie sécurisée)
+            level.portals.push({
+                x: currentX + unit * 14,
+                y: h - unit * 5 - 80,
+                w: 50, h: 80,
+                color: '#00FFFF',
+                destX: currentX + unit * 5,
+                destY: h - unit * 2 - 80,
+                portalPair: 'cyan_03_A'
+            });
+
+            // Plateforme haute de sécurité
+            level.platforms.push({
+                x: currentX + unit * 13,
+                y: h - unit * 5,
+                w: unit * 3, h: unit,
+                type: 'test_chamber_platform'
+            });
+
+            // Pièces sur le parcours
+            for (let i = 0; i < 5; i++) {
+                level.coins.push({
+                    x: currentX + unit * 9 + i * 30,
+                    y: h - unit * 2 - 60,
+                    w: 20, h: 20
+                });
+            }
+
+            // Super Jump (pour la chambre suivante)
+            level.powerups.push({
+                x: currentX + unit * 15,
+                y: h - unit * 5 - 40,
+                w: 35, h: 35,
+                type: 'superJump'
+            });
+
+            // Plafond
+            level.platforms.push({
+                x: currentX,
+                y: h - unit * 8,
+                w: unit * 16, h: unit,
+                type: 'test_chamber_wall'
+            });
+
+            // Signalétique "03"
+            level.decorations.push({
+                type: 'chamber_sign',
+                x: currentX + 20,
+                y: h - unit * 7,
+                number: '03'
+            });
+
+            currentX += chamberWidth + chamberGap + 150;
+
+            // ============================================================
+            // CHAMBRE 04 : LA SALLE DE LA CLÉ (PUZZLE PRINCIPAL)
+            // Objectif : Combiner toutes les mécaniques apprises
+            // La clé est VISIBLE mais INACCESSIBLE directement
+            // ============================================================
+
+            // Sol principal (zone de départ de la chambre)
+            for (let i = 0; i < 6; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit,
+                    y: h - unit * 2,
+                    w: unit, h: unit * 2,
+                    type: 'test_chamber_floor'
+                });
+            }
+
+            // GRANDE FOSSE CENTRALE (danger!)
+            level.hazards.push({
+                x: currentX + unit * 6,
+                y: h - unit,
+                w: unit * 6, h: unit,
+                type: 'acid_pool'
+            });
+
+            // Sol après la fosse
+            for (let i = 12; i < 20; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit,
+                    y: h - unit * 2,
+                    w: unit, h: unit * 2,
+                    type: 'test_chamber_floor'
+                });
+            }
+
+            // ===== PLATEFORME DE LA CLÉ (INACCESSIBLE DIRECTEMENT) =====
+            // Positionnée en hauteur, au-dessus de la fosse
+            level.platforms.push({
+                x: currentX + unit * 8,
+                y: h - unit * 6,
+                w: unit * 3, h: unit,
+                type: 'key_platform'
+            });
+
+            // LA CLÉ ! (visible mais comment l'atteindre ?)
+            level.keyItem = {
+                x: currentX + unit * 9,
+                y: h - unit * 6 - 50,
+                w: 45, h: 45,
+                type: 'aperture_key'
+            };
+
+            // ===== SOLUTION DU PUZZLE =====
+
+            // ÉTAPE 1 : Plateforme intermédiaire haute à gauche
+            level.platforms.push({
+                x: currentX + unit * 2,
+                y: h - unit * 5,
+                w: unit * 3, h: unit,
+                type: 'test_chamber_platform'
+            });
+
+            // Échelle pour atteindre la plateforme intermédiaire
+            level.ladders.push({
+                x: currentX + unit,
+                y: h - unit * 5,
+                w: 30, h: unit * 3
+            });
+
+            // ÉTAPE 2 : Portail VIOLET A (sur la plateforme intermédiaire)
+            // Le joueur doit TOMBER dedans depuis plus haut
+            level.portals.push({
+                x: currentX + unit * 3,
+                y: h - unit * 5,
+                w: 60, h: 40,
+                color: '#9900FF',
+                destX: currentX + unit * 5,
+                destY: h - unit * 4,
+                portalPair: 'violet_04_B',
+                isFloorPortal: true,
+                exitDirection: 'up-right'
+            });
+
+            // ÉTAPE 3 : Plateforme TRÈS haute pour prendre de l'élan
+            level.platforms.push({
+                x: currentX + unit,
+                y: h - unit * 8,
+                w: unit * 4, h: unit,
+                type: 'test_chamber_platform'
+            });
+
+            // Échelle vers la plateforme très haute
+            level.ladders.push({
+                x: currentX + unit * 4.5,
+                y: h - unit * 8,
+                w: 30, h: unit * 3
+            });
+
+            // PORTAIL VIOLET B (sortie murale) - Projette vers la clé !
+            level.portals.push({
+                x: currentX + unit * 5,
+                y: h - unit * 5 - 80,
+                w: 50, h: 80,
+                color: '#9900FF',
+                destX: currentX + unit * 3,
+                destY: h - unit * 5,
+                portalPair: 'violet_04_A',
+                isWallPortal: true
+            });
+
+            // ===== GARDIENS DE LA CLÉ =====
+
+            // Chest Monster patrouille en bas
+            level.enemies.push({
+                x: currentX + unit * 14,
+                y: h - unit * 2 - 60,
+                w: 60, h: 60,
+                type: 'chest_monster',
+                patrolStart: currentX + unit * 12,
+                patrolEnd: currentX + unit * 18,
+                dir: -1,
                 speed: 2 * state.difficulty
             });
 
-            // Trail de pièces le long de la plateforme
-            for (let i = 0; i < 6; i++) {
-                level.coins.push({ x: 140 + i * 40, y: unit * 2 - 50, w: 20, h: 20 });
-            }
-
-            // Pièces bonus en arc (éviter le zombie)
-            for (let i = 0; i < 4; i++) {
-                const arcHeight = Math.sin((i / 3) * Math.PI) * 40;
-                level.coins.push({ x: 150 + i * 50, y: unit * 2 - 100 - arcHeight, w: 20, h: 20 });
-            }
-
-            // Power-up bouclier stratégique
-            level.powerups.push({ x: 330, y: unit * 2 - 60, w: 35, h: 35, type: 'shield' });
-
-            // ===== PORTAIL ORANGE A (Haute gauche → Milieu droit) =====
-            level.portals.push({
-                x: 330,
-                y: unit * 2 - 80,
-                w: 50,
-                h: 80,
-                color: '#FF9900',
-                destX: w - 250,
-                destY: unit * 5 - 60,
-                portalPair: 'orange_B'
-            });
-
-            // ===== ZONE 3 : MILIEU DROIT (Améliorée) =====
-            level.platforms.push({ x: w - 450, y: unit * 5, w: 450, h: 20, type: 'metal' });
-
-            // PORTAIL ORANGE B (Retour → Haute gauche) - BIDIRECTIONNEL !
-            level.portals.push({
-                x: w - 430,
-                y: unit * 5 - 80,
-                w: 50,
-                h: 80,
-                color: '#FF9900',
-                destX: 330,
-                destY: unit * 2 - 80,
-                portalPair: 'orange_A'
-            });
-
-            // Plateforme mobile avec défi
+            // Tourelle sur une plateforme latérale
             level.platforms.push({
-                x: w - 350,
-                y: unit * 6,
-                w: 100,
-                h: 20,
-                type: 'moving',
-                vx: 2 * state.difficulty,
-                minX: w - 420,
-                maxX: w - 200
+                x: currentX + unit * 15,
+                y: h - unit * 4,
+                w: unit * 2, h: unit,
+                type: 'test_chamber_platform'
             });
-
-            // Piège évitable
-            level.hazards.push({ x: w - 300, y: unit * 5 - 25, w: 25, h: 25, type: 'spike' });
-
-            // Trail de pièces guidant vers le portail
-            for (let i = 0; i < 6; i++) {
-                level.coins.push({ x: w - 380 + i * 45, y: unit * 5 - 50, w: 20, h: 20 });
-            }
-
-            // Pièces secrètes en hauteur
-            for (let i = 0; i < 3; i++) {
-                level.coins.push({
-                    x: w - 330 + i * 60,
-                    y: unit * 5 - 140,
-                    w: 25,
-                    h: 25,
-                    value: 3,
-                    secret: true
-                });
-            }
-
-            // Power-up super saut pour atteindre les pièces secrètes
-            level.powerups.push({ x: w - 250, y: unit * 5 - 60, w: 35, h: 35, type: 'super_jump' });
-
-            // ===== PORTAIL VIOLET A (Milieu droit → Basse centrale) =====
-            level.portals.push({
-                x: w - 80,
-                y: unit * 5 - 80,
-                w: 50,
-                h: 80,
-                color: '#CC00FF',
-                destX: w / 2,
-                destY: h - unit * 3 - 60,
-                portalPair: 'violet_B'
-            });
-
-            // ===== ZONE 4 : BASSE CENTRALE (Améliorée - Accessible!) =====
-            level.platforms.push({ x: w / 2 - 300, y: h - unit * 3, w: 600, h: 20, type: 'metal' });
-
-            // PORTAIL VIOLET B (Retour → Milieu droit) - BIDIRECTIONNEL !
-            level.portals.push({
-                x: w / 2 - 280,
-                y: h - unit * 3 - 80,
-                w: 50,
-                h: 80,
-                color: '#CC00FF',
-                destX: w - 80,
-                destY: unit * 5 - 80,
-                portalPair: 'violet_A'
-            });
-
-            // ÉCHELLE D'ACCÈS depuis la plateforme de départ (FIX accessibilité!)
-            level.ladders.push({
-                x: 100,
-                y: h - unit * 3,
-                w: 40,
-                h: unit - 20 // Monte depuis la plateforme basse jusqu'à la départ
-            });
-
-            // Boss coffre monstre gardien de la clé
             level.enemies.push({
-                x: w / 2 + 50,
-                y: h - unit * 3 - 60,
-                w: 60,
-                h: 60,
-                type: 'chest_monster',
-                patrolStart: w / 2 - 150,
-                patrolEnd: w / 2 + 200,
+                x: currentX + unit * 15.5,
+                y: h - unit * 4 - 50,
+                w: 40, h: 50,
+                type: 'turret',
+                patrolStart: currentX + unit * 15,
+                patrolEnd: currentX + unit * 16.5,
                 dir: -1,
-                speed: 2.5 * state.difficulty
+                speed: 1 * state.difficulty
             });
 
-            // LA CLÉ ! Bien gardée
-            level.keyItem = { x: w / 2 + 200, y: h - unit * 3 - 50, w: 40, h: 40 };
+            // Pièces autour de la clé (récompense risquée)
+            level.coins.push({ x: currentX + unit * 8.2, y: h - unit * 6 - 40, w: 25, h: 25, value: 3 });
+            level.coins.push({ x: currentX + unit * 10.2, y: h - unit * 6 - 40, w: 25, h: 25, value: 3 });
 
-            // Trail de pièces vers la clé
-            for (let i = 0; i < 8; i++) {
-                level.coins.push({ x: w / 2 - 200 + i * 50, y: h - unit * 3 - 50, w: 20, h: 20 });
-            }
-
-            // Pièces bonus en arc (au-dessus du boss)
+            // Pièces sur le chemin sécurisé
             for (let i = 0; i < 6; i++) {
-                const arcHeight = Math.sin((i / 5) * Math.PI) * 50;
-                level.coins.push({ x: w / 2 - 100 + i * 50, y: h - unit * 3 - 110 - arcHeight, w: 20, h: 20 });
-            }
-
-            // Power-up magnet pour faciliter la collection
-            level.powerups.push({ x: w / 2 - 250, y: h - unit * 3 - 80, w: 35, h: 35, type: 'magnet' });
-
-            // ===== PORTAIL VERT A (Basse centrale → Zone retour haut) =====
-            level.portals.push({
-                x: w / 2 + 230,
-                y: h - unit * 3 - 80,
-                w: 50,
-                h: 80,
-                color: '#00FF00',
-                destX: 80,
-                destY: h - unit * 4 - 60,
-                portalPair: 'vert_B'
-            });
-
-            // ===== ZONE 5 : RETOUR HAUT (Zone de sortie) =====
-            level.platforms.push({ x: -50, y: h - unit * 4, w: 450, h: 20, type: 'metal' });
-
-            // PORTAIL VERT B (Retour → Basse centrale) - BIDIRECTIONNEL !
-            level.portals.push({
-                x: 20,
-                y: h - unit * 4 - 80,
-                w: 50,
-                h: 80,
-                color: '#00FF00',
-                destX: w / 2 + 230,
-                destY: h - unit * 3 - 80,
-                portalPair: 'vert_A'
-            });
-
-            // Power-up super saut pour monter vers la sortie
-            level.powerups.push({ x: 250, y: h - unit * 4 - 60, w: 35, h: 35, type: 'super_jump' });
-
-            // Trail de pièces vers l'échelle
-            for (let i = 0; i < 7; i++) {
-                level.coins.push({ x: 100 + i * 50, y: h - unit * 4 - 60, w: 20, h: 20 });
-            }
-
-            // ===== ÉCHELLE VERS LA SORTIE FINALE =====
-            level.ladders.push({ x: 350, y: h - unit * 6, w: 40, h: unit * 2 });
-            level.platforms.push({ x: 270, y: h - unit * 6, w: 220, h: 20, type: 'metal' });
-
-            // Pièces le long de l'échelle
-            for (let i = 0; i < 5; i++) {
-                level.coins.push({ x: 340, y: h - unit * 6 + 30 + i * 50, w: 20, h: 20 });
-            }
-
-            // ===== SORTIE FINALE =====
-            level.goal = { x: 400, y: h - unit * 6 - 80, w: 70, h: 80 };
-
-            // Pièces finales (récompense finale)
-            for (let i = 0; i < 5; i++) {
-                level.coins.push({ x: 290 + i * 40, y: h - unit * 6 - 60, w: 20, h: 20 });
-            }
-
-            // Pièces secrètes bonus au sommet
-            for (let i = 0; i < 3; i++) {
                 level.coins.push({
-                    x: 320 + i * 50,
-                    y: h - unit * 6 - 130,
-                    w: 25,
-                    h: 25,
-                    value: 3,
-                    secret: true
+                    x: currentX + unit * 13 + i * 40,
+                    y: h - unit * 2 - 50,
+                    w: 20, h: 20
                 });
             }
 
-            // Vide mortel
-            level.hazards.push({ x: -1000, y: h + 100, w: w * 20, h: 100, type: 'void' });
+            // Plafond de la chambre
+            level.platforms.push({
+                x: currentX,
+                y: h - unit * 10,
+                w: unit * 20, h: unit,
+                type: 'test_chamber_wall'
+            });
+
+            // Mur droit (fin de chambre)
+            level.platforms.push({
+                x: currentX + unit * 19,
+                y: h - unit * 10,
+                w: unit, h: unit * 8,
+                type: 'test_chamber_wall'
+            });
+
+            // Signalétique "04"
+            level.decorations.push({
+                type: 'chamber_sign',
+                x: currentX + 20,
+                y: h - unit * 9,
+                number: '04'
+            });
+
+            // ===== PORTAIL DE RETOUR (après avoir la clé) =====
+            level.portals.push({
+                x: currentX + unit * 17,
+                y: h - unit * 2 - 80,
+                w: 50, h: 80,
+                color: '#00FF00',
+                destX: 100,
+                destY: h - unit * 2 - 80,
+                portalPair: 'green_return_B'
+            });
+
+            currentX += chamberWidth + chamberGap + 200;
+
+            // ============================================================
+            // CHAMBRE FINALE : SORTIE
+            // Retour au début avec la clé pour ouvrir la porte
+            // ============================================================
+
+            // Le portail vert ramène au début (x=100)
+            // Portail vert B (au début, près de la sortie)
+            level.portals.push({
+                x: 100,
+                y: h - unit * 2 - 80,
+                w: 50, h: 80,
+                color: '#00FF00',
+                destX: currentX - chamberWidth - 100 + unit * 17,
+                destY: h - unit * 2 - 80,
+                portalPair: 'green_return_A'
+            });
+
+            // Plateforme de sortie (à côté du SAS d'entrée)
+            level.platforms.push({
+                x: 200,
+                y: h - unit * 4,
+                w: unit * 4, h: unit,
+                type: 'exit_platform'
+            });
+
+            // Échelle vers la sortie
+            level.ladders.push({
+                x: 180,
+                y: h - unit * 4,
+                w: 30, h: unit * 2
+            });
+
+            // LA SORTIE FINALE (nécessite la clé!)
+            level.goal = {
+                x: 280,
+                y: h - unit * 4 - 80,
+                w: 60, h: 80,
+                type: 'aperture_exit'
+            };
+
+            // Pièces finales
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({
+                    x: 220 + i * 35,
+                    y: h - unit * 4 - 50,
+                    w: 20, h: 20
+                });
+            }
+
+            // ============================================================
+            // ÉLÉMENTS GLOBAUX
+            // ============================================================
+
+            // Vide mortel (sous les plateformes)
+            level.hazards.push({
+                x: -1000,
+                y: h + 50,
+                w: w * 30,
+                h: 100,
+                type: 'void'
+            });
+
+            // Pièces secrètes cachées dans les chambres
+            level.coins.push({ x: currentX - chamberWidth * 2, y: h - unit * 9, w: 30, h: 30, value: 5, secret: true });
+            level.coins.push({ x: 50, y: h - unit * 7, w: 30, h: 30, value: 5, secret: true });
 
             return level;
         }
