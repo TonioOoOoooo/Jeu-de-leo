@@ -542,7 +542,7 @@ const LEVELS = {
     },
     
     5: {
-        name: "Aventure Minecraft",
+        name: "🎮 Aventure Minecraft 🎮",
         bgColor: "#87CEEB",
         playerStart: { x: 50, y: 300 },
         needsKey: true,
@@ -550,16 +550,45 @@ const LEVELS = {
             const blockSize = 40;
             const level = createEmptyLevel();
 
-            // ===== MONDE PRINCIPAL =====
+            // ===== MONDE PRINCIPAL (Overworld amélioré) =====
             level.clouds = [];
-            for (let i = 0; i < 8; i++) level.clouds.push({ x: Math.random() * w * 2, y: 50 + Math.random() * 150, w: 50 + Math.random() * 40 });
+            // Nuages stylisés Minecraft (carrés)
+            for (let i = 0; i < 12; i++) {
+                level.clouds.push({
+                    x: i * 150 + Math.random() * 50,
+                    y: 40 + Math.random() * 100,
+                    w: 70 + Math.random() * 30
+                });
+            }
 
-            // Sol de départ
+            // ===== SECTION 1 : PLAINE DE DÉPART =====
+            // Sol de départ avec variété
             for (let i = 0; i < 18; i++) {
                 level.platforms.push({ x: i * blockSize, y: h - blockSize * 2, w: blockSize, h: blockSize, type: 'grass_block' });
                 level.platforms.push({ x: i * blockSize, y: h - blockSize, w: blockSize, h: blockSize, type: 'dirt_block' });
             }
-            for (let i = 0; i < 5; i++) level.coins.push({ x: 100 + i * 80, y: h - blockSize * 2 - 50, w: 20, h: 20 });
+
+            // Trail de pièces dorées (comme des lingots d'or Minecraft)
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({
+                    x: 80 + i * 70,
+                    y: h - blockSize * 2 - 50,
+                    w: 20,
+                    h: 20
+                });
+            }
+
+            // Pièces secrètes en hauteur (diamants cachés)
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({
+                    x: 150 + i * 80,
+                    y: h - blockSize * 2 - 140,
+                    w: 25,
+                    h: 25,
+                    value: 3,
+                    secret: true
+                });
+            }
 
             // Arbre avec power-up
             let treeX = 280;
