@@ -6054,6 +6054,849 @@ function drawGlitchPlatformJump(ctx, p) {
     ctx.shadowBlur = 0;
 }
 
+// ============================================================
+// MONSTRES MINECRAFT PREMIUM - NIVEAU 5
+// Design premium inspiré de Minecraft avec effets visuels avancés
+// ============================================================
+
+// ========== CREEPER PREMIUM ==========
+function drawMinecraftCreeperPremium(ctx, e, frameTick, player) {
+    const dir = e.dir || 1;
+    const pixelSize = 4; // Taille des "pixels" Minecraft
+    const distToPlayer = Math.abs(e.x - player.x);
+    const isCharging = distToPlayer < 120;
+
+    // Animation de marche
+    const walkCycle = Math.sin(frameTick * 0.12) * 3;
+    const headBob = Math.abs(Math.sin(frameTick * 0.15)) * 2;
+
+    // Animation de charge (gonflement + flash)
+    const chargePhase = isCharging ? Math.min(1, (120 - distToPlayer) / 80) : 0;
+    const swell = 1 + chargePhase * 0.15;
+    const flashIntensity = isCharging ? Math.sin(frameTick * 0.3) * 0.5 + 0.5 : 0;
+
+    ctx.save();
+    ctx.translate(e.x + e.w/2, e.y + e.h);
+    ctx.scale(swell, swell);
+
+    // Ombre au sol
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, 5, e.w * 0.4, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== JAMBES (4 pattes cubiques) =====
+    const legColors = ['#0D8A00', '#0B7800', '#0A6A00'];
+
+    // Patte arrière gauche
+    ctx.fillStyle = legColors[1];
+    ctx.fillRect(-e.w/2 + 2, -18 - walkCycle, 12, 18);
+    drawCreeperLegTexture(ctx, -e.w/2 + 2, -18 - walkCycle, 12, 18, pixelSize);
+
+    // Patte arrière droite
+    ctx.fillStyle = legColors[1];
+    ctx.fillRect(e.w/2 - 14, -18 + walkCycle, 12, 18);
+    drawCreeperLegTexture(ctx, e.w/2 - 14, -18 + walkCycle, 12, 18, pixelSize);
+
+    // Patte avant gauche
+    ctx.fillStyle = legColors[0];
+    ctx.fillRect(-e.w/2 + 2, -18 + walkCycle, 12, 18);
+    drawCreeperLegTexture(ctx, -e.w/2 + 2, -18 + walkCycle, 12, 18, pixelSize);
+
+    // Patte avant droite
+    ctx.fillStyle = legColors[0];
+    ctx.fillRect(e.w/2 - 14, -18 - walkCycle, 12, 18);
+    drawCreeperLegTexture(ctx, e.w/2 - 14, -18 - walkCycle, 12, 18, pixelSize);
+
+    // ===== CORPS =====
+    const bodyH = 28;
+    const bodyW = e.w - 8;
+    const bodyY = -18 - bodyH;
+
+    // Corps principal avec dégradé de texture
+    const bodyGrad = ctx.createLinearGradient(-bodyW/2, bodyY, bodyW/2, bodyY);
+    bodyGrad.addColorStop(0, '#0D9E00');
+    bodyGrad.addColorStop(0.3, '#0FB800');
+    bodyGrad.addColorStop(0.7, '#0DA800');
+    bodyGrad.addColorStop(1, '#0B8A00');
+    ctx.fillStyle = bodyGrad;
+    ctx.fillRect(-bodyW/2, bodyY, bodyW, bodyH);
+
+    // Texture pixelisée du corps
+    drawCreeperBodyTexture(ctx, -bodyW/2, bodyY, bodyW, bodyH, pixelSize);
+
+    // ===== TÊTE =====
+    const headSize = e.w - 4;
+    const headY = bodyY - headSize - 2 + headBob;
+
+    // Tête avec dégradé
+    const headGrad = ctx.createLinearGradient(-headSize/2, headY, headSize/2, headY + headSize);
+    headGrad.addColorStop(0, '#12B800');
+    headGrad.addColorStop(0.5, '#0FB200');
+    headGrad.addColorStop(1, '#0D9800');
+    ctx.fillStyle = headGrad;
+    ctx.fillRect(-headSize/2, headY, headSize, headSize);
+
+    // Texture de la tête
+    drawCreeperHeadTexture(ctx, -headSize/2, headY, headSize, pixelSize);
+
+    // ===== VISAGE ICONIQUE =====
+    ctx.fillStyle = '#000000';
+
+    // Yeux (carrés pixelisés)
+    const eyeSize = 8;
+    const eyeY = headY + headSize * 0.25;
+    ctx.fillRect(-headSize/2 + 6, eyeY, eyeSize, eyeSize);
+    ctx.fillRect(headSize/2 - 6 - eyeSize, eyeY, eyeSize, eyeSize);
+
+    // Bouche en forme de frown caractéristique
+    const mouthY = headY + headSize * 0.55;
+    ctx.fillRect(-4, mouthY, 8, 4); // Barre horizontale
+    ctx.fillRect(-8, mouthY + 4, 4, 8); // Côté gauche
+    ctx.fillRect(4, mouthY + 4, 4, 8); // Côté droit
+
+    // ===== EFFETS DE CHARGE (EXPLOSION IMMINENTE) =====
+    if (isCharging) {
+        // Flash blanc
+        ctx.fillStyle = `rgba(255, 255, 255, ${flashIntensity * 0.6})`;
+        ctx.fillRect(-headSize/2, headY, headSize, headSize);
+        ctx.fillRect(-bodyW/2, bodyY, bodyW, bodyH);
+
+        // Particules électriques
+        if (frameTick % 3 === 0) {
+            ctx.strokeStyle = `rgba(255, 255, 100, ${0.5 + flashIntensity * 0.5})`;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 15 + Math.random() * 20;
+                ctx.beginPath();
+                ctx.moveTo(0, headY + headSize/2);
+                ctx.lineTo(Math.cos(angle) * dist, headY + headSize/2 + Math.sin(angle) * dist);
+                ctx.stroke();
+            }
+        }
+
+        // Aura de danger
+        ctx.strokeStyle = `rgba(255, 100, 0, ${0.3 + chargePhase * 0.4})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, (headY + bodyY + bodyH) / 2, headSize + 10 + Math.sin(frameTick * 0.2) * 5, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+function drawCreeperBodyTexture(ctx, x, y, w, h, pixelSize) {
+    ctx.fillStyle = 'rgba(0, 80, 0, 0.3)';
+    for (let py = 0; py < h; py += pixelSize * 2) {
+        for (let px = 0; px < w; px += pixelSize * 2) {
+            if ((px + py) % (pixelSize * 4) === 0) {
+                ctx.fillRect(x + px, y + py, pixelSize, pixelSize);
+            }
+        }
+    }
+    ctx.fillStyle = 'rgba(50, 200, 50, 0.2)';
+    for (let py = pixelSize; py < h; py += pixelSize * 3) {
+        for (let px = pixelSize; px < w; px += pixelSize * 3) {
+            ctx.fillRect(x + px, y + py, pixelSize, pixelSize);
+        }
+    }
+}
+
+function drawCreeperHeadTexture(ctx, x, y, size, pixelSize) {
+    ctx.fillStyle = 'rgba(0, 60, 0, 0.25)';
+    for (let py = 0; py < size; py += pixelSize * 2) {
+        for (let px = 0; px < size; px += pixelSize * 2) {
+            if (Math.random() > 0.6) {
+                ctx.fillRect(x + px, y + py, pixelSize, pixelSize);
+            }
+        }
+    }
+}
+
+function drawCreeperLegTexture(ctx, x, y, w, h, pixelSize) {
+    ctx.fillStyle = 'rgba(0, 50, 0, 0.3)';
+    ctx.fillRect(x, y + h - pixelSize * 2, w, pixelSize * 2);
+}
+
+// ========== SPIDER PREMIUM ==========
+function drawMinecraftSpiderPremium(ctx, e, frameTick) {
+    const dir = e.dir || 1;
+    const walkPhase = frameTick * 0.15;
+    const bodyBob = Math.sin(walkPhase) * 2;
+
+    ctx.save();
+    ctx.translate(e.x + e.w/2, e.y + e.h/2);
+    if (dir === -1) ctx.scale(-1, 1);
+
+    // Ombre au sol
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(0, e.h/2 + 5, e.w * 0.6, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== 8 PATTES ARTICULÉES =====
+    ctx.strokeStyle = '#1A1A1A';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+
+    for (let side = -1; side <= 1; side += 2) {
+        for (let i = 0; i < 4; i++) {
+            const legOffset = i * 0.5;
+            const phase = walkPhase + legOffset + (side === 1 ? Math.PI : 0);
+
+            // Position de base sur le corps
+            const baseX = side * 8;
+            const baseY = -5 + i * 6;
+
+            // Articulations avec mouvement réaliste
+            const midAngle = side * (0.6 + Math.sin(phase) * 0.3);
+            const endAngle = side * (0.8 + Math.cos(phase) * 0.2);
+
+            const midX = baseX + Math.cos(midAngle) * 18 * side;
+            const midY = baseY - 8 + Math.sin(phase) * 4;
+
+            const endX = midX + Math.cos(endAngle) * 20 * side;
+            const endY = e.h/2 - 5;
+
+            // Dessiner les segments de patte
+            ctx.beginPath();
+            ctx.moveTo(baseX, baseY);
+            ctx.lineTo(midX, midY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            // Poils sur les pattes
+            if (i % 2 === 0) {
+                ctx.lineWidth = 1;
+                for (let h = 0; h < 3; h++) {
+                    const t = (h + 1) / 4;
+                    const hx = baseX + (midX - baseX) * t;
+                    const hy = baseY + (midY - baseY) * t;
+                    ctx.beginPath();
+                    ctx.moveTo(hx, hy);
+                    ctx.lineTo(hx + side * 4, hy - 3);
+                    ctx.stroke();
+                }
+                ctx.lineWidth = 4;
+            }
+        }
+    }
+
+    // ===== ABDOMEN (arrière) =====
+    const abdomenGrad = ctx.createRadialGradient(5, bodyBob + 5, 0, 5, bodyBob + 5, 22);
+    abdomenGrad.addColorStop(0, '#3A3A3A');
+    abdomenGrad.addColorStop(0.5, '#252525');
+    abdomenGrad.addColorStop(1, '#1A1A1A');
+    ctx.fillStyle = abdomenGrad;
+    ctx.beginPath();
+    ctx.ellipse(5, bodyBob + 5, 18, 14, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Motif sur l'abdomen (taches rouges comme vraie araignée)
+    ctx.fillStyle = '#660000';
+    ctx.beginPath();
+    ctx.ellipse(5, bodyBob + 2, 6, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#440000';
+    ctx.beginPath();
+    ctx.ellipse(8, bodyBob + 8, 3, 2, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== TÊTE =====
+    const headGrad = ctx.createRadialGradient(-12, bodyBob - 2, 0, -12, bodyBob - 2, 16);
+    headGrad.addColorStop(0, '#353535');
+    headGrad.addColorStop(0.7, '#1A1A1A');
+    headGrad.addColorStop(1, '#0A0A0A');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.ellipse(-12, bodyBob - 2, 14, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== 8 YEUX ROUGES LUMINEUX =====
+    const eyeGlow = Math.sin(frameTick * 0.1) * 0.3 + 0.7;
+
+    // Lueur autour des yeux
+    ctx.shadowColor = '#FF0000';
+    ctx.shadowBlur = 8 * eyeGlow;
+
+    // Grands yeux frontaux (2)
+    ctx.fillStyle = `rgba(255, 0, 0, ${eyeGlow})`;
+    ctx.fillRect(-18, bodyBob - 8, 6, 6);
+    ctx.fillRect(-12, bodyBob - 8, 6, 6);
+
+    // Yeux latéraux supérieurs (2)
+    ctx.fillRect(-22, bodyBob - 4, 4, 4);
+    ctx.fillRect(-6, bodyBob - 4, 4, 4);
+
+    // Yeux latéraux inférieurs (2)
+    ctx.fillRect(-21, bodyBob + 1, 3, 3);
+    ctx.fillRect(-6, bodyBob + 1, 3, 3);
+
+    // Petits yeux centraux (2)
+    ctx.fillRect(-16, bodyBob - 2, 3, 3);
+    ctx.fillRect(-11, bodyBob - 2, 3, 3);
+
+    // Reflets dans les yeux
+    ctx.fillStyle = 'rgba(255, 150, 150, 0.8)';
+    ctx.fillRect(-17, bodyBob - 7, 2, 2);
+    ctx.fillRect(-11, bodyBob - 7, 2, 2);
+
+    ctx.shadowBlur = 0;
+
+    // ===== MANDIBULES (CHÉLICÈRES) =====
+    ctx.fillStyle = '#2A2A2A';
+    // Mandibule gauche
+    ctx.save();
+    ctx.translate(-22, bodyBob + 5);
+    ctx.rotate(-0.3 + Math.sin(frameTick * 0.08) * 0.1);
+    ctx.fillRect(-2, 0, 4, 10);
+    ctx.fillStyle = '#8B0000';
+    ctx.fillRect(-1, 8, 2, 4); // Crochets rouges
+    ctx.restore();
+
+    // Mandibule droite
+    ctx.save();
+    ctx.translate(-6, bodyBob + 5);
+    ctx.rotate(0.3 - Math.sin(frameTick * 0.08) * 0.1);
+    ctx.fillRect(-2, 0, 4, 10);
+    ctx.fillStyle = '#8B0000';
+    ctx.fillRect(-1, 8, 2, 4);
+    ctx.restore();
+
+    ctx.restore();
+}
+
+// ========== BLAZE PREMIUM ==========
+function drawMinecraftBlazePremium(ctx, e, frameTick) {
+    const floatY = Math.sin(frameTick * 0.08) * 12;
+    const rotation = frameTick * 0.03;
+
+    ctx.save();
+    ctx.translate(e.x + e.w/2, e.y + e.h/2 + floatY);
+
+    // ===== AURA DE CHALEUR =====
+    const heatWave = ctx.createRadialGradient(0, 0, 0, 0, 0, 50);
+    heatWave.addColorStop(0, 'rgba(255, 150, 0, 0.3)');
+    heatWave.addColorStop(0.5, 'rgba(255, 100, 0, 0.15)');
+    heatWave.addColorStop(1, 'rgba(255, 50, 0, 0)');
+    ctx.fillStyle = heatWave;
+    ctx.beginPath();
+    ctx.arc(0, 0, 50 + Math.sin(frameTick * 0.1) * 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== 12 BÂTONS DE FEU EN LÉVITATION =====
+    for (let ring = 0; ring < 3; ring++) {
+        const ringRadius = 20 + ring * 8;
+        const rodCount = 4;
+        const ringRotation = rotation * (ring % 2 === 0 ? 1 : -1) + ring * Math.PI / 6;
+
+        for (let i = 0; i < rodCount; i++) {
+            const angle = ringRotation + (i * Math.PI * 2 / rodCount);
+            const rodX = Math.cos(angle) * ringRadius;
+            const rodY = Math.sin(angle) * ringRadius * 0.4 - ring * 10;
+
+            ctx.save();
+            ctx.translate(rodX, rodY);
+            ctx.rotate(angle + Math.PI / 2);
+
+            // Bâton avec dégradé
+            const rodGrad = ctx.createLinearGradient(0, -12, 0, 12);
+            rodGrad.addColorStop(0, '#FFD700');
+            rodGrad.addColorStop(0.5, '#FF8C00');
+            rodGrad.addColorStop(1, '#FF4500');
+            ctx.fillStyle = rodGrad;
+            ctx.fillRect(-3, -12, 6, 24);
+
+            // Lueur du bâton
+            ctx.shadowColor = '#FF6600';
+            ctx.shadowBlur = 8;
+            ctx.fillRect(-2, -10, 4, 20);
+            ctx.shadowBlur = 0;
+
+            ctx.restore();
+        }
+    }
+
+    // ===== TÊTE/CORPS CENTRAL =====
+    const headSize = 20;
+
+    // Lueur intense
+    ctx.shadowColor = '#FFAA00';
+    ctx.shadowBlur = 20;
+
+    // Corps principal (cube doré)
+    const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, headSize);
+    coreGrad.addColorStop(0, '#FFEE88');
+    coreGrad.addColorStop(0.4, '#FFCC00');
+    coreGrad.addColorStop(0.8, '#FF9900');
+    coreGrad.addColorStop(1, '#FF6600');
+    ctx.fillStyle = coreGrad;
+    ctx.fillRect(-headSize/2, -headSize/2 - 5, headSize, headSize);
+
+    ctx.shadowBlur = 0;
+
+    // Texture pixelisée du visage
+    ctx.fillStyle = '#CC6600';
+    for (let py = 0; py < headSize; py += 4) {
+        for (let px = 0; px < headSize; px += 4) {
+            if ((px + py) % 8 === 0) {
+                ctx.fillRect(-headSize/2 + px, -headSize/2 - 5 + py, 4, 4);
+            }
+        }
+    }
+
+    // ===== VISAGE MENAÇANT =====
+    ctx.fillStyle = '#000000';
+    // Yeux
+    ctx.fillRect(-headSize/2 + 3, -headSize/2, 5, 5);
+    ctx.fillRect(headSize/2 - 8, -headSize/2, 5, 5);
+
+    // Pupilles de feu
+    ctx.fillStyle = '#FF0000';
+    ctx.fillRect(-headSize/2 + 4, -headSize/2 + 1, 3, 3);
+    ctx.fillRect(headSize/2 - 7, -headSize/2 + 1, 3, 3);
+
+    // Bouche
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(-6, 3, 12, 4);
+
+    // ===== PARTICULES DE FEU =====
+    for (let i = 0; i < 8; i++) {
+        const particleAge = (frameTick * 2 + i * 50) % 100;
+        const particleY = -particleAge * 0.8;
+        const particleX = Math.sin(frameTick * 0.1 + i) * 15;
+        const particleAlpha = 1 - particleAge / 100;
+        const particleSize = 6 - particleAge / 25;
+
+        if (particleSize > 0) {
+            ctx.fillStyle = `rgba(255, ${150 - particleAge}, 0, ${particleAlpha})`;
+            ctx.fillRect(particleX - particleSize/2, particleY - headSize, particleSize, particleSize);
+        }
+    }
+
+    // ===== FUMÉE =====
+    ctx.fillStyle = 'rgba(50, 50, 50, 0.3)';
+    for (let i = 0; i < 3; i++) {
+        const smokeY = -30 - i * 15 - (frameTick % 30);
+        const smokeX = Math.sin(frameTick * 0.05 + i) * 10;
+        ctx.beginPath();
+        ctx.arc(smokeX, smokeY, 8 + i * 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+// ========== GHAST PREMIUM ==========
+function drawMinecraftGhastPremium(ctx, e, frameTick, player) {
+    const floatY = Math.sin(frameTick * 0.05) * 15;
+    const distToPlayer = Math.abs(e.x + e.w/2 - player.x);
+    const isAngry = distToPlayer < 200;
+
+    ctx.save();
+    ctx.translate(e.x + e.w/2, e.y + floatY);
+
+    const size = Math.max(e.w, e.h) * 1.2;
+
+    // ===== AURA SPECTRALE =====
+    const auraGrad = ctx.createRadialGradient(0, size/3, 0, 0, size/3, size);
+    auraGrad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+    auraGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(0, size/3, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== CORPS PRINCIPAL (CUBE GÉANT BLANC) =====
+    const bodyGrad = ctx.createLinearGradient(-size/2, 0, size/2, size);
+    bodyGrad.addColorStop(0, '#FFFFFF');
+    bodyGrad.addColorStop(0.3, '#F8F8F8');
+    bodyGrad.addColorStop(0.7, '#E8E8E8');
+    bodyGrad.addColorStop(1, '#D8D8D8');
+    ctx.fillStyle = bodyGrad;
+    ctx.fillRect(-size/2, 0, size, size);
+
+    // Bordure subtile
+    ctx.strokeStyle = '#CCCCCC';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-size/2, 0, size, size);
+
+    // Texture pixelisée
+    ctx.fillStyle = 'rgba(200, 200, 200, 0.3)';
+    for (let py = 0; py < size; py += 8) {
+        for (let px = 0; px < size; px += 8) {
+            if ((px + py) % 16 === 0) {
+                ctx.fillRect(-size/2 + px, py, 8, 8);
+            }
+        }
+    }
+
+    // ===== VISAGE EXPRESSIF =====
+    const eyeOffsetY = size * 0.2;
+    const eyeSpacing = size * 0.3;
+
+    if (isAngry) {
+        // Expression de colère
+        // Yeux rouges enflammés
+        ctx.shadowColor = '#FF0000';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#FF0000';
+
+        // Oeil gauche (ouvert, furieux)
+        ctx.fillRect(-eyeSpacing - 10, eyeOffsetY, 16, 20);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(-eyeSpacing - 6, eyeOffsetY + 8, 8, 8);
+
+        // Oeil droit
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(eyeSpacing - 6, eyeOffsetY, 16, 20);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(eyeSpacing - 2, eyeOffsetY + 8, 8, 8);
+
+        ctx.shadowBlur = 0;
+
+        // Bouche ouverte (cri)
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(-15, size * 0.6, 30, 20);
+        ctx.fillStyle = '#FF3300';
+        ctx.fillRect(-12, size * 0.6 + 3, 24, 14);
+
+        // Boule de feu qui se forme
+        const fireballGrow = Math.sin(frameTick * 0.1) * 0.3 + 0.7;
+        const fireGrad = ctx.createRadialGradient(0, size + 30, 0, 0, size + 30, 20 * fireballGrow);
+        fireGrad.addColorStop(0, '#FFFF00');
+        fireGrad.addColorStop(0.5, '#FF6600');
+        fireGrad.addColorStop(1, '#FF0000');
+        ctx.fillStyle = fireGrad;
+        ctx.beginPath();
+        ctx.arc(0, size + 30, 15 * fireballGrow, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else {
+        // Expression triste (normale)
+        // Yeux tristes avec larmes
+        ctx.fillStyle = '#880000';
+
+        // Oeil gauche (forme de larme allongée)
+        ctx.beginPath();
+        ctx.moveTo(-eyeSpacing, eyeOffsetY);
+        ctx.lineTo(-eyeSpacing - 8, eyeOffsetY + 20);
+        ctx.lineTo(-eyeSpacing + 8, eyeOffsetY + 20);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillRect(-eyeSpacing - 8, eyeOffsetY + 5, 16, 15);
+
+        // Oeil droit
+        ctx.beginPath();
+        ctx.moveTo(eyeSpacing, eyeOffsetY);
+        ctx.lineTo(eyeSpacing - 8, eyeOffsetY + 20);
+        ctx.lineTo(eyeSpacing + 8, eyeOffsetY + 20);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillRect(eyeSpacing - 8, eyeOffsetY + 5, 16, 15);
+
+        // Pupilles
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(-eyeSpacing - 2, eyeOffsetY + 10, 6, 8);
+        ctx.fillRect(eyeSpacing - 2, eyeOffsetY + 10, 6, 8);
+
+        // Bouche triste
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(-12, size * 0.65, 24, 8);
+
+        // Larmes qui coulent
+        const tearPhase = (frameTick % 60) / 60;
+        ctx.fillStyle = 'rgba(100, 150, 255, 0.6)';
+        ctx.beginPath();
+        ctx.ellipse(-eyeSpacing, eyeOffsetY + 25 + tearPhase * 30, 4, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(eyeSpacing, eyeOffsetY + 25 + tearPhase * 20, 4, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // ===== TENTACULES ONDULANTS =====
+    const tentacleCount = 9;
+    for (let i = 0; i < tentacleCount; i++) {
+        const baseX = -size/2 + 8 + i * (size - 16) / (tentacleCount - 1);
+        const wavePhase = frameTick * 0.08 + i * 0.5;
+
+        // Dégradé pour chaque tentacule
+        const tentGrad = ctx.createLinearGradient(baseX, size, baseX, size + 50);
+        tentGrad.addColorStop(0, '#E8E8E8');
+        tentGrad.addColorStop(1, '#AAAAAA');
+        ctx.fillStyle = tentGrad;
+
+        // Forme ondulante
+        ctx.beginPath();
+        ctx.moveTo(baseX - 5, size);
+
+        const segments = 5;
+        for (let s = 1; s <= segments; s++) {
+            const t = s / segments;
+            const wave = Math.sin(wavePhase + t * 3) * (8 * t);
+            const y = size + t * 45;
+            const width = 5 * (1 - t * 0.6);
+            ctx.lineTo(baseX + wave - width, y);
+        }
+        for (let s = segments; s >= 1; s--) {
+            const t = s / segments;
+            const wave = Math.sin(wavePhase + t * 3) * (8 * t);
+            const y = size + t * 45;
+            const width = 5 * (1 - t * 0.6);
+            ctx.lineTo(baseX + wave + width, y);
+        }
+        ctx.lineTo(baseX + 5, size);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+// ========== MAGMA CUBE PREMIUM ==========
+function drawMinecraftMagmaCubePremium(ctx, e, frameTick) {
+    const bouncePhase = Math.abs(Math.sin(frameTick * 0.12));
+    const squash = 1 - bouncePhase * 0.3; // Écrasement au sol
+    const stretch = 1 + bouncePhase * 0.15; // Étirement en l'air
+    const bounceY = bouncePhase * 20;
+
+    const size = Math.min(e.w, e.h);
+
+    ctx.save();
+    ctx.translate(e.x + e.w/2, e.y + e.h - size/2);
+
+    // ===== OMBRE AU SOL =====
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(0, size/2 + 5, size * 0.5 * (1 + bouncePhase * 0.2), 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ===== ÉCLABOUSSURES DE LAVE (à l'impact) =====
+    if (bouncePhase < 0.15) {
+        for (let i = 0; i < 6; i++) {
+            const splashAngle = (i / 6) * Math.PI * 2 + frameTick * 0.1;
+            const splashDist = 20 + (0.15 - bouncePhase) * 100;
+            const splashX = Math.cos(splashAngle) * splashDist;
+            const splashY = size/2 - 5 + Math.sin(splashAngle) * 5;
+            const splashSize = 6 * (0.15 - bouncePhase) / 0.15;
+
+            ctx.fillStyle = '#FF6600';
+            ctx.fillRect(splashX - splashSize/2, splashY - splashSize/2, splashSize, splashSize);
+        }
+    }
+
+    ctx.translate(0, -bounceY);
+    ctx.scale(1, stretch);
+    ctx.scale(squash, 1);
+
+    // ===== CORPS PRINCIPAL (COUCHES DE MAGMA) =====
+    // Couche externe (croûte sombre)
+    ctx.fillStyle = '#3D1F00';
+    ctx.fillRect(-size/2, -size/2, size, size);
+
+    // Couche intermédiaire (magma orange)
+    const innerSize = size - 10;
+    const magmaGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, innerSize);
+    magmaGrad.addColorStop(0, '#FFCC00');
+    magmaGrad.addColorStop(0.3, '#FF8800');
+    magmaGrad.addColorStop(0.6, '#FF4400');
+    magmaGrad.addColorStop(1, '#CC2200');
+    ctx.fillStyle = magmaGrad;
+    ctx.fillRect(-innerSize/2, -innerSize/2, innerSize, innerSize);
+
+    // ===== FISSURES DE LAVE (effet d'incandescence) =====
+    ctx.strokeStyle = '#FFFF00';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#FF6600';
+    ctx.shadowBlur = 8;
+
+    // Motif de fissures
+    const crackPattern = [
+        [{x: -size/4, y: -size/3}, {x: 0, y: 0}, {x: size/4, y: size/4}],
+        [{x: size/3, y: -size/4}, {x: size/6, y: size/6}],
+        [{x: -size/3, y: size/5}, {x: -size/6, y: -size/6}]
+    ];
+
+    for (const crack of crackPattern) {
+        ctx.beginPath();
+        ctx.moveTo(crack[0].x, crack[0].y);
+        for (let i = 1; i < crack.length; i++) {
+            ctx.lineTo(crack[i].x, crack[i].y);
+        }
+        ctx.stroke();
+    }
+
+    ctx.shadowBlur = 0;
+
+    // ===== TEXTURE PIXELISÉE =====
+    const crustColor = '#2A1500';
+    ctx.fillStyle = crustColor;
+    for (let py = -size/2; py < size/2; py += 8) {
+        for (let px = -size/2; px < size/2; px += 8) {
+            // Bordure de croûte
+            if (Math.abs(px) > size/2 - 12 || Math.abs(py) > size/2 - 12) {
+                if ((px + py + size) % 16 === 0) {
+                    ctx.fillRect(px, py, 6, 6);
+                }
+            }
+        }
+    }
+
+    // ===== YEUX MENAÇANTS =====
+    ctx.fillStyle = '#000000';
+    // Cadre des yeux
+    ctx.fillRect(-size/3 - 2, -size/4 - 2, 14, 14);
+    ctx.fillRect(size/3 - 12, -size/4 - 2, 14, 14);
+
+    // Yeux jaunes brillants
+    ctx.shadowColor = '#FFFF00';
+    ctx.shadowBlur = 5;
+    ctx.fillStyle = '#FFCC00';
+    ctx.fillRect(-size/3, -size/4, 10, 10);
+    ctx.fillRect(size/3 - 10, -size/4, 10, 10);
+
+    // Pupilles
+    ctx.fillStyle = '#FF6600';
+    ctx.fillRect(-size/3 + 3, -size/4 + 3, 4, 4);
+    ctx.fillRect(size/3 - 7, -size/4 + 3, 4, 4);
+
+    ctx.shadowBlur = 0;
+
+    // ===== BOUCHE =====
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(-8, size/6, 16, 6);
+
+    // ===== PARTICULES DE LAVE MONTANTES =====
+    for (let i = 0; i < 5; i++) {
+        const particlePhase = (frameTick * 3 + i * 40) % 120;
+        const particleY = -size/2 - particlePhase * 0.5;
+        const particleX = Math.sin(i * 2 + frameTick * 0.1) * 15;
+        const alpha = Math.max(0, 1 - particlePhase / 120);
+
+        ctx.fillStyle = `rgba(255, ${100 + i * 30}, 0, ${alpha})`;
+        ctx.fillRect(particleX - 3, particleY, 6, 6);
+    }
+
+    ctx.restore();
+}
+
+// ========== ENDERMAN PREMIUM (Nouveau monstre!) ==========
+function drawMinecraftEndermanPremium(ctx, e, frameTick, player) {
+    const dir = e.dir || 1;
+    const height = e.h * 1.5; // Enderman est très grand
+    const distToPlayer = Math.abs(e.x - player.x);
+    const isWatched = distToPlayer < 150; // Devient agressif si regardé
+
+    // Téléportation effect
+    const teleportPhase = e.teleportPhase || 0;
+    const isTeleporting = teleportPhase > 0;
+
+    ctx.save();
+    ctx.translate(e.x + e.w/2, e.y + e.h);
+
+    // Effet de téléportation
+    if (isTeleporting) {
+        ctx.globalAlpha = 1 - teleportPhase;
+        // Particules d'ender
+        for (let i = 0; i < 20; i++) {
+            const px = (Math.random() - 0.5) * 60;
+            const py = -Math.random() * height;
+            ctx.fillStyle = `rgba(148, 0, 211, ${Math.random()})`;
+            ctx.fillRect(px, py, 4, 4);
+        }
+    }
+
+    // ===== JAMBES TRÈS LONGUES =====
+    ctx.fillStyle = '#0A0A0A';
+    const legWidth = 6;
+    const legHeight = height * 0.5;
+    const walkOffset = Math.sin(frameTick * 0.1) * 5;
+
+    // Jambe gauche
+    ctx.fillRect(-10, -legHeight - walkOffset, legWidth, legHeight);
+    // Jambe droite
+    ctx.fillRect(4, -legHeight + walkOffset, legWidth, legHeight);
+
+    // ===== CORPS FIN =====
+    const bodyY = -legHeight - 30;
+    ctx.fillRect(-8, bodyY, 16, 30);
+
+    // ===== BRAS TRÈS LONGS =====
+    const armLength = height * 0.4;
+    const armSwing = Math.sin(frameTick * 0.08) * 10;
+
+    ctx.save();
+    ctx.translate(-10, bodyY + 5);
+    ctx.rotate(-0.2 + armSwing * 0.02);
+    ctx.fillRect(-4, 0, 5, armLength);
+    // Main tenant un bloc (si applicable)
+    if (e.holdingBlock) {
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-8, armLength - 5, 12, 12);
+    }
+    ctx.restore();
+
+    ctx.fillStyle = '#0A0A0A';
+    ctx.save();
+    ctx.translate(10, bodyY + 5);
+    ctx.rotate(0.2 - armSwing * 0.02);
+    ctx.fillRect(-1, 0, 5, armLength);
+    ctx.restore();
+
+    // ===== TÊTE =====
+    const headY = bodyY - 20;
+    ctx.fillStyle = '#0A0A0A';
+    ctx.fillRect(-10, headY, 20, 18);
+
+    // ===== YEUX VIOLETS LUMINEUX =====
+    const eyeGlow = isWatched ? 1 : 0.6 + Math.sin(frameTick * 0.1) * 0.2;
+    ctx.shadowColor = '#9400D3';
+    ctx.shadowBlur = 15 * eyeGlow;
+    ctx.fillStyle = isWatched ? '#FF00FF' : '#9400D3';
+
+    // Yeux horizontaux caractéristiques
+    ctx.fillRect(-8, headY + 5, 6, 3);
+    ctx.fillRect(2, headY + 5, 6, 3);
+
+    ctx.shadowBlur = 0;
+
+    // ===== PARTICULES D'ENDER (autour du corps) =====
+    for (let i = 0; i < 8; i++) {
+        const particlePhase = (frameTick + i * 30) % 90;
+        const angle = (i / 8) * Math.PI * 2 + frameTick * 0.02;
+        const dist = 20 + Math.sin(particlePhase * 0.1) * 10;
+        const px = Math.cos(angle) * dist;
+        const py = -height/2 + Math.sin(angle) * 30;
+        const alpha = 0.3 + Math.sin(particlePhase * 0.15) * 0.3;
+
+        ctx.fillStyle = `rgba(148, 0, 211, ${alpha})`;
+        ctx.fillRect(px - 2, py - 2, 4, 4);
+    }
+
+    // Expression agressive si regardé
+    if (isWatched) {
+        // Bouche ouverte hurlante
+        ctx.fillStyle = '#4B0082';
+        ctx.fillRect(-5, headY + 12, 10, 5);
+
+        // Tremblement
+        ctx.translate(Math.random() * 2 - 1, Math.random() * 2 - 1);
+    }
+
+    ctx.restore();
+}
+
+// Export des fonctions Minecraft Premium
+window.drawMinecraftCreeperPremium = drawMinecraftCreeperPremium;
+window.drawMinecraftSpiderPremium = drawMinecraftSpiderPremium;
+window.drawMinecraftBlazePremium = drawMinecraftBlazePremium;
+window.drawMinecraftGhastPremium = drawMinecraftGhastPremium;
+window.drawMinecraftMagmaCubePremium = drawMinecraftMagmaCubePremium;
+window.drawMinecraftEndermanPremium = drawMinecraftEndermanPremium;
+
 // Export des fonctions
 window.drawEnhancedLevelBackground = drawEnhancedLevelBackground;
 window.drawEnhancedLevelForeground = drawEnhancedLevelForeground;
