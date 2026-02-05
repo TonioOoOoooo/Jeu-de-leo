@@ -511,7 +511,7 @@ function checkBadges() {
     }
 
     // Badge : Boss vaincu
-    if (state.level === 10 && !state.badges['boss_defeated']) {
+    if (state.level === 11 && !state.badges['boss_defeated']) {
         state.badges['boss_defeated'] = true;
         newBadges.push({ title: '⚔️ Vainqueur', desc: 'Boss vaincu !' });
     }

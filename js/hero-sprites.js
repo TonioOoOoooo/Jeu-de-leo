@@ -1042,7 +1042,7 @@ function drawHeroBombJack(ctx, p) {
     }
 }
 
-// ===== NIVEAU 10 : SONIC THE HEDGEHOG =====
+// ===== NIVEAU 11 : SONIC THE HEDGEHOG =====
 function drawHeroSonic(ctx, p) {
     const cx = p.x + p.w / 2;
     const armSwing = Math.sin(p.animFrame * 0.3) * (Math.abs(p.vx) > 0.5 ? 15 : 5);
@@ -1240,7 +1240,7 @@ function drawHeroSonic(ctx, p) {
     }
 }
 
-// ===== NIVEAU 12 : PETITE FILLE MIYAZAKI (Chihiro / Sen) =====
+// ===== NIVEAU 10 : PETITE FILLE MIYAZAKI (Chihiro / Sen) =====
 function drawHeroMiyazakiGirl(ctx, p) {
     const cx = p.x + p.w / 2;
     const armSwing = Math.sin(p.animFrame * 0.3) * (Math.abs(p.vx) > 0.5 ? 12 : 4);
@@ -1435,11 +1435,13 @@ function drawHeroForLevel(ctx, p, level) {
             drawHeroBombJack(ctx, p);
             break;
         case 10:
+            drawHeroMiyazakiGirl(ctx, p);
+            break;
+        case 11:
             drawHeroSonic(ctx, p);
             break;
         case 12:
-            drawHeroMiyazakiGirl(ctx, p);
-            break;
+            // Fruity Frank (bonus) : utilise Léo par défaut
         default:
             // Par défaut : Léo (petit garçon)
             drawHeroLeo(ctx, p);

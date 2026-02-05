@@ -3110,54 +3110,65 @@ function initLevel6Visuals(w, h) {
     if (VisualCache.level6) return VisualCache.level6;
 
     const visuals = {
-        stars: [],
-        nebulae: [],
-        gridLines: [],
-        floatingParticles: [],
-        energyBeams: []
+        panels: [],
+        pipes: [],
+        dustParticles: [],
+        sparks: [],
+        cracks: []
     };
 
-    // Étoiles en arrière-plan
+    // Panneaux muraux Aperture (arrière-plan)
     for (let i = 0; i < 60; i++) {
-        visuals.stars.push({
-            x: seededRandom(i * 541) * w * 3,
+        visuals.panels.push({
+            x: seededRandom(i * 541) * w * 4,
             y: seededRandom(i * 547) * h,
-            size: 1 + seededRandom(i * 557) * 2,
-            twinkleOffset: seededRandom(i * 563) * Math.PI * 2,
-            color: ['#FFFFFF', '#B3E5FC', '#CE93D8', '#FFCC80'][Math.floor(seededRandom(i * 569) * 4)]
+            w: 60 + seededRandom(i * 553) * 40,
+            h: 60 + seededRandom(i * 557) * 40,
+            shade: 0.85 + seededRandom(i * 563) * 0.12,
+            hasScrews: seededRandom(i * 569) > 0.4
         });
     }
 
-    // Nébuleuses colorées
-    for (let i = 0; i < 4; i++) {
-        visuals.nebulae.push({
-            x: seededRandom(i * 571) * w * 2,
-            y: seededRandom(i * 577) * h * 0.7,
-            width: 200 + seededRandom(i * 587) * 300,
-            height: 150 + seededRandom(i * 593) * 200,
-            color: ['#7C4DFF', '#00BCD4', '#E91E63', '#4CAF50'][i % 4],
-            opacity: 0.15 + seededRandom(i * 599) * 0.1
+    // Tuyaux et conduits
+    for (let i = 0; i < 12; i++) {
+        visuals.pipes.push({
+            x: seededRandom(i * 571) * w * 4,
+            y: seededRandom(i * 577) * h * 0.4,
+            length: 100 + seededRandom(i * 587) * 200,
+            diameter: 6 + seededRandom(i * 593) * 8,
+            color: ['#606060', '#707070', '#555555', '#888888'][i % 4],
+            vertical: seededRandom(i * 599) > 0.6
         });
     }
 
-    // Lignes de grille futuriste
-    for (let i = 0; i < 20; i++) {
-        visuals.gridLines.push({
-            y: seededRandom(i * 601) * h,
-            speed: 0.5 + seededRandom(i * 607) * 1,
-            opacity: 0.1 + seededRandom(i * 613) * 0.2
+    // Particules de poussière
+    for (let i = 0; i < 40; i++) {
+        visuals.dustParticles.push({
+            x: seededRandom(i * 601) * w * 4,
+            y: seededRandom(i * 607) * h,
+            size: 1 + seededRandom(i * 613) * 2,
+            speedX: (seededRandom(i * 617) - 0.5) * 0.4,
+            speedY: -0.1 - seededRandom(i * 619) * 0.3,
+            alpha: 0.1 + seededRandom(i * 623) * 0.2
         });
     }
 
-    // Particules flottantes
-    for (let i = 0; i < 30; i++) {
-        visuals.floatingParticles.push({
-            x: seededRandom(i * 617) * w * 3,
-            y: seededRandom(i * 619) * h,
-            size: 2 + seededRandom(i * 631) * 4,
-            speedX: 0.5 + seededRandom(i * 641) * 1.5,
-            speedY: (seededRandom(i * 643) - 0.5) * 0.5,
-            color: seededRandom(i * 647) > 0.5 ? '#00FFFF' : '#FF00FF'
+    // Étincelles (panneaux endommagés)
+    for (let i = 0; i < 8; i++) {
+        visuals.sparks.push({
+            x: seededRandom(i * 631) * w * 3,
+            y: seededRandom(i * 641) * h * 0.6 + 20,
+            interval: 60 + Math.floor(seededRandom(i * 643) * 180)
+        });
+    }
+
+    // Fissures dans les murs
+    for (let i = 0; i < 15; i++) {
+        visuals.cracks.push({
+            x: seededRandom(i * 647) * w * 3,
+            y: seededRandom(i * 653) * h,
+            length: 20 + seededRandom(i * 659) * 40,
+            angle: seededRandom(i * 661) * Math.PI
         });
     }
 
@@ -3169,106 +3180,177 @@ function drawLevel6Background(ctx, w, h, camX) {
     const visuals = initLevel6Visuals(w, h);
     const time = state.frameTick;
 
-    // ===== FOND LABORATOIRE APERTURE (blanc/gris clair) =====
-    const labGradient = ctx.createLinearGradient(0, 0, 0, h);
-    labGradient.addColorStop(0, '#F5F5F5');
-    labGradient.addColorStop(0.3, '#E8E8E8');
-    labGradient.addColorStop(0.7, '#DEDEDE');
-    labGradient.addColorStop(1, '#D0D0D0');
-    ctx.fillStyle = labGradient;
+    // ===== FOND PROFOND APERTURE SCIENCE =====
+    // Dégradé sombre : les entrailles du laboratoire souterrain
+    const labGrad = ctx.createLinearGradient(0, 0, 0, h);
+    labGrad.addColorStop(0, '#0d0d1a');
+    labGrad.addColorStop(0.3, '#141428');
+    labGrad.addColorStop(0.6, '#1a1a30');
+    labGrad.addColorStop(1, '#0a0a15');
+    ctx.fillStyle = labGrad;
     ctx.fillRect(0, 0, w, h);
 
-    // ===== PANNEAUX DE MUR (style Portal) =====
-    const panelSize = 160;
-    const panelMargin = 6;
-
+    // ===== GRILLE DE PANNEAUX MUARAUX (en profondeur) =====
+    const panelSize = 80;
+    ctx.globalAlpha = 0.12;
     for (let py = 0; py < h; py += panelSize) {
-        for (let px = -camX * 0.1; px < w + panelSize; px += panelSize) {
-            const adjustedX = px % (w + panelSize * 2);
-
-            // Grille légère pour éviter le bruit visuel
-            ctx.globalAlpha = 0.05;
-            ctx.strokeStyle = '#B5B5B5';
+        for (let px = (-camX * 0.05) % panelSize - panelSize; px < w + panelSize; px += panelSize) {
+            ctx.strokeStyle = '#4a4a6a';
             ctx.lineWidth = 1;
-            ctx.strokeRect(adjustedX + panelMargin, py + panelMargin,
-                           panelSize - panelMargin * 2, panelSize - panelMargin * 2);
-            ctx.globalAlpha = 1;
+            ctx.strokeRect(px + 3, py + 3, panelSize - 6, panelSize - 6);
         }
     }
+    ctx.globalAlpha = 1;
 
-    // ===== BANDES ORANGE/NOIR (warning stripes) =====
-    const stripeY = h - 60;
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(0, stripeY, w, 20);
+    // ===== TUYAUX ET CONDUITS (arrière-plan) =====
+    for (const pipe of visuals.pipes) {
+        const px = pipe.x - camX * 0.15;
+        if (px < -300 || px > w + 300) continue;
+        ctx.fillStyle = pipe.color;
+        ctx.globalAlpha = 0.3;
+        if (pipe.vertical) {
+            ctx.fillRect(px, pipe.y, pipe.diameter, pipe.length);
+            // Joints
+            for (let j = pipe.y; j < pipe.y + pipe.length; j += 40) {
+                ctx.fillStyle = '#444';
+                ctx.fillRect(px - 2, j, pipe.diameter + 4, 4);
+                ctx.fillStyle = pipe.color;
+            }
+        } else {
+            ctx.fillRect(px, pipe.y, pipe.length, pipe.diameter);
+            for (let j = px; j < px + pipe.length; j += 50) {
+                ctx.fillStyle = '#444';
+                ctx.fillRect(j, pipe.y - 2, 4, pipe.diameter + 4);
+                ctx.fillStyle = pipe.color;
+            }
+        }
+    }
+    ctx.globalAlpha = 1;
 
-    for (let sx = -camX * 0.5; sx < w + 40; sx += 40) {
+    // ===== FISSURES DANS LES MURS =====
+    ctx.strokeStyle = 'rgba(40, 40, 60, 0.4)';
+    ctx.lineWidth = 1;
+    for (const crack of visuals.cracks) {
+        const crX = crack.x - camX * 0.08;
+        if (crX < -100 || crX > w + 100) continue;
+        ctx.beginPath();
+        ctx.moveTo(crX, crack.y);
+        const endX = crX + Math.cos(crack.angle) * crack.length;
+        const endY = crack.y + Math.sin(crack.angle) * crack.length;
+        // Ligne principale
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        // Branches secondaires
+        ctx.beginPath();
+        const midX = (crX + endX) / 2;
+        const midY = (crack.y + endY) / 2;
+        ctx.moveTo(midX, midY);
+        ctx.lineTo(midX + Math.cos(crack.angle + 0.8) * crack.length * 0.3,
+                   midY + Math.sin(crack.angle + 0.8) * crack.length * 0.3);
+        ctx.stroke();
+    }
+
+    // ===== LOGO APERTURE SCIENCE (grand, subtil) =====
+    const logoX = w / 2 - camX * 0.02;
+    const logoY = h * 0.35;
+    const logoR = 120;
+
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    ctx.strokeStyle = '#FF6600';
+    ctx.lineWidth = 6;
+    // Segments du diaphragme Aperture
+    for (let i = 0; i < 7; i++) {
+        const a1 = (i / 7) * Math.PI * 2 - Math.PI / 2;
+        const a2 = ((i + 0.65) / 7) * Math.PI * 2 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.arc(logoX, logoY, logoR, a1, a2);
+        ctx.stroke();
+        // Lames du diaphragme
+        ctx.beginPath();
+        ctx.moveTo(logoX + Math.cos(a1) * logoR, logoY + Math.sin(a1) * logoR);
+        ctx.lineTo(logoX + Math.cos(a1 + 0.3) * logoR * 0.5, logoY + Math.sin(a1 + 0.3) * logoR * 0.5);
+        ctx.stroke();
+    }
+    // Cercle intérieur
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(logoX, logoY, logoR * 0.45, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // ===== BANDES DE DANGER (bas de l'écran) =====
+    const stripeY = h - 50;
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, stripeY, w, 16);
+    for (let sx = (-camX * 0.3) % 40 - 40; sx < w + 40; sx += 40) {
         ctx.fillStyle = '#FF6600';
+        ctx.globalAlpha = 0.7;
         ctx.beginPath();
         ctx.moveTo(sx, stripeY);
-        ctx.lineTo(sx + 20, stripeY);
-        ctx.lineTo(sx + 40, stripeY + 20);
-        ctx.lineTo(sx + 20, stripeY + 20);
+        ctx.lineTo(sx + 18, stripeY);
+        ctx.lineTo(sx + 38, stripeY + 16);
+        ctx.lineTo(sx + 20, stripeY + 16);
         ctx.closePath();
         ctx.fill();
     }
+    ctx.globalAlpha = 1;
 
-    // ===== LOGO APERTURE EN ARRIÈRE-PLAN =====
-    const logoX = w / 2 - camX * 0.02;
-    const logoY = h * 0.3;
-    const logoSize = 150;
+    // ===== ÉCRANS DE MONITORING GLaDOS =====
+    for (let si = 0; si < 5; si++) {
+        const screenX = 250 + si * 500 - camX * 0.08;
+        if (screenX < -120 || screenX > w + 20) continue;
 
-    ctx.save();
-    ctx.globalAlpha = 0.08;
-    ctx.strokeStyle = '#FF6600';
-    ctx.lineWidth = 8;
+        // Cadre
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(screenX, 40, 90, 60);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(screenX, 40, 90, 60);
 
-    // Cercle principal avec segments (logo Aperture stylisé)
-    for (let i = 0; i < 8; i++) {
-        const startAngle = (i / 8) * Math.PI * 2 - Math.PI / 2;
-        const endAngle = ((i + 0.7) / 8) * Math.PI * 2 - Math.PI / 2;
+        // Écran vert
+        ctx.fillStyle = '#001a00';
+        ctx.fillRect(screenX + 4, 44, 82, 52);
+
+        // Texte GLaDOS
+        ctx.fillStyle = '#00cc00';
+        ctx.font = '7px monospace';
+        ctx.globalAlpha = 0.9;
+        const texts = ['TEST ACTIVE', 'SUBJECT OK', 'MONITORING', 'CAKE: TRUE', 'GLaDOS v3.1'][si % 5];
+        ctx.fillText(texts, screenX + 8, 58);
+
+        // Barres de données animées
+        for (let bar = 0; bar < 3; bar++) {
+            const bw = 20 + Math.sin(time * 0.04 + bar * 2 + si) * 18;
+            ctx.fillStyle = '#00aa00';
+            ctx.fillRect(screenX + 8, 66 + bar * 9, Math.max(5, bw), 5);
+        }
+        ctx.globalAlpha = 1;
+
+        // LED d'état
+        ctx.fillStyle = (time % 120 < 80) ? '#ff0000' : '#330000';
         ctx.beginPath();
-        ctx.arc(logoX, logoY, logoSize, startAngle, endAngle);
-        ctx.stroke();
+        ctx.arc(screenX + 78, 48, 3, 0, Math.PI * 2);
+        ctx.fill();
     }
 
-    // Cercle intérieur
-    ctx.lineWidth = 4;
-    for (let i = 0; i < 8; i++) {
-        const startAngle = (i / 8) * Math.PI * 2 - Math.PI / 2 + 0.2;
-        const endAngle = ((i + 0.5) / 8) * Math.PI * 2 - Math.PI / 2 + 0.2;
-        ctx.beginPath();
-        ctx.arc(logoX, logoY, logoSize * 0.6, startAngle, endAngle);
-        ctx.stroke();
-    }
-
-    ctx.restore();
-
-    // ===== LUMIÈRES DE PLAFOND =====
-    for (let lx = 100 - camX * 0.15; lx < w + 200; lx += 300) {
-        // Boîtier de la lumière
-        ctx.fillStyle = '#E0E0E0';
-        ctx.fillRect(lx - 60, 0, 120, 15);
-
-        // Néon
-        const flicker = Math.sin(time * 0.05 + lx) > 0.985 ? 0.75 : 1;
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * flicker})`;
-        ctx.shadowColor = '#FFFFFF';
-        ctx.shadowBlur = 8 * flicker;
-        ctx.fillRect(lx - 50, 5, 100, 8);
-        ctx.shadowBlur = 0;
-    }
-
-    // ===== CONDUITS/TUYAUX EN HAUT =====
-    ctx.fillStyle = '#808080';
-    ctx.fillRect(0, 25, w, 8);
-    ctx.fillStyle = '#606060';
-    ctx.fillRect(0, 33, w, 3);
-
-    // ===== MARQUEURS LAB DISCRETS =====
-    ctx.globalAlpha = 0.15;
-    ctx.fillStyle = '#909090';
-    for (let markX = 220 - camX * 0.08; markX < w; markX += 520) {
-        ctx.fillRect(markX, 52, 80, 8);
+    // ===== ÉTINCELLES DE PANNEAUX ENDOMMAGÉS =====
+    for (const spark of visuals.sparks) {
+        const sparkX = spark.x - camX * 0.1;
+        if (sparkX < -50 || sparkX > w + 50) continue;
+        if (time % spark.interval < 8) {
+            const sparkPhase = time % spark.interval;
+            for (let si = 0; si < 3; si++) {
+                const sx = sparkX + (Math.random() - 0.5) * 15;
+                const sy = spark.y + (Math.random() - 0.5) * 10;
+                ctx.fillStyle = si % 2 === 0 ? '#FFD700' : '#FF6600';
+                ctx.globalAlpha = 0.8 - sparkPhase * 0.1;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
     }
     ctx.globalAlpha = 1;
 }
@@ -3277,41 +3359,45 @@ function drawLevel6Foreground(ctx, w, h, camX) {
     const visuals = initLevel6Visuals(w, h);
     const time = state.frameTick;
 
-    // ===== PARTICULES DE POUSSIÈRE (laboratoire) =====
-    for (let i = 0; i < visuals.floatingParticles.length; i += 2) {
-        const particle = visuals.floatingParticles[i];
-        const x = (particle.x + time * particle.speedX * 0.3) % (w * 3);
-        const y = particle.y + Math.sin(time * 0.01 + particle.x) * 10;
+    // ===== PARTICULES DE POUSSIÈRE FLOTTANTES =====
+    for (const p of visuals.dustParticles) {
+        const dx = (p.x + time * p.speedX * 0.5 + camX * 0.1) % (w + 100) - 50;
+        const dy = p.y + Math.sin(time * 0.008 + p.x * 0.1) * 15;
 
-        // Particules blanches/grises au lieu de cyan/magenta
-        ctx.fillStyle = '#FFFFFF';
-        ctx.globalAlpha = 0.15 + Math.sin(time * 0.05 + particle.x) * 0.1;
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = p.alpha + Math.sin(time * 0.03 + p.x) * 0.05;
         ctx.beginPath();
-        ctx.arc(x - camX * 0.8, y, particle.size * 0.5, 0, Math.PI * 2);
+        ctx.arc(dx, dy, p.size, 0, Math.PI * 2);
         ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // ===== EFFET DE SCAN LABORATOIRE =====
-    const scanY = (time * 1.5) % (h + 100) - 50;
-    ctx.strokeStyle = 'rgba(255, 102, 0, 0.08)'; // Orange Aperture
+    // ===== LIGNE DE SCAN ORANGE (GLaDOS surveille) =====
+    const scanY = (time * 1.2) % (h + 100) - 50;
+    ctx.strokeStyle = 'rgba(255, 102, 0, 0.12)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, scanY);
     ctx.lineTo(w, scanY);
     ctx.stroke();
+    // Halo autour de la ligne
+    ctx.strokeStyle = 'rgba(255, 102, 0, 0.04)';
+    ctx.lineWidth = 12;
+    ctx.beginPath();
+    ctx.moveTo(0, scanY);
+    ctx.lineTo(w, scanY);
+    ctx.stroke();
 
-    // Ligne de scan secondaire (décalée)
-    const scanY2 = (time * 1.5 + 200) % (h + 100) - 50;
-    ctx.strokeStyle = 'rgba(0, 170, 255, 0.05)'; // Bleu portail
-    ctx.lineWidth = 1;
+    // ===== LIGNE DE SCAN BLEUE (décalée) =====
+    const scanY2 = (time * 0.8 + 300) % (h + 100) - 50;
+    ctx.strokeStyle = 'rgba(0, 170, 255, 0.08)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(0, scanY2);
     ctx.lineTo(w, scanY2);
     ctx.stroke();
 
     // ===== SIGNALÉTIQUE DES CHAMBRES DE TEST =====
-    // Ces panneaux sont dessinés en foreground pour être visibles
     if (typeof currentLevelData !== 'undefined' && currentLevelData.decorations) {
         for (const deco of currentLevelData.decorations) {
             if (deco.type === 'chamber_sign') {
@@ -3320,46 +3406,55 @@ function drawLevel6Foreground(ctx, w, h, camX) {
         }
     }
 
-    // ===== EFFET DE VIGNETTE LÉGÈRE =====
-    const vignetteGrad = ctx.createRadialGradient(w/2, h/2, h * 0.3, w/2, h/2, h);
-    vignetteGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    vignetteGrad.addColorStop(1, 'rgba(0, 0, 0, 0.08)');
-    ctx.fillStyle = vignetteGrad;
+    // ===== VIGNETTE SOMBRE (ambiance souterraine) =====
+    const vigGrad = ctx.createRadialGradient(w / 2, h / 2, h * 0.25, w / 2, h / 2, h * 0.9);
+    vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vigGrad.addColorStop(0.7, 'rgba(0, 0, 10, 0.08)');
+    vigGrad.addColorStop(1, 'rgba(0, 0, 10, 0.25)');
+    ctx.fillStyle = vigGrad;
     ctx.fillRect(0, 0, w, h);
 }
 
 // ===== PANNEAU DE NUMÉRO DE CHAMBRE (style Portal) =====
 function drawChamberSign(ctx, x, y, number) {
-    const signWidth = 80;
-    const signHeight = 50;
+    const sw = 90;
+    const sh = 55;
 
     ctx.save();
 
-    // Fond du panneau (gris foncé)
-    ctx.fillStyle = '#2A2A2A';
-    ctx.fillRect(x, y, signWidth, signHeight);
+    // Fond du panneau
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x, y, sw, sh);
 
-    // Bordure orange
-    ctx.strokeStyle = '#FF6600';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x + 2, y + 2, signWidth - 4, signHeight - 4);
+    // Bordure extérieure grise
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, sw, sh);
 
-    // Texte "CHAMBRE"
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 8px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('CHAMBRE', x + signWidth / 2, y + 15);
-
-    // Numéro de chambre (grand)
-    ctx.font = 'bold 24px Arial';
+    // Ligne décorative orange
     ctx.fillStyle = '#FF6600';
-    ctx.fillText(number, x + signWidth / 2, y + 40);
+    ctx.fillRect(x + 3, y + 3, sw - 6, 3);
 
-    // Petite icône d'avertissement si chambre avancée
-    if (parseInt(number) >= 3) {
-        ctx.fillStyle = '#FF0000';
+    // Texte "TEST CHAMBER"
+    ctx.fillStyle = '#aaa';
+    ctx.font = '7px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TEST CHAMBER', x + sw / 2, y + 18);
+
+    // Numéro de chambre (grand, orange)
+    ctx.font = 'bold 26px monospace';
+    ctx.fillStyle = '#FF6600';
+    ctx.shadowColor = '#FF6600';
+    ctx.shadowBlur = 6;
+    ctx.fillText(number, x + sw / 2, y + 45);
+    ctx.shadowBlur = 0;
+
+    // Icône danger si chambre >= 04
+    if (parseInt(number) >= 4) {
+        ctx.fillStyle = '#ff3333';
         ctx.font = '10px Arial';
-        ctx.fillText('⚠', x + signWidth - 12, y + 12);
+        ctx.textAlign = 'right';
+        ctx.fillText('⚠', x + sw - 6, y + 16);
     }
 
     ctx.restore();
@@ -5148,7 +5243,7 @@ function drawLevel10Background(ctx, w, h, camX) {
     drawEpicPlanet(ctx, w - 250, 180, time);
 
     // Lignes de vitesse (effet dynamique)
-    if (state.level === 10) {
+    if (state.level === 11) {
         for (const line of visuals.speedLines) {
             const x = (line.x - time * line.speed) % (w * 2);
             ctx.globalAlpha = line.opacity;
@@ -5521,11 +5616,11 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
     } else if (state.level === 9) {
         drawLevel9Background(ctx, w, h, camX);
     } else if (state.level === 10) {
-        drawLevel10Background(ctx, w, h, camX);
+        drawLevel12Background(ctx, w, h, camX);  // Miyazaki (anciennement niveau 12)
     } else if (state.level === 11) {
-        drawLevel11Background(ctx, w, h, camX);
+        drawLevel10Background(ctx, w, h, camX);  // Boss/Sonic (anciennement niveau 10)
     } else if (state.level === 12) {
-        drawLevel12Background(ctx, w, h, camX);
+        drawLevel11Background(ctx, w, h, camX);  // Fruity Frank (anciennement niveau 11)
     }
 }
 
@@ -5549,11 +5644,11 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
     } else if (state.level === 9) {
         drawLevel9Foreground(ctx, w, h, camX);
     } else if (state.level === 10) {
-        drawLevel10Foreground(ctx, w, h, camX);
+        drawLevel12Foreground(ctx, w, h, camX);  // Miyazaki
     } else if (state.level === 11) {
-        drawLevel11Foreground(ctx, w, h, camX);
+        drawLevel10Foreground(ctx, w, h, camX);  // Boss/Sonic
     } else if (state.level === 12) {
-        drawLevel12Foreground(ctx, w, h, camX);
+        drawLevel11Foreground(ctx, w, h, camX);  // Fruity Frank
     }
 }
 
@@ -5633,6 +5728,7 @@ function resetVisualCache() {
     VisualCache.level9 = null;
     VisualCache.level10 = null;
     VisualCache.level11 = null;
+    VisualCache.level12 = null;
 }
 
 // ===== NIVEAU 10 : ZONE FINALE (CYBER-SPACE) =====
