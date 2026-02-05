@@ -2,6 +2,19 @@
 // L'AVENTURE DE LÉO - FONCTIONS DE DESSIN
 // ============================================================
 
+function getCameraOffset() {
+    const camX = Math.min(0, (canvas.width * 0.35) - player.x);
+    let camY = 0;
+
+    if (state.level === 6) {
+        const focusY = player.y - canvas.height * 0.6;
+        const maxUpScroll = Math.max(0, canvas.height * 0.18);
+        camY = Math.min(maxUpScroll, Math.max(0, -focusY));
+    }
+
+    return { camX, camY };
+}
+
 function draw() {
     // IMPORTANT : Reset COMPLET de la matrice de transformation pour éviter l'accumulation !
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -44,15 +57,14 @@ function draw() {
     
     // Arrière-plan amélioré pour tous les niveaux 1-12
     const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const { camX, camY } = getCameraOffset();
     if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
-        const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
     }
-    
+
     // Caméra
-    const camX = Math.min(0, (canvas.width * 0.3) - player.x);
     ctx.save();
-    ctx.translate(camX, 0);
+    ctx.translate(camX, camY);
     
     // Étoiles (niveaux 9 et 10)
     if (currentLevelData.stars && currentLevelData.stars.length > 0) {
@@ -126,8 +138,7 @@ function draw() {
     player.draw(ctx);
 
     // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable, pétales sakura) pour tous les niveaux
-    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
-        const camX = Math.min(0, (canvas.width * 0.3) - player.x);
+    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(state.level) && typeof drawEnhancedLevelForeground === 'function' && state.level !== 6) {
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
 
@@ -256,6 +267,21 @@ function drawClouds() {
 }
 
 function drawPortals() {
+    if (state.level === 6) {
+        for (const p of currentLevelData.portals) {
+            if (!p.color || p.destX === undefined || p.destY === undefined) continue;
+            ctx.save();
+            ctx.setLineDash([10, 14]);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = `${p.color}44`;
+            ctx.beginPath();
+            ctx.moveTo(p.x + p.w / 2, p.y + p.h / 2);
+            ctx.lineTo(p.destX + p.w / 2, p.destY + p.h / 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
     for (const p of currentLevelData.portals) {
         // Portail underground : secret, pas d'effets visuels !
         if (p.isUndergroundPortal) {

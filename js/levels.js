@@ -1095,7 +1095,7 @@ const LEVELS = {
             level.portals.push({
                 x: currentX + unit,
                 y: h - unit * 2 - 80,
-                w: 50, h: 80,
+                w: 70, h: 100,
                 color: '#00AAFF',
                 destX: currentX + unit * 7,
                 destY: h - unit * 2 - 80,
@@ -1176,7 +1176,7 @@ const LEVELS = {
             level.portals.push({
                 x: currentX + unit * 5.5,
                 y: h - unit,
-                w: 80, h: 40,
+                w: 100, h: 50,
                 color: '#FF6600',
                 destX: currentX + unit * 8,
                 destY: h - unit * 5,
@@ -1189,7 +1189,7 @@ const LEVELS = {
             level.portals.push({
                 x: currentX + unit * 8,
                 y: h - unit * 5 - 40,
-                w: 50, h: 80,
+                w: 70, h: 100,
                 color: '#FF6600',
                 destX: currentX + unit * 5.5,
                 destY: h - unit - 40,
@@ -1199,9 +1199,9 @@ const LEVELS = {
 
             // PLATEFORME CIBLE (accessible uniquement via fling)
             level.platforms.push({
-                x: currentX + unit * 11,
+                x: currentX + unit * 10.5,
                 y: h - unit * 5,
-                w: unit * 3, h: unit,
+                w: unit * 4, h: unit,
                 type: 'test_chamber_platform'
             });
 
@@ -1225,9 +1225,9 @@ const LEVELS = {
 
             // Danger en bas du trou (punition si raté)
             level.hazards.push({
-                x: currentX + unit * 5,
-                y: h - unit * 0.5,
-                w: unit * 3, h: unit / 2,
+                x: currentX + unit * 5.5,
+                y: h - unit * 0.4,
+                w: unit * 2, h: unit * 0.35,
                 type: 'energy_field'
             });
 
@@ -1390,7 +1390,7 @@ const LEVELS = {
             level.hazards.push({
                 x: currentX + unit * 6,
                 y: h - unit,
-                w: unit * 6, h: unit,
+                w: unit * 4.5, h: unit,
                 type: 'acid_pool'
             });
 
@@ -1443,7 +1443,7 @@ const LEVELS = {
             level.portals.push({
                 x: currentX + unit * 3,
                 y: h - unit * 5,
-                w: 60, h: 40,
+                w: 90, h: 50,
                 color: '#9900FF',
                 destX: currentX + unit * 5,
                 destY: h - unit * 4,
@@ -1471,7 +1471,7 @@ const LEVELS = {
             level.portals.push({
                 x: currentX + unit * 5,
                 y: h - unit * 5 - 80,
-                w: 50, h: 80,
+                w: 70, h: 100,
                 color: '#9900FF',
                 destX: currentX + unit * 3,
                 destY: h - unit * 5,
@@ -1512,8 +1512,7 @@ const LEVELS = {
             });
 
             // Pièces autour de la clé (récompense risquée)
-            level.coins.push({ x: currentX + unit * 8.2, y: h - unit * 6 - 40, w: 25, h: 25, value: 3 });
-            level.coins.push({ x: currentX + unit * 10.2, y: h - unit * 6 - 40, w: 25, h: 25, value: 3 });
+            level.coins.push({ x: currentX + unit * 9.2, y: h - unit * 6 - 40, w: 28, h: 28, value: 4 });
 
             // Pièces sur le chemin sécurisé
             for (let i = 0; i < 6; i++) {
