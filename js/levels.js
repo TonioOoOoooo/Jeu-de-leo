@@ -1635,10 +1635,10 @@ const LEVELS = {
     },
 
     // ========================================
-    // NIVEAU 10 - BOSS FINAL !
+    // NIVEAU 11 - BOSS FINAL !
     // Zone Sonic + Boss Multi-Phases
     // ========================================
-    10: {
+    11: {
         name: "⚡ ZONE FINALE ⚡",
         bgColor: "#0a0a2e",
         playerStart: { x: 80, y: 400 },
@@ -1778,10 +1778,10 @@ const LEVELS = {
         }
     },
 
-    // NIVEAU 11 - FRUITY FRANK (Niveau Caché / Bonus)
+    // NIVEAU 12 - FRUITY FRANK (Niveau Bonus)
     // Remastered : Moteur grid-based avec graphismes HD
     // ========================================================
-    11: {
+    12: {
         name: "🍓 SUPER FRUITY FRANK 🍓",
         bgColor: "#1a0505", // Fond prune très sombre pour faire ressortir les couleurs
         playerStart: { x: 0, y: 0 }, // Géré par le moteur fruity
@@ -1793,19 +1793,18 @@ const LEVELS = {
     },
 
     // ============================================================
-    // NIVEAU 12 - LE MONDE DES ESPRITS (Hommage à Miyazaki)
+    // NIVEAU 10 - LE MONDE DES ESPRITS (Hommage à Miyazaki)
     // 千と千尋の神隠し - Spirited Away
     // ============================================================
-    // NIVEAU CACHÉ - Inspiré du Voyage de Chihiro
+    // Inspiré du Voyage de Chihiro
     // Direction artistique : Poésie visuelle, mélancolie, beauté étrange
     // Gameplay : Exploration contemplative avec moments de tension
     // ============================================================
-    12: {
+    10: {
         name: "🌸 Le Monde des Esprits 🌸",
         bgColor: "#1a1a2e", // Crépuscule bleu-violet profond
         playerStart: { x: 80, y: 400 },
         needsKey: true,
-        hidden: true, // Niveau caché pour tests
         setup: (w, h) => {
             const unit = 40;
             const level = createEmptyLevel();
@@ -2062,7 +2061,15 @@ const LEVELS = {
             // "Il faut descendre vers la gare du train fantôme"
             // ============================================================
 
-            currentX += unit * 22;
+            currentX += unit * 20;
+
+            // Pierres de passage entre les bains et le pont
+            level.platforms.push({
+                x: currentX + unit, y: h - unit * 11,
+                w: unit * 2, h: unit / 2, type: 'spirit_stone'
+            });
+
+            currentX += unit * 4;
 
             // Pont traditionnel japonais
             level.platforms.push({
@@ -2116,7 +2123,7 @@ const LEVELS = {
             // C'est LE moment poétique du niveau
             // ============================================================
 
-            currentX += unit * 22;
+            currentX += unit * 20;
 
             // Quai de la gare
             for (let i = 0; i < 8; i++) {
@@ -2190,22 +2197,38 @@ const LEVELS = {
                 });
             }
 
-            // Îlot secret avec power-up étoile (récompense pour les explorateurs)
+            // Îlots de pierre sur l'eau (chemin alternatif si on rate le train)
             level.platforms.push({
-                x: currentX + unit * 25, y: h - unit * 5,
-                w: unit * 3, h: unit,
-                type: 'spirit_stone'
+                x: currentX + unit * 16, y: h - unit * 3,
+                w: unit * 2, h: unit / 2, type: 'spirit_stone'
+            });
+            level.platforms.push({
+                x: currentX + unit * 22, y: h - unit * 3.5,
+                w: unit * 2, h: unit / 2, type: 'spirit_stone'
+            });
+            // Îlot avec power-up étoile
+            level.platforms.push({
+                x: currentX + unit * 27, y: h - unit * 4,
+                w: unit * 3, h: unit / 2, type: 'spirit_stone'
             });
             level.powerups.push({
-                x: currentX + unit * 26, y: h - unit * 5 - 50,
+                x: currentX + unit * 28, y: h - unit * 4 - 50,
                 w: 35, h: 35, type: 'star'
+            });
+            level.platforms.push({
+                x: currentX + unit * 33, y: h - unit * 3,
+                w: unit * 2, h: unit / 2, type: 'spirit_stone'
+            });
+            level.platforms.push({
+                x: currentX + unit * 38, y: h - unit * 2.5,
+                w: unit * 2, h: unit / 2, type: 'spirit_stone'
             });
 
             // Arrivée à la destination du train
             currentX += unit * 42;
 
-            // Quai d'arrivée
-            for (let i = 0; i < 6; i++) {
+            // Quai d'arrivée (plus large pour atterrir facilement)
+            for (let i = 0; i < 8; i++) {
                 level.platforms.push({
                     x: currentX + i * unit, y: h - unit * 2,
                     w: unit, h: unit * 2, type: 'train_platform'

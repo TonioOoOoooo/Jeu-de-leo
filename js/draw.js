@@ -437,7 +437,7 @@ function drawPlatforms() {
     for (const p of currentLevelData.platforms) {
         if (p.type === 'slide') continue;
 
-        if (state.level === 11) {
+        if (state.level === 12) {
             if (p.type === 'normal' || p.type === 'moving') {
                 if (typeof drawGlitchPlatformNormal === 'function') {
                     drawGlitchPlatformNormal(ctx, p);
@@ -797,7 +797,7 @@ function drawPlatforms() {
                 ctx.fillRect(p.x + 2, p.y + floatY + 2, p.w - 4, 3);
                 break;
 
-            // === FRUITY FRANK NIVEAU 11 ===
+            // === FRUITY FRANK NIVEAU 12 ===
             case 'fruity_ground':
                 // Sol noir avec bordure rouge/orange
                 ctx.fillStyle = '#000000';
@@ -826,7 +826,7 @@ function drawPlatforms() {
                 break;
 
             // ============================================================
-            // PLATEFORMES MIYAZAKI - NIVEAU 12 (Le Monde des Esprits)
+            // PLATEFORMES MIYAZAKI - NIVEAU 10 (Le Monde des Esprits)
             // ============================================================
 
             case 'spirit_grass':
@@ -1919,7 +1919,7 @@ function drawEnemies() {
                 break;
 
             // ============================================================
-            // CRÉATURES MIYAZAKI - NIVEAU 12
+            // CRÉATURES MIYAZAKI - NIVEAU 10
             // ============================================================
 
             case 'noface':

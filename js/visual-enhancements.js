@@ -5242,7 +5242,7 @@ function drawLevel10Background(ctx, w, h, camX) {
     drawEpicPlanet(ctx, w - 250, 180, time);
 
     // Lignes de vitesse (effet dynamique)
-    if (state.level === 10) {
+    if (state.level === 11) {
         for (const line of visuals.speedLines) {
             const x = (line.x - time * line.speed) % (w * 2);
             ctx.globalAlpha = line.opacity;
@@ -5615,11 +5615,11 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
     } else if (state.level === 9) {
         drawLevel9Background(ctx, w, h, camX);
     } else if (state.level === 10) {
-        drawLevel10Background(ctx, w, h, camX);
+        drawLevel12Background(ctx, w, h, camX);  // Miyazaki (anciennement niveau 12)
     } else if (state.level === 11) {
-        drawLevel11Background(ctx, w, h, camX);
+        drawLevel10Background(ctx, w, h, camX);  // Boss/Sonic (anciennement niveau 10)
     } else if (state.level === 12) {
-        drawLevel12Background(ctx, w, h, camX);
+        drawLevel11Background(ctx, w, h, camX);  // Fruity Frank (anciennement niveau 11)
     }
 }
 
@@ -5643,11 +5643,11 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
     } else if (state.level === 9) {
         drawLevel9Foreground(ctx, w, h, camX);
     } else if (state.level === 10) {
-        drawLevel10Foreground(ctx, w, h, camX);
+        drawLevel12Foreground(ctx, w, h, camX);  // Miyazaki
     } else if (state.level === 11) {
-        drawLevel11Foreground(ctx, w, h, camX);
+        drawLevel10Foreground(ctx, w, h, camX);  // Boss/Sonic
     } else if (state.level === 12) {
-        drawLevel12Foreground(ctx, w, h, camX);
+        drawLevel11Foreground(ctx, w, h, camX);  // Fruity Frank
     }
 }
 
@@ -5727,6 +5727,7 @@ function resetVisualCache() {
     VisualCache.level9 = null;
     VisualCache.level10 = null;
     VisualCache.level11 = null;
+    VisualCache.level12 = null;
 }
 
 // ===== NIVEAU 10 : ZONE FINALE (CYBER-SPACE) =====

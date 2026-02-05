@@ -7,13 +7,13 @@ const CONFIG = {
     GRAVITY: 0.8,
     FRICTION: 0.85,
     MAX_FALL_SPEED: 15,
-    TOTAL_LEVELS: 10,
+    TOTAL_LEVELS: 11,
     MAX_LIVES: 10,
 
     // Critères pour les étoiles
     STARS: {
-        TIME_GOLD: [60, 80, 100, 90, 110, 120, 150, 140, 90, 250], // Temps en secondes pour 3 étoiles par niveau (niv 9 = BombJack, 10 = Boss!)
-        TIME_SILVER: [90, 120, 150, 130, 160, 180, 210, 200, 130, 350], // Temps pour 2 étoiles
+        TIME_GOLD: [60, 80, 100, 90, 110, 120, 150, 140, 90, 120, 250, 200], // Temps en secondes pour 3 étoiles par niveau (niv 10 = Miyazaki, 11 = Boss!, 12 = Fruity Frank)
+        TIME_SILVER: [90, 120, 150, 130, 160, 180, 210, 200, 130, 180, 350, 300], // Temps pour 2 étoiles
         MIN_COINS_PERCENT: 0.7 // Collecter 70% des pièces pour étoile bonus
     },
 
