@@ -548,8 +548,8 @@ function handleKey(e, pressed) {
 }
 
 function jumpToLevel(targetLevel) {
-    // Permettre niveau 11 (Fruity Frank) comme niveau bonus secret
-    const maxLevel = LEVELS[11] ? 11 : CONFIG.TOTAL_LEVELS;
+    // Permettre les niveaux secrets (11 Fruity Frank, 12 Miyazaki)
+    const maxLevel = LEVELS[12] ? 12 : (LEVELS[11] ? 11 : CONFIG.TOTAL_LEVELS);
     const nextLevel = Math.max(1, Math.min(maxLevel, targetLevel));
     state.level = nextLevel;
     if (state.current === GameState.MENU) {
