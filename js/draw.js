@@ -42,8 +42,8 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour tous les niveaux 1-11
-    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    // Arrière-plan amélioré pour tous les niveaux 1-12
+    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
@@ -125,8 +125,8 @@ function draw() {
     // Joueur
     player.draw(ctx);
 
-    // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable) pour tous les niveaux
-    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
+    // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable, pétales sakura) pour tous les niveaux
+    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(state.level) && typeof drawEnhancedLevelForeground === 'function') {
         const camX = Math.min(0, (canvas.width * 0.3) - player.x);
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
@@ -777,6 +777,184 @@ function drawPlatforms() {
                         ctx.lineWidth = 1;
                         ctx.strokeRect(p.x + i, p.y + j, brickW - 1, brickH - 1);
                     }
+                }
+                break;
+
+            // ============================================================
+            // PLATEFORMES MIYAZAKI - NIVEAU 12 (Le Monde des Esprits)
+            // ============================================================
+
+            case 'spirit_grass':
+                // Herbe du monde des esprits (nuances violettes/bleues)
+                const spiritGrassGrad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+                spiritGrassGrad.addColorStop(0, '#4a5568');
+                spiritGrassGrad.addColorStop(0.3, '#2d3748');
+                spiritGrassGrad.addColorStop(1, '#1a202c');
+                ctx.fillStyle = spiritGrassGrad;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Herbe violette en surface
+                ctx.fillStyle = '#6b46c1';
+                for (let i = 0; i < p.w; i += 8) {
+                    const grassH = 5 + Math.sin(i * 0.3 + state.frameTick * 0.03) * 3;
+                    ctx.fillRect(p.x + i, p.y - grassH, 3, grassH);
+                }
+                break;
+
+            case 'spirit_stone':
+                // Pierre ancienne du monde des esprits
+                const spiritStoneGrad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+                spiritStoneGrad.addColorStop(0, '#4a5568');
+                spiritStoneGrad.addColorStop(0.5, '#2d3748');
+                spiritStoneGrad.addColorStop(1, '#1a202c');
+                ctx.fillStyle = spiritStoneGrad;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Motifs de mousse/lichen
+                ctx.fillStyle = 'rgba(107, 70, 193, 0.3)';
+                for (let i = 0; i < p.w; i += 15) {
+                    ctx.beginPath();
+                    ctx.arc(p.x + i + 7, p.y + 5, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.strokeStyle = '#1a202c';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                break;
+
+            case 'spirit_wood':
+                // Bois ancien des échoppes (rouge sombre japonais)
+                ctx.fillStyle = '#742a2a';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Planches
+                ctx.strokeStyle = '#5c1f1f';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < p.w; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x + i, p.y);
+                    ctx.lineTo(p.x + i, p.y + p.h);
+                    ctx.stroke();
+                }
+                // Surface brillante
+                ctx.fillStyle = 'rgba(255, 200, 150, 0.1)';
+                ctx.fillRect(p.x, p.y, p.w, 3);
+                break;
+
+            case 'spirit_tunnel':
+                // Tunnel mystérieux (entrée du monde des esprits)
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Effet de profondeur
+                const tunnelGrad = ctx.createRadialGradient(p.x + p.w/2, p.y + p.h/2, 0, p.x + p.w/2, p.y + p.h/2, p.w/2);
+                tunnelGrad.addColorStop(0, 'rgba(0, 0, 0, 0.8)');
+                tunnelGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = tunnelGrad;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                break;
+
+            case 'bathhouse_floor':
+                // Sol des bains publics (bois vernis)
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Planches vernies
+                ctx.fillStyle = '#a0522d';
+                for (let i = 0; i < p.w; i += 25) {
+                    ctx.fillRect(p.x + i + 1, p.y, 23, p.h);
+                }
+                // Reflet de lumière
+                ctx.fillStyle = 'rgba(255, 220, 180, 0.2)';
+                ctx.fillRect(p.x, p.y, p.w, 4);
+                break;
+
+            case 'bathhouse_platform':
+                // Plateforme des bains (style japonais traditionnel)
+                ctx.fillStyle = '#6b4423';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Bordure décorative rouge
+                ctx.fillStyle = '#8b0000';
+                ctx.fillRect(p.x, p.y, p.w, 4);
+                ctx.fillRect(p.x, p.y + p.h - 4, p.w, 4);
+                // Motif doré
+                ctx.fillStyle = '#daa520';
+                for (let i = 0; i < p.w; i += 30) {
+                    ctx.fillRect(p.x + i + 10, p.y + p.h/2 - 2, 10, 4);
+                }
+                break;
+
+            case 'spirit_bridge':
+                // Pont traditionnel japonais (rouge vermillon)
+                ctx.fillStyle = '#c0392b';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Planches
+                ctx.strokeStyle = '#922b21';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < p.w; i += 15) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x + i, p.y);
+                    ctx.lineTo(p.x + i, p.y + p.h);
+                    ctx.stroke();
+                }
+                // Bordure dorée
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(p.x, p.y, p.w, 3);
+                break;
+
+            case 'train_platform':
+                // Quai de la gare fantôme
+                ctx.fillStyle = '#34495e';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Ligne jaune de sécurité
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(p.x, p.y, p.w, 5);
+                // Texture béton
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                for (let i = 0; i < p.w; i += 20) {
+                    for (let j = 0; j < p.h; j += 20) {
+                        ctx.fillRect(p.x + i, p.y + j, 10, 10);
+                    }
+                }
+                break;
+
+            case 'spirit_train':
+                // Le train fantôme sur l'eau (moment poétique)
+                const trainFloat = Math.sin(state.frameTick * 0.02) * 3;
+                ctx.save();
+                ctx.translate(0, trainFloat);
+                // Corps du train (bleu nuit)
+                ctx.fillStyle = '#1a365d';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Toit arrondi
+                ctx.fillStyle = '#2c5282';
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.quadraticCurveTo(p.x + p.w/2, p.y - 15, p.x + p.w, p.y);
+                ctx.fill();
+                // Fenêtres illuminées (jaune chaud)
+                ctx.fillStyle = '#fbd38d';
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillRect(p.x + 20 + i * (p.w/4 - 10), p.y + 5, p.w/5, p.h - 15);
+                }
+                // Reflet sur l'eau
+                ctx.fillStyle = 'rgba(251, 211, 141, 0.2)';
+                ctx.fillRect(p.x, p.y + p.h + 5, p.w, 10);
+                ctx.restore();
+                break;
+
+            case 'garden_path':
+                // Chemin de pierres du jardin de Zeniba
+                ctx.fillStyle = '#4a5568';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Pierres
+                ctx.fillStyle = '#718096';
+                for (let i = 0; i < p.w; i += 25) {
+                    ctx.beginPath();
+                    ctx.ellipse(p.x + i + 12, p.y + p.h/2, 10, 8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Mousse entre les pierres
+                ctx.fillStyle = '#276749';
+                for (let i = 0; i < p.w; i += 25) {
+                    ctx.beginPath();
+                    ctx.arc(p.x + i + 3, p.y + p.h/2, 3, 0, Math.PI * 2);
+                    ctx.fill();
                 }
                 break;
 
@@ -1567,6 +1745,109 @@ function drawEnemies() {
                     ctx.fillStyle = '#333333';
                     ctx.fillRect(e.x + 5, e.y + e.h - 15, 8, 15);
                     ctx.fillRect(e.x + e.w - 13, e.y + e.h - 15, 8, 15);
+                }
+                break;
+
+            // ============================================================
+            // CRÉATURES MIYAZAKI - NIVEAU 12
+            // ============================================================
+
+            case 'noface':
+                // SANS-VISAGE (Kaonashi) - Créature mystérieuse du monde des esprits
+                if (typeof drawMiyazakiNoFace === 'function') {
+                    drawMiyazakiNoFace(ctx, e, state.frameTick, player);
+                } else {
+                    // Fallback simple
+                    ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
+                    ctx.beginPath();
+                    ctx.ellipse(e.x + e.w/2, e.y + e.h/2, e.w/2, e.h/2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Masque
+                    ctx.fillStyle = '#f5f5f0';
+                    ctx.beginPath();
+                    ctx.ellipse(e.x + e.w/2, e.y + e.h * 0.3, e.w * 0.25, e.h * 0.2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+
+            case 'soot_sprite':
+                // NOIRAUDE (Susuwatari) - Petites boules de suie adorables
+                if (typeof drawMiyazakiSootSprite === 'function') {
+                    drawMiyazakiSootSprite(ctx, e, state.frameTick);
+                } else {
+                    // Fallback simple
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.beginPath();
+                    ctx.arc(e.x + e.w/2, e.y + e.h/2, e.w * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Yeux
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(e.x + e.w * 0.35, e.y + e.h * 0.45, 4, 0, Math.PI * 2);
+                    ctx.arc(e.x + e.w * 0.65, e.y + e.h * 0.45, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+
+            case 'radish_spirit':
+                // ESPRIT DU RADIS (Oshira-sama) - Grand esprit bienveillant
+                if (typeof drawMiyazakiRadishSpirit === 'function') {
+                    drawMiyazakiRadishSpirit(ctx, e, state.frameTick);
+                } else {
+                    // Fallback simple
+                    ctx.fillStyle = '#f8f8f8';
+                    ctx.beginPath();
+                    ctx.ellipse(e.x + e.w/2, e.y + e.h * 0.6, e.w * 0.4, e.h * 0.5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Feuilles
+                    ctx.fillStyle = '#4a7c4e';
+                    ctx.beginPath();
+                    ctx.ellipse(e.x + e.w/2, e.y + e.h * 0.1, e.w * 0.2, e.h * 0.15, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+
+            case 'yubaba_bird':
+                // OISEAU DE YUBABA - Ennemi volant dangereux
+                if (typeof drawMiyazakiYubabaBird === 'function') {
+                    drawMiyazakiYubabaBird(ctx, e, state.frameTick);
+                } else {
+                    // Fallback simple
+                    const wingFlap = Math.sin(state.frameTick * 0.25) * 15;
+                    ctx.fillStyle = '#2a2a2a';
+                    // Corps
+                    ctx.beginPath();
+                    ctx.ellipse(e.x + e.w/2, e.y + e.h/2, e.w * 0.25, e.h * 0.35, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Ailes
+                    ctx.beginPath();
+                    ctx.moveTo(e.x + e.w/2, e.y + e.h/2);
+                    ctx.lineTo(e.x, e.y + e.h/2 - wingFlap);
+                    ctx.lineTo(e.x + e.w * 0.2, e.y + e.h/2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(e.x + e.w/2, e.y + e.h/2);
+                    ctx.lineTo(e.x + e.w, e.y + e.h/2 - wingFlap);
+                    ctx.lineTo(e.x + e.w * 0.8, e.y + e.h/2);
+                    ctx.fill();
+                }
+                break;
+
+            case 'boh_mouse':
+                // BOH MOUSE - Petite souris rapide
+                if (typeof drawMiyazakiBohMouse === 'function') {
+                    drawMiyazakiBohMouse(ctx, e, state.frameTick);
+                } else {
+                    // Fallback simple
+                    ctx.fillStyle = '#a0a0a0';
+                    ctx.beginPath();
+                    ctx.ellipse(e.x + e.w/2, e.y + e.h/2, e.w * 0.4, e.h * 0.4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Oreilles
+                    ctx.beginPath();
+                    ctx.arc(e.x + e.w * 0.3, e.y + e.h * 0.2, 6, 0, Math.PI * 2);
+                    ctx.arc(e.x + e.w * 0.7, e.y + e.h * 0.2, 6, 0, Math.PI * 2);
+                    ctx.fill();
                 }
                 break;
         }
