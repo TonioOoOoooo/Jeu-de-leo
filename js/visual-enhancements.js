@@ -3352,6 +3352,7 @@ function drawLevel6Background(ctx, w, h, camX) {
             ctx.globalAlpha = 1;
         }
     }
+    ctx.globalAlpha = 1;
 }
 
 function drawLevel6Foreground(ctx, w, h, camX) {

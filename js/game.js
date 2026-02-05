@@ -882,30 +882,38 @@ function update() {
     }
     
     // Projectiles du niveau 7 - tirés par les archers !
-    if (state.level === 7 && currentLevelData.archers && state.frameTick % 120 === 0) {
-        // Chaque archer tire à son tour
-        const archerIndex = Math.floor((state.frameTick / 120) % currentLevelData.archers.length);
-        const archer = currentLevelData.archers[archerIndex];
-        if (archer) {
-            // Tirer une flèche vers le joueur
-            const dx = player.x - archer.x;
-            const dy = player.y - archer.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const speed = 5 * state.difficulty;
+    if (state.level === 7 && currentLevelData.archers) {
+        const baseCadence = 160;
+        const cadence = Math.floor(baseCadence / Math.max(1, state.difficulty));
 
-            currentLevelData.projectiles.push({
-                x: archer.x + archer.w / 2,
-                y: archer.y + archer.h / 2,
-                w: 40, h: 8,
-                vx: (dx / dist) * speed,
-                vy: (dy / dist) * speed,
-                type: 'arrow',
-                fromArcher: archerIndex
-            });
+        if (state.frameTick % cadence === 0) {
+            // Chaque archer tire à son tour
+            const archerIndex = Math.floor((state.frameTick / cadence) % currentLevelData.archers.length);
+            const archer = currentLevelData.archers[archerIndex];
+            if (archer) {
+                // Tirer une flèche vers le joueur uniquement si la menace est lisible
+                const dx = player.x - archer.x;
+                const dy = player.y - archer.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
 
-            // Animation de tir
-            archer.shooting = true;
-            setTimeout(() => { archer.shooting = false; }, 300);
+                if (dist < 700) {
+                    const speed = 4.2 * state.difficulty;
+
+                    currentLevelData.projectiles.push({
+                        x: archer.x + archer.w / 2,
+                        y: archer.y + archer.h / 2,
+                        w: 40, h: 8,
+                        vx: (dx / dist) * speed,
+                        vy: (dy / dist) * speed,
+                        type: 'arrow',
+                        fromArcher: archerIndex
+                    });
+
+                    // Animation de tir
+                    archer.shooting = true;
+                    setTimeout(() => { archer.shooting = false; }, 300);
+                }
+            }
         }
     }
     
