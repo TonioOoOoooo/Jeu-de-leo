@@ -17,6 +17,8 @@ const VisualCache = {
     level8: null,
     level9: null,
     level10: null,
+    level11: null,
+    level12: null,
     initialized: false
 };
 
@@ -5551,6 +5553,8 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel10Background(ctx, w, h, camX);
     } else if (state.level === 11) {
         drawLevel11Background(ctx, w, h, camX);
+    } else if (state.level === 12) {
+        drawLevel12Background(ctx, w, h, camX);
     }
 }
 
@@ -5577,6 +5581,8 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel10Foreground(ctx, w, h, camX);
     } else if (state.level === 11) {
         drawLevel11Foreground(ctx, w, h, camX);
+    } else if (state.level === 12) {
+        drawLevel12Foreground(ctx, w, h, camX);
     }
 }
 
@@ -7178,12 +7184,695 @@ function drawApertureTurret(ctx, e, frameTick) {
 // Export Tourelle Aperture
 window.drawApertureTurret = drawApertureTurret;
 
+// ============================================================
+// NIVEAU 12 : LE MONDE DES ESPRITS (Hommage à Miyazaki)
+// 千と千尋の神隠し - Spirited Away
+// Direction artistique : Poésie visuelle, mélancolie, beauté étrange
+// ============================================================
+
+// Initialisation des visuels du niveau 12
+function initLevel12Visuals(w, h) {
+    if (VisualCache.level12) return VisualCache.level12;
+
+    const visuals = {
+        mountains: [],
+        clouds: [],
+        lanterns: [],
+        petals: [],
+        fireflies: []
+    };
+
+    // Montagnes en couches (style encre japonaise)
+    for (let layer = 0; layer < 4; layer++) {
+        const baseY = h * 0.35 + layer * 60;
+        visuals.mountains.push({
+            points: generateMiyazakiMountains(w * 5, baseY, layer),
+            color: `rgba(${40 + layer * 20}, ${50 + layer * 15}, ${80 + layer * 25}, ${0.8 - layer * 0.15})`,
+            layer: layer
+        });
+    }
+
+    // Nuages de crépuscule (orange/rose/violet)
+    for (let i = 0; i < 15; i++) {
+        visuals.clouds.push({
+            x: Math.random() * w * 5,
+            y: 40 + Math.random() * 120,
+            width: 100 + Math.random() * 200,
+            height: 30 + Math.random() * 50,
+            speed: 0.1 + Math.random() * 0.15,
+            color: ['#ff9a8b', '#ffecd2', '#fcb69f', '#a18cd1', '#fbc2eb'][Math.floor(Math.random() * 5)],
+            opacity: 0.4 + Math.random() * 0.3
+        });
+    }
+
+    // Lanternes flottantes
+    for (let i = 0; i < 25; i++) {
+        visuals.lanterns.push({
+            x: Math.random() * w * 5,
+            y: h * 0.3 + Math.random() * h * 0.4,
+            size: 15 + Math.random() * 15,
+            swayOffset: Math.random() * Math.PI * 2,
+            swaySpeed: 0.02 + Math.random() * 0.02,
+            glowPhase: Math.random() * Math.PI * 2,
+            color: ['#ff9f43', '#ee5a24', '#ffc048', '#ff6b6b'][Math.floor(Math.random() * 4)]
+        });
+    }
+
+    // Pétales de sakura qui tombent
+    for (let i = 0; i < 60; i++) {
+        visuals.petals.push({
+            x: Math.random() * w * 5,
+            y: Math.random() * h,
+            size: 4 + Math.random() * 6,
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.1,
+            fallSpeed: 0.3 + Math.random() * 0.5,
+            swayOffset: Math.random() * Math.PI * 2
+        });
+    }
+
+    // Lucioles
+    for (let i = 0; i < 40; i++) {
+        visuals.fireflies.push({
+            x: Math.random() * w * 5,
+            y: h * 0.4 + Math.random() * h * 0.5,
+            targetX: Math.random() * w * 5,
+            targetY: h * 0.4 + Math.random() * h * 0.5,
+            size: 2 + Math.random() * 3,
+            glowPhase: Math.random() * Math.PI * 2,
+            speed: 0.2 + Math.random() * 0.3
+        });
+    }
+
+    VisualCache.level12 = visuals;
+    return visuals;
+}
+
+function generateMiyazakiMountains(width, baseY, layer) {
+    const points = [];
+    const segments = 30 + layer * 10;
+    const amplitude = 80 - layer * 15;
+    for (let i = 0; i <= segments; i++) {
+        const x = (i / segments) * width;
+        const noise = Math.sin(i * 0.3) * amplitude * 0.5 +
+                      Math.sin(i * 0.15) * amplitude * 0.3 +
+                      Math.sin(i * 0.7) * amplitude * 0.2;
+        points.push({ x, y: baseY - Math.abs(noise) });
+    }
+    return points;
+}
+
+function drawLevel12Background(ctx, w, h, camX) {
+    const visuals = initLevel12Visuals(w, h);
+    const time = state.frameTick;
+
+    // Ciel crépusculaire
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.7);
+    skyGrad.addColorStop(0, '#1a1a2e');
+    skyGrad.addColorStop(0.3, '#2d1b4e');
+    skyGrad.addColorStop(0.5, '#4a3f6e');
+    skyGrad.addColorStop(0.7, '#c84b6b');
+    skyGrad.addColorStop(0.85, '#ff9a8b');
+    skyGrad.addColorStop(1, '#ffecd2');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, w, h * 0.7);
+
+    // Lune
+    drawSpiritMoon(ctx, w * 0.8 - camX * 0.05, 100, time);
+
+    // Nuages
+    for (const cloud of visuals.clouds) {
+        const cloudX = ((cloud.x - camX * (0.1 + cloud.speed)) % (w * 5)) - w;
+        drawMiyazakiCloud(ctx, cloudX, cloud.y, cloud.width, cloud.height, cloud.color, cloud.opacity, time);
+    }
+
+    // Montagnes
+    for (let i = visuals.mountains.length - 1; i >= 0; i--) {
+        const mountain = visuals.mountains[i];
+        drawMiyazakiMountain(ctx, mountain, camX * (0.05 + i * 0.03), h);
+    }
+
+    // Brume
+    drawMiyazakiBrume(ctx, w, h, camX, time);
+
+    // Lanternes arrière-plan
+    for (const lantern of visuals.lanterns) {
+        const lanternX = ((lantern.x - camX * 0.3) % (w * 3)) - 100;
+        if (lanternX > -100 && lanternX < w + 100) {
+            drawFloatingLanternSprite(ctx, lanternX, lantern.y, lantern, time);
+        }
+    }
+}
+
+function drawLevel12Foreground(ctx, w, h, camX) {
+    const visuals = initLevel12Visuals(w, h);
+    const time = state.frameTick;
+
+    // Pétales de sakura
+    for (const petal of visuals.petals) {
+        updateSakuraPetal12(petal, w, h);
+        const petalX = ((petal.x - camX * 0.8) % (w * 2)) - 50;
+        if (petalX > -50 && petalX < w + 50) {
+            drawSakuraPetal12(ctx, petalX, petal.y, petal, time);
+        }
+    }
+
+    // Lucioles
+    for (const firefly of visuals.fireflies) {
+        updateFirefly12(firefly, w, h);
+        const fireflyX = ((firefly.x - camX * 0.5) % (w * 3)) - 50;
+        if (fireflyX > -50 && fireflyX < w + 50) {
+            drawFireflySprite12(ctx, fireflyX, firefly.y, firefly, time);
+        }
+    }
+
+    // Brume premier plan
+    const mistGrad = ctx.createLinearGradient(0, h - 150, 0, h);
+    mistGrad.addColorStop(0, 'rgba(200, 210, 230, 0)');
+    mistGrad.addColorStop(1, 'rgba(200, 210, 230, 0.15)');
+    ctx.fillStyle = mistGrad;
+    ctx.fillRect(0, h - 150, w, 150);
+}
+
+function drawSpiritMoon(ctx, x, y, time) {
+    const glow = Math.sin(time * 0.02) * 0.1 + 0.9;
+    ctx.shadowColor = '#fffacd';
+    ctx.shadowBlur = 60;
+    ctx.fillStyle = `rgba(255, 250, 205, ${0.2 * glow})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 80, 0, Math.PI * 2);
+    ctx.fill();
+
+    const moonGrad = ctx.createRadialGradient(x - 10, y - 10, 0, x, y, 50);
+    moonGrad.addColorStop(0, '#fffef0');
+    moonGrad.addColorStop(0.5, '#fff8dc');
+    moonGrad.addColorStop(1, '#f0e68c');
+    ctx.fillStyle = moonGrad;
+    ctx.beginPath();
+    ctx.arc(x, y, 45, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(200, 180, 150, 0.2)';
+    ctx.beginPath();
+    ctx.arc(x - 15, y - 10, 8, 0, Math.PI * 2);
+    ctx.arc(x + 10, y + 15, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+function drawMiyazakiCloud(ctx, x, y, width, height, color, opacity, time) {
+    const drift = Math.sin(time * 0.01 + x * 0.01) * 5;
+    ctx.fillStyle = color;
+    ctx.globalAlpha = opacity;
+    const puffs = 4 + Math.floor(width / 60);
+    for (let i = 0; i < puffs; i++) {
+        const puffX = x + (i / puffs) * width;
+        const puffY = y + drift + Math.sin(i * 1.5) * (height * 0.2);
+        ctx.beginPath();
+        ctx.ellipse(puffX, puffY, width / puffs * 1.5, height * (0.6 + Math.sin(i * 0.8) * 0.3), 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawMiyazakiMountain(ctx, mountain, offsetX, h) {
+    ctx.fillStyle = mountain.color;
+    ctx.beginPath();
+    ctx.moveTo(mountain.points[0].x - offsetX, h);
+    for (const point of mountain.points) {
+        ctx.lineTo(point.x - offsetX, point.y);
+    }
+    ctx.lineTo(mountain.points[mountain.points.length - 1].x - offsetX, h);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawMiyazakiBrume(ctx, w, h, camX, time) {
+    for (let i = 0; i < 3; i++) {
+        const brumeY = h * (0.4 + i * 0.15);
+        const brumeOffset = (time * (0.2 + i * 0.1) - camX * (0.1 + i * 0.05)) % (w * 2);
+        const brumeGrad = ctx.createLinearGradient(0, brumeY - 30, 0, brumeY + 30);
+        brumeGrad.addColorStop(0, 'rgba(200, 210, 230, 0)');
+        brumeGrad.addColorStop(0.5, `rgba(200, 210, 230, ${0.1 - i * 0.02})`);
+        brumeGrad.addColorStop(1, 'rgba(200, 210, 230, 0)');
+        ctx.fillStyle = brumeGrad;
+        ctx.fillRect(-100 + brumeOffset, brumeY - 30, w + 200, 60);
+    }
+}
+
+function drawFloatingLanternSprite(ctx, x, y, lantern, time) {
+    const sway = Math.sin(time * lantern.swaySpeed + lantern.swayOffset) * 8;
+    const glow = Math.sin(time * 0.05 + lantern.glowPhase) * 0.3 + 0.7;
+    const size = lantern.size;
+
+    ctx.save();
+    ctx.translate(x + sway, y);
+    ctx.shadowColor = lantern.color;
+    ctx.shadowBlur = 20 * glow;
+    ctx.fillStyle = lantern.color;
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.5, 0);
+    ctx.quadraticCurveTo(-size * 0.6, -size * 0.5, 0, -size);
+    ctx.quadraticCurveTo(size * 0.6, -size * 0.5, size * 0.5, 0);
+    ctx.quadraticCurveTo(size * 0.3, size * 0.3, 0, size * 0.4);
+    ctx.quadraticCurveTo(-size * 0.3, size * 0.3, -size * 0.5, 0);
+    ctx.fill();
+    ctx.fillStyle = '#fff8dc';
+    ctx.globalAlpha = glow;
+    ctx.beginPath();
+    ctx.ellipse(0, -size * 0.3, size * 0.25, size * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+    ctx.restore();
+}
+
+function updateSakuraPetal12(petal, w, h) {
+    petal.y += petal.fallSpeed;
+    petal.x += Math.sin(state.frameTick * 0.02 + petal.swayOffset) * 0.5;
+    petal.rotation += petal.rotSpeed;
+    if (petal.y > h + 20) {
+        petal.y = -20;
+        petal.x = Math.random() * w * 5;
+    }
+}
+
+function drawSakuraPetal12(ctx, x, y, petal, time) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(petal.rotation);
+    ctx.fillStyle = '#ffb7c5';
+    ctx.beginPath();
+    ctx.moveTo(0, -petal.size);
+    ctx.quadraticCurveTo(petal.size * 0.8, -petal.size * 0.3, petal.size * 0.5, petal.size * 0.5);
+    ctx.quadraticCurveTo(0, petal.size * 0.8, -petal.size * 0.5, petal.size * 0.5);
+    ctx.quadraticCurveTo(-petal.size * 0.8, -petal.size * 0.3, 0, -petal.size);
+    ctx.fill();
+    ctx.restore();
+}
+
+function updateFirefly12(firefly, w, h) {
+    const dx = firefly.targetX - firefly.x;
+    const dy = firefly.targetY - firefly.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 10) {
+        firefly.targetX = Math.random() * w * 5;
+        firefly.targetY = h * 0.4 + Math.random() * h * 0.5;
+    }
+    firefly.x += (dx / dist) * firefly.speed;
+    firefly.y += (dy / dist) * firefly.speed;
+}
+
+function drawFireflySprite12(ctx, x, y, firefly, time) {
+    const glow = Math.sin(time * 0.1 + firefly.glowPhase) * 0.5 + 0.5;
+    ctx.save();
+    ctx.shadowColor = '#98fb98';
+    ctx.shadowBlur = 15 * glow;
+    ctx.fillStyle = `rgba(152, 251, 152, ${0.3 + glow * 0.7})`;
+    ctx.beginPath();
+    ctx.arc(x, y, firefly.size * 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fffacd';
+    ctx.beginPath();
+    ctx.arc(x, y, firefly.size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+}
+
+// ============================================================
+// CRÉATURES MIYAZAKI - SPRITES PREMIUM
+// ============================================================
+
+// SANS-VISAGE (Kaonashi)
+function drawMiyazakiNoFace(ctx, e, frameTick, player) {
+    const phase = e.phase || 'curious';
+    const float = Math.sin(frameTick * 0.03) * 8;
+    const breathe = Math.sin(frameTick * 0.05) * 0.05 + 1;
+
+    ctx.save();
+    ctx.translate(e.x + e.w / 2, e.y + e.h + float);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(0, 10, e.w * 0.4, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const bodyGrad = ctx.createLinearGradient(0, -e.h, 0, 0);
+    bodyGrad.addColorStop(0, 'rgba(10, 10, 15, 0.95)');
+    bodyGrad.addColorStop(0.5, 'rgba(20, 20, 30, 0.9)');
+    bodyGrad.addColorStop(1, 'rgba(10, 10, 15, 0.3)');
+    ctx.fillStyle = bodyGrad;
+    ctx.scale(breathe, 1);
+    ctx.beginPath();
+    ctx.moveTo(-e.w * 0.4, -e.h * 0.1);
+    ctx.quadraticCurveTo(-e.w * 0.5, -e.h * 0.5, -e.w * 0.3, -e.h * 0.9);
+    ctx.quadraticCurveTo(0, -e.h * 1.05, e.w * 0.3, -e.h * 0.9);
+    ctx.quadraticCurveTo(e.w * 0.5, -e.h * 0.5, e.w * 0.4, -e.h * 0.1);
+    ctx.quadraticCurveTo(e.w * 0.2, e.h * 0.1, 0, 0);
+    ctx.quadraticCurveTo(-e.w * 0.2, e.h * 0.1, -e.w * 0.4, -e.h * 0.1);
+    ctx.fill();
+
+    const maskY = -e.h * 0.75;
+    const maskW = e.w * 0.5;
+    const maskH = e.h * 0.35;
+    ctx.fillStyle = '#f5f5f0';
+    ctx.beginPath();
+    ctx.ellipse(0, maskY, maskW * 0.5, maskH * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.ellipse(-maskW * 0.2, maskY - maskH * 0.1, 4, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(maskW * 0.2, maskY - maskH * 0.1, 4, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (phase === 'curious') {
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-maskW * 0.1, maskY + maskH * 0.2);
+        ctx.lineTo(maskW * 0.1, maskY + maskH * 0.2);
+        ctx.stroke();
+    } else if (phase === 'chasing') {
+        ctx.fillStyle = '#8B0000';
+        ctx.beginPath();
+        ctx.ellipse(0, maskY + maskH * 0.2, maskW * 0.3, maskH * 0.25, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.fillStyle = '#4a0080';
+    ctx.beginPath();
+    ctx.ellipse(-maskW * 0.35, maskY, 3, 6, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(maskW * 0.35, maskY, 3, 6, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (phase !== 'curious') {
+        const handExtend = phase === 'chasing' ? 1.3 : 0.8;
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.8)';
+        ctx.beginPath();
+        ctx.moveTo(-e.w * 0.3, -e.h * 0.5);
+        ctx.quadraticCurveTo(-e.w * handExtend, -e.h * 0.4, -e.w * handExtend * 0.8, -e.h * 0.3);
+        ctx.quadraticCurveTo(-e.w * 0.4, -e.h * 0.35, -e.w * 0.3, -e.h * 0.4);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(e.w * 0.3, -e.h * 0.5);
+        ctx.quadraticCurveTo(e.w * handExtend, -e.h * 0.4, e.w * handExtend * 0.8, -e.h * 0.3);
+        ctx.quadraticCurveTo(e.w * 0.4, -e.h * 0.35, e.w * 0.3, -e.h * 0.4);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+// NOIRAUDE (Susuwatari)
+function drawMiyazakiSootSprite(ctx, e, frameTick) {
+    const bounce = Math.abs(Math.sin(frameTick * 0.15 + e.x * 0.1)) * 5;
+    const squash = 1 - bounce * 0.02;
+
+    ctx.save();
+    ctx.translate(e.x + e.w / 2, e.y + e.h / 2 - bounce);
+    ctx.scale(1 / squash, squash);
+
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.arc(0, 0, e.w * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2 + frameTick * 0.02;
+        const length = e.w * 0.2 + Math.sin(frameTick * 0.1 + i) * 3;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(angle) * e.w * 0.35, Math.sin(angle) * e.w * 0.35);
+        ctx.lineTo(Math.cos(angle) * (e.w * 0.35 + length), Math.sin(angle) * (e.w * 0.35 + length));
+        ctx.stroke();
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-e.w * 0.12, -e.w * 0.05, e.w * 0.15, 0, Math.PI * 2);
+    ctx.arc(e.w * 0.12, -e.w * 0.05, e.w * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(-e.w * 0.1, -e.w * 0.03, e.w * 0.06, 0, Math.PI * 2);
+    ctx.arc(e.w * 0.14, -e.w * 0.03, e.w * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#1a1a1a';
+    const legOffset = Math.sin(frameTick * 0.2) * 3;
+    ctx.beginPath();
+    ctx.arc(-e.w * 0.25, e.w * 0.35 + legOffset, 4, 0, Math.PI * 2);
+    ctx.arc(e.w * 0.25, e.w * 0.35 - legOffset, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (e.carryingStar) {
+        ctx.save();
+        ctx.translate(0, -e.w * 0.5);
+        ctx.rotate(frameTick * 0.05);
+        ctx.shadowColor = '#ff6b35';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#ff8c42';
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const ang = (i / 5) * Math.PI * 2 - Math.PI / 2;
+            const innerAng = ang + Math.PI / 5;
+            ctx.lineTo(Math.cos(ang) * 8, Math.sin(ang) * 8);
+            ctx.lineTo(Math.cos(innerAng) * 3, Math.sin(innerAng) * 3);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    }
+
+    ctx.restore();
+}
+
+// ESPRIT DU RADIS (Oshira-sama)
+function drawMiyazakiRadishSpirit(ctx, e, frameTick) {
+    const wobble = Math.sin(frameTick * 0.02) * 3;
+    const breathe = Math.sin(frameTick * 0.03) * 0.03 + 1;
+
+    ctx.save();
+    ctx.translate(e.x + e.w / 2, e.y + e.h);
+    ctx.scale(breathe, 1);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.beginPath();
+    ctx.ellipse(0, 5, e.w * 0.4, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const bodyGrad = ctx.createLinearGradient(-e.w / 2, -e.h, e.w / 2, 0);
+    bodyGrad.addColorStop(0, '#f8f8f8');
+    bodyGrad.addColorStop(0.3, '#ffffff');
+    bodyGrad.addColorStop(0.7, '#f0f0f0');
+    bodyGrad.addColorStop(1, '#e8e8e8');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.moveTo(-e.w * 0.35, 0);
+    ctx.quadraticCurveTo(-e.w * 0.45, -e.h * 0.3, -e.w * 0.4, -e.h * 0.6);
+    ctx.quadraticCurveTo(-e.w * 0.3, -e.h * 0.9, 0, -e.h);
+    ctx.quadraticCurveTo(e.w * 0.3, -e.h * 0.9, e.w * 0.4, -e.h * 0.6);
+    ctx.quadraticCurveTo(e.w * 0.45, -e.h * 0.3, e.w * 0.35, 0);
+    ctx.quadraticCurveTo(0, e.h * 0.1, -e.w * 0.35, 0);
+    ctx.fill();
+
+    ctx.fillStyle = '#4a7c4e';
+    for (let i = 0; i < 5; i++) {
+        const leafAngle = (i - 2) * 0.3 + wobble * 0.02;
+        const leafLength = 30 + Math.sin(i * 1.5) * 10;
+        ctx.save();
+        ctx.translate(0, -e.h);
+        ctx.rotate(leafAngle);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(8, -leafLength * 0.5, 3, -leafLength);
+        ctx.quadraticCurveTo(0, -leafLength * 0.7, -3, -leafLength);
+        ctx.quadraticCurveTo(-8, -leafLength * 0.5, 0, 0);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(-e.w * 0.15, -e.h * 0.6, 6, Math.PI * 0.2, Math.PI * 0.8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(e.w * 0.15, -e.h * 0.6, 6, Math.PI * 0.2, Math.PI * 0.8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, -e.h * 0.45, 8, Math.PI * 0.1, Math.PI * 0.9);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255, 180, 180, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(-e.w * 0.25, -e.h * 0.5, 8, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(e.w * 0.25, -e.h * 0.5, 8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// OISEAU DE YUBABA
+function drawMiyazakiYubabaBird(ctx, e, frameTick) {
+    const wingFlap = Math.sin(frameTick * 0.25) * 25;
+    const float = Math.sin(frameTick * 0.05) * 5;
+    const dir = e.dir || 1;
+
+    ctx.save();
+    ctx.translate(e.x + e.w / 2, e.y + e.h / 2 + float);
+    ctx.scale(dir, 1);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(0, e.h * 0.5, e.w * 0.3, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#2a2a2a';
+    ctx.save();
+    ctx.rotate((-30 + wingFlap) * Math.PI / 180);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-e.w * 0.8, -e.h * 0.3, -e.w, e.h * 0.1);
+    ctx.quadraticCurveTo(-e.w * 0.5, e.h * 0.2, 0, 0);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.rotate((30 - wingFlap) * Math.PI / 180);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(e.w * 0.8, -e.h * 0.3, e.w, e.h * 0.1);
+    ctx.quadraticCurveTo(e.w * 0.5, e.h * 0.2, 0, 0);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = '#3a3a3a';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, e.w * 0.25, e.h * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#f5deb3';
+    ctx.beginPath();
+    ctx.arc(0, -e.h * 0.35, e.w * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#4a4a4a';
+    ctx.beginPath();
+    ctx.arc(0, -e.h * 0.4, e.w * 0.2, Math.PI, 0);
+    ctx.fill();
+
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(-e.w * 0.08, -e.h * 0.38, 3, 0, Math.PI * 2);
+    ctx.arc(e.w * 0.08, -e.h * 0.38, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#8b0000';
+    ctx.beginPath();
+    ctx.arc(-e.w * 0.08, -e.h * 0.38, 1.5, 0, Math.PI * 2);
+    ctx.arc(e.w * 0.08, -e.h * 0.38, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#daa520';
+    ctx.beginPath();
+    ctx.moveTo(0, -e.h * 0.3);
+    ctx.lineTo(-4, -e.h * 0.25);
+    ctx.lineTo(0, -e.h * 0.15);
+    ctx.lineTo(4, -e.h * 0.25);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// BOH MOUSE
+function drawMiyazakiBohMouse(ctx, e, frameTick) {
+    const run = Math.sin(frameTick * 0.3) * 3;
+    const dir = e.dir || 1;
+
+    ctx.save();
+    ctx.translate(e.x + e.w / 2, e.y + e.h);
+    ctx.scale(dir, 1);
+
+    ctx.fillStyle = '#a0a0a0';
+    ctx.beginPath();
+    ctx.ellipse(0, -e.h * 0.5, e.w * 0.4, e.h * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#c0c0c0';
+    ctx.beginPath();
+    ctx.ellipse(-e.w * 0.25, -e.h * 0.8, 8, 12, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(e.w * 0.25, -e.h * 0.8, 8, 12, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffb6c1';
+    ctx.beginPath();
+    ctx.ellipse(-e.w * 0.25, -e.h * 0.8, 4, 7, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(e.w * 0.25, -e.h * 0.8, 4, 7, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(-e.w * 0.1, -e.h * 0.55, 3, 0, Math.PI * 2);
+    ctx.arc(e.w * 0.1, -e.h * 0.55, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffb6c1';
+    ctx.beginPath();
+    ctx.arc(0, -e.h * 0.45, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 1;
+    for (let i = -1; i <= 1; i += 2) {
+        ctx.beginPath();
+        ctx.moveTo(i * 5, -e.h * 0.45);
+        ctx.lineTo(i * 15, -e.h * 0.5 + i * 2);
+        ctx.moveTo(i * 5, -e.h * 0.43);
+        ctx.lineTo(i * 15, -e.h * 0.43);
+        ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#909090';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-e.w * 0.3, -e.h * 0.3);
+    ctx.quadraticCurveTo(-e.w * 0.6, -e.h * 0.2 + run, -e.w * 0.5, e.h * 0.1);
+    ctx.stroke();
+
+    ctx.fillStyle = '#c0c0c0';
+    ctx.beginPath();
+    ctx.ellipse(-e.w * 0.2, -e.h * 0.1 + run, 5, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(e.w * 0.2, -e.h * 0.1 - run, 5, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// Export créatures Miyazaki
+window.drawMiyazakiNoFace = drawMiyazakiNoFace;
+window.drawMiyazakiSootSprite = drawMiyazakiSootSprite;
+window.drawMiyazakiRadishSpirit = drawMiyazakiRadishSpirit;
+window.drawMiyazakiYubabaBird = drawMiyazakiYubabaBird;
+window.drawMiyazakiBohMouse = drawMiyazakiBohMouse;
+window.drawLevel12Background = drawLevel12Background;
+window.drawLevel12Foreground = drawLevel12Foreground;
+
 // Export des fonctions
 window.drawEnhancedLevelBackground = drawEnhancedLevelBackground;
 window.drawEnhancedLevelForeground = drawEnhancedLevelForeground;
 window.drawEnhancedZombie = drawEnhancedZombie;
 window.drawEnhancedChestMonster = drawEnhancedChestMonster;
-window.drawMinecraftSkeleton = drawMinecraftSkeleton; // Export squelette Minecraft
+window.drawMinecraftSkeleton = drawMinecraftSkeleton;
 window.drawEnhancedSkeleton = drawEnhancedSkeleton;
 window.drawEnhancedGrassPlatform = drawEnhancedGrassPlatform;
 window.drawEnhancedStonePlatform = drawEnhancedStonePlatform;

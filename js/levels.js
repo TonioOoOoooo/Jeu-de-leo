@@ -2096,6 +2096,545 @@ const LEVELS = {
         setup: (w, h) => {
             return { fruityFrank: true };
         }
+    },
+
+    // ============================================================
+    // NIVEAU 12 - LE MONDE DES ESPRITS (Hommage à Miyazaki)
+    // 千と千尋の神隠し - Spirited Away
+    // ============================================================
+    // NIVEAU CACHÉ - Inspiré du Voyage de Chihiro
+    // Direction artistique : Poésie visuelle, mélancolie, beauté étrange
+    // Gameplay : Exploration contemplative avec moments de tension
+    // ============================================================
+    12: {
+        name: "🌸 Le Monde des Esprits 🌸",
+        bgColor: "#1a1a2e", // Crépuscule bleu-violet profond
+        playerStart: { x: 80, y: 400 },
+        needsKey: true,
+        hidden: true, // Niveau caché pour tests
+        setup: (w, h) => {
+            const unit = 40;
+            const level = createEmptyLevel();
+
+            // Étoiles scintillantes pour le ciel crépusculaire
+            level.stars = [];
+            for (let i = 0; i < 80; i++) {
+                level.stars.push({
+                    x: Math.random() * 8000,
+                    y: Math.random() * h * 0.6,
+                    size: 1 + Math.random() * 2,
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Décorations spéciales Miyazaki
+            level.decorations = level.decorations || [];
+
+            // ============================================================
+            // SECTION 1 : L'ENTRÉE DU MONDE DES ESPRITS
+            // "Un tunnel rouge mène vers l'inconnu..."
+            // ============================================================
+
+            let currentX = 0;
+
+            // Sol de départ - monde réel (herbe et terre)
+            for (let i = 0; i < 8; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit, y: h - unit * 2,
+                    w: unit, h: unit * 2, type: 'spirit_grass'
+                });
+            }
+
+            // Torii d'entrée (portail traditionnel japonais)
+            level.decorations.push({
+                type: 'torii_gate',
+                x: currentX + unit * 3,
+                y: h - unit * 6,
+                scale: 1.5
+            });
+
+            // Pièces d'introduction (pétales de sakura)
+            for (let i = 0; i < 5; i++) {
+                level.coins.push({
+                    x: currentX + 60 + i * 45,
+                    y: h - unit * 2 - 50,
+                    w: 22, h: 22, type: 'sakura_petal'
+                });
+            }
+
+            // Première NOIRAUDE (Susuwatari) - créature inoffensive
+            level.enemies.push({
+                x: currentX + 200, y: h - unit * 2 - 25,
+                w: 30, h: 30, type: 'soot_sprite',
+                patrolStart: currentX + 150, patrolEnd: currentX + 280,
+                dir: 1, speed: 0.8, harmless: true
+            });
+
+            // Tunnel mystérieux (transition)
+            currentX += unit * 8;
+
+            // Entrée du tunnel
+            level.platforms.push({
+                x: currentX, y: h - unit * 5,
+                w: unit * 6, h: unit * 3, type: 'spirit_tunnel'
+            });
+            level.platforms.push({
+                x: currentX, y: h - unit * 2,
+                w: unit * 6, h: unit * 2, type: 'spirit_stone'
+            });
+
+            // Portail de transition (téléporte vers l'autre côté)
+            level.portals.push({
+                x: currentX + unit * 2, y: h - unit * 5 + 20,
+                w: 80, h: 100,
+                color: '#ff6b6b',
+                destX: currentX + unit * 8,
+                destY: h - unit * 2 - 80,
+                portalPair: 'torii_entrance',
+                isToriiPortal: true
+            });
+
+            currentX += unit * 8;
+
+            // Sortie du tunnel - monde des esprits
+            for (let i = 0; i < 6; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit, y: h - unit * 2,
+                    w: unit, h: unit * 2, type: 'spirit_stone'
+                });
+            }
+
+            // Lanternes flottantes (décor animé)
+            for (let i = 0; i < 4; i++) {
+                level.decorations.push({
+                    type: 'floating_lantern',
+                    x: currentX + 50 + i * 120,
+                    y: h - unit * 4 - Math.random() * 80,
+                    color: ['#ff9f43', '#ee5a24', '#ffc048'][i % 3]
+                });
+            }
+
+            // ============================================================
+            // SECTION 2 : LES ÉCHOPPES ABANDONNÉES
+            // "Des stands de nourriture vides... ou pas tout à fait"
+            // ============================================================
+
+            currentX += unit * 8;
+
+            // Grande plateforme des échoppes
+            for (let i = 0; i < 15; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit, y: h - unit * 2,
+                    w: unit, h: unit * 2, type: 'spirit_wood'
+                });
+            }
+
+            // Échoppes de nourriture (décor)
+            level.decorations.push({ type: 'food_stall', x: currentX + unit * 2, y: h - unit * 4 });
+            level.decorations.push({ type: 'food_stall', x: currentX + unit * 6, y: h - unit * 4 });
+            level.decorations.push({ type: 'food_stall', x: currentX + unit * 10, y: h - unit * 4 });
+
+            // SANS-VISAGE (Kaonashi) - Premier apparition mystérieuse
+            // Il est immobile et observe... pour l'instant
+            level.enemies.push({
+                x: currentX + unit * 5, y: h - unit * 2 - 80,
+                w: 50, h: 80, type: 'noface',
+                patrolStart: currentX + unit * 4, patrolEnd: currentX + unit * 7,
+                dir: 1, speed: 0.5 * state.difficulty,
+                phase: 'curious' // curious, offering, chasing
+            });
+
+            // Pièces dans les échoppes (récompenses cachées)
+            level.coins.push({ x: currentX + unit * 2.5, y: h - unit * 5, w: 25, h: 25, value: 3, type: 'gold_coin' });
+            level.coins.push({ x: currentX + unit * 6.5, y: h - unit * 5, w: 25, h: 25, value: 3, type: 'gold_coin' });
+            level.coins.push({ x: currentX + unit * 10.5, y: h - unit * 5, w: 25, h: 25, value: 3, type: 'gold_coin' });
+
+            // Plus de noiraudes qui travaillent
+            for (let i = 0; i < 3; i++) {
+                level.enemies.push({
+                    x: currentX + unit * (3 + i * 4), y: h - unit * 2 - 25,
+                    w: 25, h: 25, type: 'soot_sprite',
+                    patrolStart: currentX + unit * (2 + i * 4), patrolEnd: currentX + unit * (4 + i * 4),
+                    dir: (i % 2 === 0) ? 1 : -1, speed: 1, harmless: true,
+                    carryingStar: (i === 1) // Une porte une étoile de charbon
+                });
+            }
+
+            // Power-up bouclier caché derrière une échoppe
+            level.powerups.push({
+                x: currentX + unit * 8, y: h - unit * 2 - 50,
+                w: 35, h: 35, type: 'shield'
+            });
+
+            // ============================================================
+            // SECTION 3 : LES BAINS PUBLICS D'ABURAYA (Zone verticale)
+            // "Le palais des bains où travaillent les esprits"
+            // ============================================================
+
+            currentX += unit * 16;
+
+            // Base des bains (grande structure)
+            for (let i = 0; i < 20; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit, y: h - unit * 2,
+                    w: unit, h: unit * 2, type: 'bathhouse_floor'
+                });
+            }
+
+            // Structure verticale des bains (plateformes à grimper)
+            // Niveau 1
+            level.platforms.push({
+                x: currentX + unit * 2, y: h - unit * 5,
+                w: unit * 4, h: unit, type: 'bathhouse_platform'
+            });
+            level.platforms.push({
+                x: currentX + unit * 14, y: h - unit * 5,
+                w: unit * 4, h: unit, type: 'bathhouse_platform'
+            });
+
+            // Niveau 2
+            level.platforms.push({
+                x: currentX + unit * 6, y: h - unit * 8,
+                w: unit * 8, h: unit, type: 'bathhouse_platform'
+            });
+
+            // Niveau 3 - Plateforme avec l'ESPRIT DU RADIS
+            level.platforms.push({
+                x: currentX + unit * 4, y: h - unit * 11,
+                w: unit * 12, h: unit, type: 'bathhouse_platform'
+            });
+
+            // Échelles pour monter
+            level.ladders.push({
+                x: currentX + unit * 18, y: h - unit * 5,
+                w: 35, h: unit * 3
+            });
+            level.ladders.push({
+                x: currentX + unit * 6, y: h - unit * 8,
+                w: 35, h: unit * 3
+            });
+            level.ladders.push({
+                x: currentX + unit * 14, y: h - unit * 11,
+                w: 35, h: unit * 3
+            });
+
+            // ESPRIT DU RADIS (Oshira-sama) - Grand esprit bienveillant
+            // Il bouge lentement et sert presque de plateforme mobile
+            level.enemies.push({
+                x: currentX + unit * 8, y: h - unit * 11 - 90,
+                w: 70, h: 90, type: 'radish_spirit',
+                patrolStart: currentX + unit * 5, patrolEnd: currentX + unit * 13,
+                dir: 1, speed: 0.3, harmless: true, rideable: true
+            });
+
+            // Vapeurs et brume (décor animé)
+            for (let i = 0; i < 6; i++) {
+                level.decorations.push({
+                    type: 'steam_cloud',
+                    x: currentX + unit * (2 + i * 3),
+                    y: h - unit * (3 + (i % 3) * 2),
+                    size: 0.5 + Math.random() * 0.5
+                });
+            }
+
+            // YUBABA'S BIRD - Ennemi volant dangereux
+            level.enemies.push({
+                x: currentX + unit * 10, y: h - unit * 9,
+                w: 55, h: 45, type: 'yubaba_bird',
+                patrolStart: currentX + unit * 4, patrolEnd: currentX + unit * 16,
+                dir: -1, speed: 2.5 * state.difficulty
+            });
+
+            // Pièces le long du parcours vertical
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({ x: currentX + unit * (3 + i), y: h - unit * 5 - 35, w: 20, h: 20 });
+            }
+            for (let i = 0; i < 6; i++) {
+                level.coins.push({ x: currentX + unit * (7 + i), y: h - unit * 8 - 35, w: 20, h: 20 });
+            }
+            // Pièces précieuses en haut
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: currentX + unit * (6 + i * 3), y: h - unit * 11 - 50, w: 25, h: 25, value: 5 });
+            }
+
+            // Power-up super saut pour atteindre les hauteurs
+            level.powerups.push({
+                x: currentX + unit * 10, y: h - unit * 8 - 50,
+                w: 35, h: 35, type: 'super_jump'
+            });
+
+            // ============================================================
+            // SECTION 4 : LE PONT ET LA DESCENTE VERS LE TRAIN
+            // "Il faut descendre vers la gare du train fantôme"
+            // ============================================================
+
+            currentX += unit * 22;
+
+            // Pont traditionnel japonais
+            level.platforms.push({
+                x: currentX, y: h - unit * 11,
+                w: unit * 10, h: unit, type: 'spirit_bridge'
+            });
+
+            // Rampes du pont (décor)
+            level.decorations.push({
+                type: 'bridge_railing',
+                x: currentX, y: h - unit * 12,
+                width: unit * 10
+            });
+
+            // Second SANS-VISAGE sur le pont (plus agressif maintenant)
+            level.enemies.push({
+                x: currentX + unit * 5, y: h - unit * 11 - 80,
+                w: 50, h: 80, type: 'noface',
+                patrolStart: currentX + unit * 2, patrolEnd: currentX + unit * 8,
+                dir: -1, speed: 1.2 * state.difficulty,
+                phase: 'chasing'
+            });
+
+            // Plateformes de descente (style escalier)
+            for (let i = 0; i < 5; i++) {
+                level.platforms.push({
+                    x: currentX + unit * 10 + i * unit * 2,
+                    y: h - unit * (10 - i * 1.5),
+                    w: unit * 2, h: unit,
+                    type: 'spirit_stone'
+                });
+                // Pièces sur chaque marche
+                level.coins.push({
+                    x: currentX + unit * 10.5 + i * unit * 2,
+                    y: h - unit * (10 - i * 1.5) - 40,
+                    w: 20, h: 20
+                });
+            }
+
+            // BOH MOUSE - Petite souris rapide
+            level.enemies.push({
+                x: currentX + unit * 14, y: h - unit * 7 - 20,
+                w: 30, h: 25, type: 'boh_mouse',
+                patrolStart: currentX + unit * 12, patrolEnd: currentX + unit * 18,
+                dir: 1, speed: 3 * state.difficulty
+            });
+
+            // ============================================================
+            // SECTION 5 : LA GARE ET LE TRAIN SUR L'EAU
+            // "Le train qui traverse l'océan infini au crépuscule"
+            // C'est LE moment poétique du niveau
+            // ============================================================
+
+            currentX += unit * 22;
+
+            // Quai de la gare
+            for (let i = 0; i < 8; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit, y: h - unit * 2,
+                    w: unit, h: unit * 2, type: 'train_platform'
+                });
+            }
+
+            // Petit abri de gare (décor)
+            level.decorations.push({
+                type: 'train_station',
+                x: currentX + unit * 2, y: h - unit * 5
+            });
+
+            // Panneau de la gare "6番目の駅" (6ème station)
+            level.decorations.push({
+                type: 'station_sign',
+                x: currentX + unit * 5, y: h - unit * 4,
+                text: '六番目'
+            });
+
+            // L'EAU INFINIE (zone de danger mais aussi de beauté)
+            level.hazards.push({
+                x: currentX + unit * 8, y: h - unit,
+                w: unit * 40, h: unit,
+                type: 'spirit_water'
+            });
+
+            // LE TRAIN FANTÔME - Grande plateforme mobile !
+            // C'est une expérience unique : le joueur monte sur le train
+            level.platforms.push({
+                x: currentX + unit * 10, y: h - unit * 3,
+                w: unit * 8, h: unit,
+                type: 'spirit_train',
+                moving: true,
+                vx: 2, vy: 0,
+                minX: currentX + unit * 10,
+                maxX: currentX + unit * 40
+            });
+
+            // Fenêtres du train (décor sur la plateforme)
+            level.decorations.push({
+                type: 'train_windows',
+                x: currentX + unit * 10, y: h - unit * 5,
+                width: unit * 8
+            });
+
+            // Passagers fantômes dans le train (décor animé)
+            level.decorations.push({
+                type: 'ghost_passengers',
+                x: currentX + unit * 12, y: h - unit * 4,
+                count: 3
+            });
+
+            // Pièces à collecter PENDANT le trajet en train
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({
+                    x: currentX + unit * (12 + i * 3),
+                    y: h - unit * 4 - 20 + Math.sin(i) * 30,
+                    w: 22, h: 22
+                });
+            }
+
+            // Lanternes sur pilotis au milieu de l'eau
+            for (let i = 0; i < 5; i++) {
+                level.decorations.push({
+                    type: 'water_lantern',
+                    x: currentX + unit * (15 + i * 6),
+                    y: h - unit * 2
+                });
+            }
+
+            // Îlot secret avec power-up étoile (récompense pour les explorateurs)
+            level.platforms.push({
+                x: currentX + unit * 25, y: h - unit * 5,
+                w: unit * 3, h: unit,
+                type: 'spirit_stone'
+            });
+            level.powerups.push({
+                x: currentX + unit * 26, y: h - unit * 5 - 50,
+                w: 35, h: 35, type: 'star'
+            });
+
+            // Arrivée à la destination du train
+            currentX += unit * 42;
+
+            // Quai d'arrivée
+            for (let i = 0; i < 6; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit, y: h - unit * 2,
+                    w: unit, h: unit * 2, type: 'train_platform'
+                });
+            }
+
+            // ============================================================
+            // SECTION 6 : LE JARDIN DE ZENIBA
+            // "La maison paisible au bout du voyage"
+            // Moment de calme avant la conclusion
+            // ============================================================
+
+            currentX += unit * 8;
+
+            // Chemin de pierres
+            for (let i = 0; i < 12; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit, y: h - unit * 2,
+                    w: unit, h: unit * 2, type: 'garden_path'
+                });
+            }
+
+            // Arbres à esprits (décor avec lucioles)
+            level.decorations.push({ type: 'spirit_tree', x: currentX + unit * 2, y: h - unit * 6 });
+            level.decorations.push({ type: 'spirit_tree', x: currentX + unit * 8, y: h - unit * 7 });
+
+            // Lucioles (particules décoratives)
+            for (let i = 0; i < 8; i++) {
+                level.decorations.push({
+                    type: 'firefly',
+                    x: currentX + unit * (1 + i * 1.5),
+                    y: h - unit * (3 + Math.random() * 3),
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+
+            // La maison de Zeniba (décor)
+            level.decorations.push({
+                type: 'zeniba_house',
+                x: currentX + unit * 4, y: h - unit * 6
+            });
+
+            // Dernière noiraude amicale devant la maison
+            level.enemies.push({
+                x: currentX + unit * 6, y: h - unit * 2 - 25,
+                w: 30, h: 30, type: 'soot_sprite',
+                patrolStart: currentX + unit * 5, patrolEnd: currentX + unit * 8,
+                dir: 1, speed: 0.5, harmless: true, friendly: true
+            });
+
+            // ============================================================
+            // LA CLÉ : LE SCEAU DE ZENIBA
+            // "L'amour qu'on met dans quelque chose le rend précieux"
+            // ============================================================
+
+            level.keyItem = {
+                x: currentX + unit * 5.5, y: h - unit * 2 - 60,
+                w: 45, h: 45, type: 'zeniba_seal'
+            };
+
+            // Pièces finales autour de la clé
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * Math.PI * 2;
+                level.coins.push({
+                    x: currentX + unit * 5.5 + Math.cos(angle) * 60,
+                    y: h - unit * 2 - 60 + Math.sin(angle) * 40,
+                    w: 20, h: 20, value: 2
+                });
+            }
+
+            // ============================================================
+            // SECTION 7 : LE RETOUR - La porte de sortie
+            // "Quand tu passeras le tunnel, ne te retourne pas"
+            // ============================================================
+
+            currentX += unit * 14;
+
+            // Chemin final vers la sortie
+            for (let i = 0; i < 10; i++) {
+                level.platforms.push({
+                    x: currentX + i * unit, y: h - unit * 2,
+                    w: unit, h: unit * 2, type: 'spirit_grass'
+                });
+            }
+
+            // Dernier torii de sortie
+            level.decorations.push({
+                type: 'torii_gate',
+                x: currentX + unit * 5,
+                y: h - unit * 6,
+                scale: 1.5,
+                isExit: true
+            });
+
+            // Pétales de sakura final (récompenses)
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({
+                    x: currentX + 50 + i * 40,
+                    y: h - unit * 2 - 40 - Math.sin(i * 0.5) * 30,
+                    w: 22, h: 22, type: 'sakura_petal'
+                });
+            }
+
+            // Power-up magnet final
+            level.powerups.push({
+                x: currentX + unit * 3, y: h - unit * 2 - 60,
+                w: 35, h: 35, type: 'magnet'
+            });
+
+            // LA SORTIE
+            level.goal = {
+                x: currentX + unit * 6, y: h - unit * 2 - 80,
+                w: 70, h: 80, type: 'spirit_gate'
+            };
+
+            // Vide mortel (l'eau spirituelle en dessous)
+            level.hazards.push({
+                x: -1000, y: h + 50,
+                w: 10000, h: 100, type: 'void'
+            });
+
+            return level;
+        }
     }
 };
 
