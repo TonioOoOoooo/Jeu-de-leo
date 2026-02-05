@@ -3118,7 +3118,7 @@ function initLevel6Visuals(w, h) {
     };
 
     // Étoiles en arrière-plan
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 60; i++) {
         visuals.stars.push({
             x: seededRandom(i * 541) * w * 3,
             y: seededRandom(i * 547) * h,
@@ -3179,33 +3179,20 @@ function drawLevel6Background(ctx, w, h, camX) {
     ctx.fillRect(0, 0, w, h);
 
     // ===== PANNEAUX DE MUR (style Portal) =====
-    const panelSize = 80;
-    const panelMargin = 4;
+    const panelSize = 160;
+    const panelMargin = 6;
 
     for (let py = 0; py < h; py += panelSize) {
         for (let px = -camX * 0.1; px < w + panelSize; px += panelSize) {
             const adjustedX = px % (w + panelSize * 2);
 
-            // Panneau principal (blanc cassé)
-            ctx.fillStyle = '#FAFAFA';
-            ctx.fillRect(adjustedX + panelMargin, py + panelMargin,
-                         panelSize - panelMargin * 2, panelSize - panelMargin * 2);
-
-            // Bordure du panneau
-            ctx.strokeStyle = '#C0C0C0';
+            // Grille légère pour éviter le bruit visuel
+            ctx.globalAlpha = 0.05;
+            ctx.strokeStyle = '#B5B5B5';
             ctx.lineWidth = 1;
             ctx.strokeRect(adjustedX + panelMargin, py + panelMargin,
                            panelSize - panelMargin * 2, panelSize - panelMargin * 2);
-
-            // Vis dans les coins (détail)
-            ctx.fillStyle = '#A0A0A0';
-            const screwSize = 3;
-            ctx.beginPath();
-            ctx.arc(adjustedX + panelMargin + 8, py + panelMargin + 8, screwSize, 0, Math.PI * 2);
-            ctx.arc(adjustedX + panelSize - panelMargin - 8, py + panelMargin + 8, screwSize, 0, Math.PI * 2);
-            ctx.arc(adjustedX + panelMargin + 8, py + panelSize - panelMargin - 8, screwSize, 0, Math.PI * 2);
-            ctx.arc(adjustedX + panelSize - panelMargin - 8, py + panelSize - panelMargin - 8, screwSize, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.globalAlpha = 1;
         }
     }
 
@@ -3263,10 +3250,10 @@ function drawLevel6Background(ctx, w, h, camX) {
         ctx.fillRect(lx - 60, 0, 120, 15);
 
         // Néon
-        const flicker = Math.sin(time * 0.1 + lx) > 0.95 ? 0.5 : 1;
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * flicker})`;
+        const flicker = Math.sin(time * 0.05 + lx) > 0.985 ? 0.75 : 1;
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * flicker})`;
         ctx.shadowColor = '#FFFFFF';
-        ctx.shadowBlur = 20 * flicker;
+        ctx.shadowBlur = 8 * flicker;
         ctx.fillRect(lx - 50, 5, 100, 8);
         ctx.shadowBlur = 0;
     }
@@ -3277,30 +3264,13 @@ function drawLevel6Background(ctx, w, h, camX) {
     ctx.fillStyle = '#606060';
     ctx.fillRect(0, 33, w, 3);
 
-    // ===== ÉCRANS DE MONITORING =====
-    for (let screenX = 200 - camX * 0.1; screenX < w; screenX += 600) {
-        // Cadre de l'écran
-        ctx.fillStyle = '#333333';
-        ctx.fillRect(screenX, 50, 100, 70);
-
-        // Écran
-        ctx.fillStyle = '#001A00';
-        ctx.fillRect(screenX + 5, 55, 90, 60);
-
-        // Texte/données simulées
-        ctx.fillStyle = '#00FF00';
-        ctx.font = '8px monospace';
-        ctx.globalAlpha = 0.8;
-        const statusText = ['CHAMBRE ACTIVE', 'TEST EN COURS', 'SUJET: OK'][Math.floor(screenX / 200) % 3];
-        ctx.fillText(statusText, screenX + 10, 75);
-
-        // Barres de données
-        for (let bar = 0; bar < 3; bar++) {
-            const barWidth = 30 + Math.sin(time * 0.05 + bar + screenX) * 20;
-            ctx.fillRect(screenX + 10, 85 + bar * 10, barWidth, 6);
-        }
-        ctx.globalAlpha = 1;
+    // ===== MARQUEURS LAB DISCRETS =====
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#909090';
+    for (let markX = 220 - camX * 0.08; markX < w; markX += 520) {
+        ctx.fillRect(markX, 52, 80, 8);
     }
+    ctx.globalAlpha = 1;
 }
 
 function drawLevel6Foreground(ctx, w, h, camX) {
@@ -3308,7 +3278,8 @@ function drawLevel6Foreground(ctx, w, h, camX) {
     const time = state.frameTick;
 
     // ===== PARTICULES DE POUSSIÈRE (laboratoire) =====
-    for (const particle of visuals.floatingParticles) {
+    for (let i = 0; i < visuals.floatingParticles.length; i += 2) {
+        const particle = visuals.floatingParticles[i];
         const x = (particle.x + time * particle.speedX * 0.3) % (w * 3);
         const y = particle.y + Math.sin(time * 0.01 + particle.x) * 10;
 
@@ -3323,8 +3294,8 @@ function drawLevel6Foreground(ctx, w, h, camX) {
 
     // ===== EFFET DE SCAN LABORATOIRE =====
     const scanY = (time * 1.5) % (h + 100) - 50;
-    ctx.strokeStyle = 'rgba(255, 102, 0, 0.15)'; // Orange Aperture
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(255, 102, 0, 0.08)'; // Orange Aperture
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, scanY);
     ctx.lineTo(w, scanY);
@@ -3332,8 +3303,8 @@ function drawLevel6Foreground(ctx, w, h, camX) {
 
     // Ligne de scan secondaire (décalée)
     const scanY2 = (time * 1.5 + 200) % (h + 100) - 50;
-    ctx.strokeStyle = 'rgba(0, 170, 255, 0.1)'; // Bleu portail
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(0, 170, 255, 0.05)'; // Bleu portail
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, scanY2);
     ctx.lineTo(w, scanY2);
@@ -3352,7 +3323,7 @@ function drawLevel6Foreground(ctx, w, h, camX) {
     // ===== EFFET DE VIGNETTE LÉGÈRE =====
     const vignetteGrad = ctx.createRadialGradient(w/2, h/2, h * 0.3, w/2, h/2, h);
     vignetteGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    vignetteGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+    vignetteGrad.addColorStop(1, 'rgba(0, 0, 0, 0.08)');
     ctx.fillStyle = vignetteGrad;
     ctx.fillRect(0, 0, w, h);
 }
