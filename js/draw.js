@@ -317,8 +317,58 @@ function drawPortals() {
                     ctx.fillText('← RETOUR', p.x + 5, p.y - 15);
                 }
             }
+        } else if (state.level === 6) {
+            // ===== PORTAILS STYLE PORTAL 2 (niveau 6) =====
+            const pcx = p.x + p.w / 2;
+            const pcy = p.y + p.h / 2;
+            const prx = p.w / 2;
+            const pry = p.h / 2;
+
+            // Halo externe lumineux
+            ctx.save();
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 20;
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.ellipse(pcx, pcy, prx + 3, pry + 3, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            // Anneau principal
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(pcx, pcy, prx, pry, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Remplissage du portail (effet de vortex)
+            const portalGrad = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, Math.max(prx, pry));
+            portalGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+            portalGrad.addColorStop(0.4, p.color);
+            portalGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+            ctx.fillStyle = portalGrad;
+            ctx.globalAlpha = 0.75 + Math.sin(state.frameTick * 0.15) * 0.1;
+            ctx.beginPath();
+            ctx.ellipse(pcx, pcy, prx - 2, pry - 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // Particules tourbillonnantes
+            for (let pi = 0; pi < 4; pi++) {
+                const pa = state.frameTick * 0.08 + pi * Math.PI / 2;
+                const pd = 0.6 + Math.sin(state.frameTick * 0.05 + pi) * 0.3;
+                const ppx = pcx + Math.cos(pa) * prx * pd;
+                const ppy = pcy + Math.sin(pa) * pry * pd;
+                ctx.fillStyle = '#ffffff';
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(ppx, ppy, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
         } else {
-            // Portail normal
+            // Portail normal (autres niveaux)
             ctx.strokeStyle = p.color;
             ctx.lineWidth = 5;
             ctx.beginPath();
@@ -326,12 +376,7 @@ function drawPortals() {
             ctx.stroke();
 
             ctx.fillStyle = p.color;
-            // Style Portal (ovale plein)
-            if (state.level === 6) {
-                ctx.globalAlpha = 0.8;
-            } else {
-                ctx.globalAlpha = 0.3 + Math.sin(state.frameTick * 0.1) * 0.1;
-            }
+            ctx.globalAlpha = 0.3 + Math.sin(state.frameTick * 0.1) * 0.1;
             ctx.fill();
             ctx.globalAlpha = 1;
         }
@@ -961,7 +1006,95 @@ function drawPlatforms() {
             case 'invisible_wall':
                 // Ne rien dessiner
                 break;
-                
+
+            // ========== PLATEFORMES APERTURE SCIENCE (Niveau 6) ==========
+            case 'ap_floor':
+                // Sol de chambre de test : dalles blanches propres
+                ctx.fillStyle = '#e8e8e8';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Joints entre dalles
+                ctx.strokeStyle = '#c0c0c0';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(p.x + 1, p.y + 1, p.w - 2, p.h - 2);
+                // Surface claire du dessus
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(p.x + 2, p.y, p.w - 4, 3);
+                break;
+
+            case 'ap_wall':
+                // Murs Aperture : panneaux gris avec joints
+                ctx.fillStyle = '#b0b0b0';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.strokeStyle = '#909090';
+                ctx.lineWidth = 1;
+                // Panneaux verticaux
+                for (let py = p.y; py < p.y + p.h; py += 40) {
+                    ctx.strokeRect(p.x + 2, py + 2, p.w - 4, 36);
+                }
+                break;
+
+            case 'ap_ceiling':
+                // Plafond avec néons
+                ctx.fillStyle = '#a0a0a0';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.strokeStyle = '#888';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                // Néons encastrés
+                for (let lx = p.x + 30; lx < p.x + p.w - 30; lx += 120) {
+                    const flicker = Math.sin(state.frameTick * 0.08 + lx * 0.1) > 0.92 ? 0.4 : 1;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * flicker})`;
+                    ctx.shadowColor = '#fff';
+                    ctx.shadowBlur = 8 * flicker;
+                    ctx.fillRect(lx, p.y + p.h - 5, 60, 4);
+                    ctx.shadowBlur = 0;
+                }
+                break;
+
+            case 'ap_platform':
+                // Plateforme de test : métal poli avec bords lumineux
+                ctx.fillStyle = '#d0d0d0';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                // Bandes lumineuses bleues
+                ctx.fillStyle = 'rgba(0, 170, 255, 0.5)';
+                ctx.fillRect(p.x, p.y, p.w, 2);
+                ctx.fillRect(p.x, p.y + p.h - 2, p.w, 2);
+                break;
+
+            case 'ap_key_platform':
+                // Plateforme clé : orange pulsante
+                const keyPulse = 0.5 + Math.sin(state.frameTick * 0.08) * 0.3;
+                ctx.fillStyle = '#d0d0d0';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.strokeStyle = `rgba(255, 102, 0, ${keyPulse})`;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(p.x - 1, p.y - 1, p.w + 2, p.h + 2);
+                // Glow orange
+                ctx.shadowColor = '#FF6600';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = 'rgba(255, 102, 0, 0.15)';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.shadowBlur = 0;
+                break;
+
+            case 'ap_exit_platform':
+                // Plateforme de sortie : verte pulsante
+                const exitPulse = 0.5 + Math.sin(state.frameTick * 0.1) * 0.3;
+                ctx.fillStyle = '#d0d0d0';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.strokeStyle = `rgba(0, 255, 0, ${exitPulse})`;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(p.x - 1, p.y - 1, p.w + 2, p.h + 2);
+                ctx.shadowColor = '#00FF00';
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.1)';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.shadowBlur = 0;
+                break;
+
             default:
                 // Plateformes améliorées pour niveaux 1-2
                 if (state.level <= 2 && typeof drawEnhancedGrassPlatform === 'function') {
@@ -1314,6 +1447,43 @@ function drawHazards() {
                 }
                 break;
                 
+            case 'toxic_goo':
+                // Acide toxique Aperture Science (vert luminescent)
+                // Surface de l'acide
+                const gooGrad = ctx.createLinearGradient(h.x, h.y, h.x, h.y + h.h);
+                gooGrad.addColorStop(0, '#39ff14');
+                gooGrad.addColorStop(0.3, '#2ecc40');
+                gooGrad.addColorStop(1, '#1a7a1a');
+                ctx.fillStyle = gooGrad;
+                ctx.fillRect(h.x, h.y, h.w, h.h);
+                // Glow vert
+                ctx.shadowColor = '#39ff14';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = 'rgba(57, 255, 20, 0.4)';
+                ctx.fillRect(h.x, h.y, h.w, 4);
+                ctx.shadowBlur = 0;
+                // Bulles
+                for (let bi = 0; bi < 4; bi++) {
+                    const bx = h.x + ((state.frameTick * 0.5 + bi * 137) % h.w);
+                    const by = h.y + 5 + Math.sin(state.frameTick * 0.08 + bi * 2) * 5;
+                    const br = 2 + Math.sin(state.frameTick * 0.1 + bi) * 1.5;
+                    ctx.fillStyle = 'rgba(150, 255, 100, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(bx, by, br, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Vagues de surface
+                ctx.strokeStyle = 'rgba(100, 255, 50, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let wx = h.x; wx < h.x + h.w; wx += 5) {
+                    const wy = h.y + Math.sin((wx + state.frameTick * 2) * 0.05) * 3;
+                    if (wx === h.x) ctx.moveTo(wx, wy);
+                    else ctx.lineTo(wx, wy);
+                }
+                ctx.stroke();
+                break;
+
             case 'knight':
                 // Utiliser le sprite amélioré pour le niveau 7
                 if (state.level === 7 && typeof drawEnhancedKnight === 'function') {
