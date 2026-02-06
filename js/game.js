@@ -1735,14 +1735,15 @@ function checkCollisions() {
         const bossY = boss.y + (boss.floatY || 0);
         const bossHitbox = { x: boss.x, y: bossY, w: boss.w, h: boss.h };
         
-        // Joueur saute sur le boss
+        // Joueur saute sur le boss (zone de stomp = moitié haute du boss)
         if (player.vy > 0 && boss.invincible === 0 &&
             player.x + player.w > boss.x && player.x < boss.x + boss.w &&
-            player.y + player.h > bossY && player.y + player.h < bossY + 50) {
-            
+            player.y + player.h > bossY && player.y + player.h < bossY + boss.h * 0.6) {
+
             boss.hp--;
-            boss.invincible = 120; // Plus long (était 90) pour donner plus de temps à Léo
+            boss.invincible = 120;
             player.vy = -14;
+            state.invincibilityTimer = 30; // Protéger le joueur après un stomp réussi
             state.screenShake = 15;
             AudioSystem.play('boss_hit');
             ParticleSystem.emit(boss.x + boss.w/2, bossY, 'boss', 20);
