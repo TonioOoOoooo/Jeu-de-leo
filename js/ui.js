@@ -209,8 +209,10 @@ function calculateStars() {
 
 function gameOver(reason) {
     state.current = GameState.GAME_OVER;
+    state.invincibilityTimer = 0; // Reset pour éviter le bug du héros invisible
+    state.screenShake = 0;
     AudioSystem.play('death');
-    
+
     document.getElementById('msg-title').textContent = "💀 GAME OVER";
     document.getElementById('msg-title').style.color = "#e74c3c";
     document.getElementById('msg-text').textContent = reason || "Plus de vies...";
@@ -223,8 +225,13 @@ function gameOver(reason) {
 function nextLevelAction() {
     document.getElementById('message-box').style.display = 'none';
 
-    if (state.level >= CONFIG.TOTAL_LEVELS || state.current === GameState.GAME_OVER) {
+    if (state.current === GameState.GAME_OVER) {
         showHallOfFame();
+        return;
+    }
+
+    if (state.level >= CONFIG.TOTAL_LEVELS) {
+        showGameSummary();
         return;
     }
 
@@ -408,12 +415,15 @@ function restartLevel() {
     if (typeof resetKeys === 'function') resetKeys();
 
     document.getElementById('pause-screen').style.display = 'none';
+    document.getElementById('message-box').style.display = 'none';
     document.body.classList.remove('is-paused');
 
     // Réinitialiser les vies selon la difficulté
     const maxLives = state.difficulty <= 0.5 ? 10 : state.difficulty <= 0.7 ? 7 : state.difficulty <= 1.2 ? 4 : 2;
     state.lives = maxLives;
     state.coins = 0;
+    state.invincibilityTimer = 0; // Reset pour éviter le bug du héros invisible
+    state.screenShake = 0;
     updateHud();
     initLevel(state.level);
     state.current = GameState.PLAYING;
@@ -611,6 +621,183 @@ function createConfetti(stars) {
     }
 }
 
+// ===== ÉCRAN RÉCAPITULATIF DE FIN DE JEU =====
+function showGameSummary() {
+    const screen = document.getElementById('game-summary');
+    if (!screen) { showHallOfFame(); return; }
+
+    screen.style.display = 'flex';
+    screen.style.opacity = '1';
+
+    // Reset toutes les sections
+    const sections = ['summary-coins-section', 'summary-stars-section',
+                      'summary-badges-section', 'summary-stats-section', 'summary-btn-section'];
+    sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.opacity = '0';
+    });
+
+    let delay = 300;
+
+    // --- 1. ANIMATION DES PIÈCES (compteur qui monte avec son) ---
+    setTimeout(() => {
+        const coinsSection = document.getElementById('summary-coins-section');
+        if (coinsSection) coinsSection.style.opacity = '1';
+
+        const counterEl = document.getElementById('summary-coins-counter');
+        const targetCoins = state.totalCoins;
+        let currentCoins = 0;
+        const steps = Math.min(targetCoins, 40);
+        const increment = Math.max(1, Math.floor(targetCoins / steps));
+        let stepIndex = 0;
+
+        const coinInterval = setInterval(() => {
+            currentCoins = Math.min(currentCoins + increment, targetCoins);
+            if (counterEl) counterEl.textContent = currentCoins;
+
+            // Son de pièce qui monte en fréquence
+            if (AudioSystem && AudioSystem.ctx && AudioSystem.enabled) {
+                try {
+                    const osc = AudioSystem.ctx.createOscillator();
+                    const gain = AudioSystem.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(AudioSystem.ctx.destination);
+                    const now = AudioSystem.ctx.currentTime;
+                    const freq = 600 + (stepIndex / steps) * 800;
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } catch(e) {}
+            }
+            stepIndex++;
+
+            if (currentCoins >= targetCoins) {
+                clearInterval(coinInterval);
+                if (counterEl) counterEl.textContent = targetCoins;
+                // Son final
+                AudioSystem.play('powerup');
+            }
+        }, 50);
+    }, delay);
+    delay += 2200;
+
+    // --- 2. ÉTOILES PAR NIVEAU ---
+    setTimeout(() => {
+        const starsSection = document.getElementById('summary-stars-section');
+        if (starsSection) starsSection.style.opacity = '1';
+
+        const grid = document.getElementById('summary-stars-grid');
+        if (grid) {
+            grid.innerHTML = '';
+            for (let lvl = 1; lvl <= CONFIG.TOTAL_LEVELS; lvl++) {
+                const stars = state.levelStars[lvl] || 0;
+                const div = document.createElement('div');
+                div.style.cssText = 'background: rgba(255,255,255,0.1); border-radius: 10px; padding: 6px 10px; min-width: 60px;';
+                div.innerHTML = `<div style="font-size: 12px; color: rgba(255,255,255,0.6);">Niv ${lvl}</div>` +
+                    `<div style="font-size: 18px;">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>`;
+                grid.appendChild(div);
+
+                // Apparition progressive
+                div.style.opacity = '0';
+                div.style.transform = 'scale(0.5)';
+                div.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    div.style.opacity = '1';
+                    div.style.transform = 'scale(1)';
+                }, lvl * 150);
+            }
+        }
+        const totalEl = document.getElementById('summary-stars-total');
+        if (totalEl) {
+            totalEl.textContent = `Total : ${state.totalStars} / ${CONFIG.TOTAL_LEVELS * 3} ⭐`;
+        }
+
+        AudioSystem.play('cheer');
+    }, delay);
+    delay += CONFIG.TOTAL_LEVELS * 150 + 800;
+
+    // --- 3. BADGES ---
+    setTimeout(() => {
+        const badgesSection = document.getElementById('summary-badges-section');
+        if (badgesSection) badgesSection.style.opacity = '1';
+
+        const badgesList = document.getElementById('summary-badges-list');
+        if (badgesList) {
+            badgesList.innerHTML = '';
+            const allBadges = [
+                { id: 'first_level', icon: '🎮', title: 'Premier pas' },
+                { id: 'perfect_level', icon: '⭐', title: 'Perfection' },
+                { id: 'coin_collector', icon: '🪙', title: 'Collectionneur' },
+                { id: 'coin_master', icon: '💰', title: 'Riche !' },
+                { id: 'halfway', icon: '🏃', title: 'À mi-chemin' },
+                { id: 'boss_defeated', icon: '⚔️', title: 'Vainqueur' },
+                { id: 'all_stars', icon: '🌟', title: 'Maître du jeu' },
+                { id: 'no_death', icon: '🛡️', title: 'Invincible' },
+                { id: 'speed_runner', icon: '⚡', title: 'Éclair' },
+                { id: 'streak_3', icon: '🔥', title: 'En feu !' },
+                { id: 'persistent', icon: '💪', title: 'Persévérant' },
+                { id: 'explorer', icon: '🗺️', title: 'Explorateur' }
+            ];
+            let badgeCount = 0;
+            allBadges.forEach((badge, i) => {
+                const unlocked = state.badges[badge.id];
+                if (unlocked) badgeCount++;
+                const div = document.createElement('div');
+                div.style.cssText = `background: ${unlocked ? 'rgba(241,196,15,0.2)' : 'rgba(255,255,255,0.05)'}; border: 2px solid ${unlocked ? '#f1c40f' : 'rgba(255,255,255,0.1)'}; border-radius: 10px; padding: 6px 10px; min-width: 50px; opacity: ${unlocked ? 1 : 0.3};`;
+                div.innerHTML = `<div style="font-size: 22px;">${badge.icon}</div><div style="font-size: 10px; color: ${unlocked ? 'white' : 'rgba(255,255,255,0.4)'};">${badge.title}</div>`;
+                badgesList.appendChild(div);
+            });
+
+            // Ajouter compteur
+            const countDiv = document.createElement('p');
+            countDiv.style.cssText = 'width: 100%; text-align: center; color: #f1c40f; font-size: 16px; margin-top: 5px;';
+            countDiv.textContent = `${badgeCount} / ${allBadges.length} débloqués`;
+            badgesList.appendChild(countDiv);
+        }
+    }, delay);
+    delay += 800;
+
+    // --- 4. STATISTIQUES ---
+    setTimeout(() => {
+        const statsSection = document.getElementById('summary-stats-section');
+        if (statsSection) statsSection.style.opacity = '1';
+
+        const statsList = document.getElementById('summary-stats-list');
+        if (statsList) {
+            statsList.innerHTML = '';
+            const statsData = [
+                { icon: '💀', label: 'Morts', value: state.stats.totalDeaths },
+                { icon: '🦘', label: 'Sauts', value: state.stats.totalJumps },
+                { icon: '🔥', label: 'Meilleure série', value: state.stats.bestStreak + ' niveaux' },
+                { icon: '⭐', label: 'Niveaux parfaits', value: state.stats.perfectLevels }
+            ];
+            statsData.forEach(s => {
+                const div = document.createElement('div');
+                div.style.cssText = 'background: rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 14px;';
+                div.innerHTML = `<span style="font-size: 20px;">${s.icon}</span> <span>${s.label} : <strong>${s.value}</strong></span>`;
+                statsList.appendChild(div);
+            });
+        }
+    }, delay);
+    delay += 600;
+
+    // --- 5. BOUTON CONTINUER ---
+    setTimeout(() => {
+        const btnSection = document.getElementById('summary-btn-section');
+        if (btnSection) btnSection.style.opacity = '1';
+        AudioSystem.play('victory');
+    }, delay);
+}
+
+function closeSummaryAndShowHallOfFame() {
+    const screen = document.getElementById('game-summary');
+    if (screen) screen.style.display = 'none';
+    showHallOfFame();
+}
+
 // ===== EXPORTS GLOBAUX =====
 window.startGame = startGame;
 window.continueSavedGame = continueSavedGame;
@@ -627,3 +814,4 @@ window.openSettings = openSettings;
 window.closeSettings = closeSettings;
 window.submitHallOfFame = submitHallOfFame;
 window.returnToMenu = returnToMenu;
+window.closeSummaryAndShowHallOfFame = closeSummaryAndShowHallOfFame;

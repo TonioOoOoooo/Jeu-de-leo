@@ -333,6 +333,32 @@
             <p class="space-hint" id="msg-hint">(ESPACE pour continuer)</p>
         </div>
 
+        <div id="game-summary" class="screen" style="display: none;">
+            <div id="summary-content" style="max-width: 700px; width: 90%; margin: 0 auto; text-align: center;">
+                <h2 id="summary-title" style="font-size: 42px; color: gold; margin: 0 0 10px;">AVENTURE TERMINÉE !</h2>
+                <div id="summary-coins-section" style="margin: 15px 0; opacity: 0;">
+                    <p style="font-size: 20px; color: rgba(255,255,255,0.7); margin: 0;">Pièces collectées</p>
+                    <p id="summary-coins-counter" style="font-size: 56px; color: gold; margin: 5px 0; font-weight: bold;">0</p>
+                </div>
+                <div id="summary-stars-section" style="margin: 15px 0; opacity: 0;">
+                    <p style="font-size: 20px; color: rgba(255,255,255,0.7); margin: 0 0 8px;">Étoiles par niveau</p>
+                    <div id="summary-stars-grid" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;"></div>
+                    <p id="summary-stars-total" style="font-size: 24px; color: #f1c40f; margin: 8px 0 0;"></p>
+                </div>
+                <div id="summary-badges-section" style="margin: 15px 0; opacity: 0;">
+                    <p style="font-size: 20px; color: rgba(255,255,255,0.7); margin: 0 0 8px;">Badges débloqués</p>
+                    <div id="summary-badges-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;"></div>
+                </div>
+                <div id="summary-stats-section" style="margin: 15px 0; opacity: 0;">
+                    <p style="font-size: 20px; color: rgba(255,255,255,0.7); margin: 0 0 8px;">Statistiques</p>
+                    <div id="summary-stats-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; font-size: 16px; color: white;"></div>
+                </div>
+                <div id="summary-btn-section" style="margin-top: 20px; opacity: 0;">
+                    <button class="big-btn btn-continue" onclick="closeSummaryAndShowHallOfFame()">Continuer</button>
+                </div>
+            </div>
+        </div>
+
         <div id="hall-of-fame" class="screen" style="display: none;">
             <h2 style="font-size: 48px; color: gold; margin: 0;">🏆 Hall of Fame</h2>
             <p id="hall-score" style="font-size: 26px; color: white; margin: 10px 0 20px;"></p>
