@@ -137,6 +137,38 @@ const AudioSystem = {
                 osc.start(now);
                 osc.stop(now + 0.5);
                 break;
+
+            case 'poke_shoot':
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.08);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+                break;
+
+            case 'poke_capture':
+                osc.type = 'sine';
+                [660, 880, 1100, 1320].forEach((freq, i) => {
+                    osc.frequency.setValueAtTime(freq, now + i * 0.06);
+                });
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+                break;
+
+            case 'poke_flute':
+                osc.type = 'sine';
+                [523, 587, 659, 784, 880, 784, 659].forEach((freq, i) => {
+                    osc.frequency.setValueAtTime(freq, now + i * 0.15);
+                });
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 1.1);
+                osc.start(now);
+                osc.stop(now + 1.1);
+                break;
         }
     }
 };

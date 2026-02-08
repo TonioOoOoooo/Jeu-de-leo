@@ -19,6 +19,7 @@ const VisualCache = {
     level10: null,
     level11: null,
     level12: null,
+    level13: null,
     initialized: false
 };
 
@@ -5621,6 +5622,8 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel10Background(ctx, w, h, camX);  // Boss/Sonic (anciennement niveau 10)
     } else if (state.level === 12) {
         drawLevel11Background(ctx, w, h, camX);  // Fruity Frank (anciennement niveau 11)
+    } else if (state.level === 13) {
+        drawLevel13Background(ctx, w, h, camX);
     }
 }
 
@@ -5649,6 +5652,8 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel10Foreground(ctx, w, h, camX);  // Boss/Sonic
     } else if (state.level === 12) {
         drawLevel11Foreground(ctx, w, h, camX);  // Fruity Frank
+    } else if (state.level === 13) {
+        drawLevel13Foreground(ctx, w, h, camX);
     }
 }
 
@@ -5729,6 +5734,7 @@ function resetVisualCache() {
     VisualCache.level10 = null;
     VisualCache.level11 = null;
     VisualCache.level12 = null;
+    VisualCache.level13 = null;
 }
 
 // ===== NIVEAU 10 : ZONE FINALE (CYBER-SPACE) =====
@@ -7958,3 +7964,134 @@ window.resetVisualCache = resetVisualCache;
 window.drawGlitchPlatformNormal = drawGlitchPlatformNormal;
 window.drawGlitchPlatformIce = drawGlitchPlatformIce;
 window.drawGlitchPlatformJump = drawGlitchPlatformJump;
+
+// ===== NIVEAU 13 : POKÉMON - BACKGROUND & FOREGROUND =====
+function initLevel13Visuals(w, h) {
+    if (VisualCache.level13) return VisualCache.level13;
+    const visuals = {
+        clouds: [],
+        grassPatches: [],
+        birds: []
+    };
+    for (let i = 0; i < 15; i++) {
+        visuals.clouds.push({
+            x: Math.random() * 6000,
+            y: 20 + Math.random() * 120,
+            w: 50 + Math.random() * 60,
+            speed: 0.2 + Math.random() * 0.3
+        });
+    }
+    for (let i = 0; i < 8; i++) {
+        visuals.birds.push({
+            x: Math.random() * 5000,
+            y: 50 + Math.random() * 150,
+            speed: 0.5 + Math.random() * 1,
+            wingPhase: Math.random() * Math.PI * 2
+        });
+    }
+    VisualCache.level13 = visuals;
+    return visuals;
+}
+
+function drawLevel13Background(ctx, w, h, camX) {
+    const visuals = initLevel13Visuals(w, h);
+    const t = state.frameTick;
+
+    // Ciel gradient (bleu clair → blanc)
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+    skyGrad.addColorStop(0, '#87CEEB');
+    skyGrad.addColorStop(0.5, '#b8e6f0');
+    skyGrad.addColorStop(1, '#e8f5e9');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Collines lointaines (parallax lent)
+    ctx.fillStyle = '#a5d6a7';
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.65);
+    for (let x = 0; x <= w; x += 50) {
+        const hillY = h * 0.65 + Math.sin((x + camX * 0.1) * 0.008) * 40 + Math.sin((x + camX * 0.1) * 0.015) * 20;
+        ctx.lineTo(x, hillY);
+    }
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Collines proches (parallax moyen)
+    ctx.fillStyle = '#81c784';
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.75);
+    for (let x = 0; x <= w; x += 30) {
+        const hillY = h * 0.75 + Math.sin((x + camX * 0.25) * 0.01) * 30 + Math.sin((x + camX * 0.25) * 0.02) * 15;
+        ctx.lineTo(x, hillY);
+    }
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Nuages
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    for (const cloud of visuals.clouds) {
+        const cx = ((cloud.x - camX * 0.15 + 6500) % 6500) - 200;
+        const cy = cloud.y;
+        const cw = cloud.w;
+        ctx.beginPath();
+        ctx.arc(cx, cy, cw * 0.3, 0, Math.PI * 2);
+        ctx.arc(cx + cw * 0.25, cy - cw * 0.12, cw * 0.25, 0, Math.PI * 2);
+        ctx.arc(cx + cw * 0.5, cy, cw * 0.28, 0, Math.PI * 2);
+        ctx.arc(cx - cw * 0.2, cy + cw * 0.05, cw * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Oiseaux lointains
+    ctx.strokeStyle = '#546e7a';
+    ctx.lineWidth = 1.5;
+    for (const bird of visuals.birds) {
+        const bx = ((bird.x - camX * 0.3 + 5500) % 5500) - 200;
+        const by = bird.y;
+        const wing = Math.sin(t * 0.1 + bird.wingPhase) * 6;
+        ctx.beginPath();
+        ctx.moveTo(bx - 8, by + wing);
+        ctx.quadraticCurveTo(bx - 3, by - 3, bx, by);
+        ctx.quadraticCurveTo(bx + 3, by - 3, bx + 8, by + wing);
+        ctx.stroke();
+    }
+}
+
+function drawLevel13Foreground(ctx, w, h, camX) {
+    const t = state.frameTick;
+
+    // Herbes animées au premier plan
+    ctx.strokeStyle = '#66bb6a';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 20; i++) {
+        const gx = ((i * 130 - camX * 0.8 + 3000) % 3000) - 100;
+        const gy = h - 10;
+        const sway = Math.sin(t * 0.04 + i * 0.7) * 5;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy);
+        ctx.quadraticCurveTo(gx + sway, gy - 20, gx + sway * 1.5, gy - 35);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(gx + 8, gy);
+        ctx.quadraticCurveTo(gx + 8 - sway, gy - 15, gx + 8 - sway * 1.2, gy - 28);
+        ctx.stroke();
+    }
+
+    // Papillons décoratifs (hors gameplay)
+    ctx.globalAlpha = 0.6;
+    for (let i = 0; i < 4; i++) {
+        const bx = ((i * 400 + t * 0.3 - camX * 0.5 + 2000) % 2000) - 100;
+        const by = 100 + Math.sin(t * 0.03 + i * 2) * 60;
+        const wingFlap = Math.sin(t * 0.2 + i) * 8;
+        const colors = ['#e91e63', '#9c27b0', '#ff9800', '#00bcd4'];
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.beginPath();
+        ctx.ellipse(bx - 4, by, 5, 3 + wingFlap * 0.3, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(bx + 4, by, 5, 3 + wingFlap * 0.3, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}

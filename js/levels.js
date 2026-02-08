@@ -2352,6 +2352,284 @@ const LEVELS = {
 
             return level;
         }
+    },
+
+    // ============================================================
+    // NIVEAU 13 - POKÉMON : L'AVENTURE DU DRESSEUR
+    // 3 Zones : Hautes Herbes → Gymnase → Chasse aux Créatures
+    // ============================================================
+    13: {
+        name: "Pokémon - Aventure du Dresseur",
+        bgColor: "#87CEEB",
+        playerStart: { x: 50, y: 350 },
+        needsKey: false,
+        pokemonLevel: true,
+        hidden: true,
+        setup: (w, h) => {
+            const unit = 40;
+            const level = createEmptyLevel();
+            const groundY = h - unit * 2;
+            let currentX = 0;
+
+            // ==========================================
+            // ZONE A : ROUTE DES HAUTES HERBES
+            // ==========================================
+
+            // Sol de départ - Route campagne
+            level.platforms.push({ x: -50, y: groundY, w: 300, h: unit * 2, type: 'poke_path' });
+
+            // Clôture décorative au début
+            level.decorations.push({ type: 'poke_fence', x: 20, y: groundY - 30 });
+            level.decorations.push({ type: 'poke_fence', x: 100, y: groundY - 30 });
+            level.decorations.push({ type: 'poke_fence', x: 180, y: groundY - 30 });
+
+            // Pièces de départ (sphères)
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({ x: 80 + i * 50, y: groundY - 50, w: 20, h: 20, pokeBall: true });
+            }
+
+            currentX = 250;
+
+            // Première zone d'herbes hautes
+            level.platforms.push({ x: currentX, y: groundY, w: 350, h: unit * 2, type: 'poke_grass' });
+
+            // Créatures sauvages dans les herbes (capturables)
+            level.enemies.push({
+                x: currentX + 80, y: groundY - 35, w: 35, h: 30,
+                type: 'wild_creature', creatureType: 'caterpillar',
+                capturable: true, captureValue: 5,
+                patrolStart: currentX + 40, patrolEnd: currentX + 200,
+                dir: 1, speed: 1.2 * state.difficulty
+            });
+            level.enemies.push({
+                x: currentX + 250, y: groundY - 35, w: 30, h: 30,
+                type: 'wild_creature', creatureType: 'rat',
+                capturable: true, captureValue: 5,
+                patrolStart: currentX + 200, patrolEnd: currentX + 320,
+                dir: -1, speed: 1.5 * state.difficulty
+            });
+
+            // Pièces dans les herbes
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: currentX + 100 + i * 80, y: groundY - 60, w: 20, h: 20, pokeBall: true });
+            }
+
+            currentX += 350;
+
+            // Route intermédiaire
+            level.platforms.push({ x: currentX, y: groundY, w: 200, h: unit * 2, type: 'poke_path' });
+
+            // Arbre décoratif
+            level.decorations.push({ type: 'poke_tree', x: currentX + 50, y: groundY - 80 });
+
+            // Power-up : bouclier
+            level.powerups.push({ x: currentX + 120, y: groundY - 55, w: 35, h: 35, type: 'shield' });
+
+            currentX += 200;
+
+            // Deuxième zone d'herbes hautes (plus longue)
+            level.platforms.push({ x: currentX, y: groundY, w: 500, h: unit * 2, type: 'poke_grass' });
+
+            // Plus de créatures sauvages
+            level.enemies.push({
+                x: currentX + 100, y: groundY - 35, w: 35, h: 30,
+                type: 'wild_creature', creatureType: 'bird',
+                capturable: true, captureValue: 8,
+                patrolStart: currentX + 50, patrolEnd: currentX + 250,
+                dir: 1, speed: 2 * state.difficulty
+            });
+            level.enemies.push({
+                x: currentX + 300, y: groundY - 35, w: 30, h: 30,
+                type: 'wild_creature', creatureType: 'butterfly',
+                capturable: true, captureValue: 10,
+                patrolStart: currentX + 250, patrolEnd: currentX + 430,
+                dir: -1, speed: 1.8 * state.difficulty
+            });
+
+            for (let i = 0; i < 5; i++) {
+                level.coins.push({ x: currentX + 60 + i * 90, y: groundY - 50, w: 20, h: 20, pokeBall: true });
+            }
+
+            currentX += 500;
+
+            // Route avant le Snorlax
+            level.platforms.push({ x: currentX, y: groundY, w: 200, h: unit * 2, type: 'poke_path' });
+
+            // Flûte cachée (objet clé pour réveiller le Snorlax)
+            level.coins.push({ x: currentX + 80, y: groundY - 120, w: 25, h: 25, secret: true, value: 0, isFlute: true });
+
+            // Plateforme en hauteur pour accéder à la flûte
+            level.platforms.push({ x: currentX + 30, y: groundY - 90, w: 120, h: 15, type: 'poke_platform' });
+
+            currentX += 200;
+
+            // Snorlax qui bloque le passage
+            level.platforms.push({ x: currentX, y: groundY, w: 300, h: unit * 2, type: 'poke_path' });
+
+            // Le Snorlax est un ennemi spécial qui bloque mais ne peut pas être battu
+            level.enemies.push({
+                x: currentX + 80, y: groundY - 90, w: 100, h: 90,
+                type: 'snorlax', uncapturable: true,
+                patrolStart: currentX + 80, patrolEnd: currentX + 80, // Ne bouge pas
+                dir: 1, speed: 0
+            });
+
+            level.decorations.push({ type: 'poke_sign', x: currentX + 20, y: groundY - 40, text: 'ZZZ...' });
+
+            currentX += 300;
+
+            // ==========================================
+            // ZONE B : GYMNASE (ARÈNE PLATEFORMES)
+            // ==========================================
+            const gymStart = currentX;
+
+            // Sol du gymnase
+            level.platforms.push({ x: currentX, y: groundY, w: 1200, h: unit * 2, type: 'poke_gym_floor' });
+
+            // Plateforme d'entrée
+            level.decorations.push({ type: 'poke_gym_entrance', x: currentX + 20, y: groundY - 100 });
+
+            // Badges à collecter (remplacent les pièces)
+            // Rangée basse - plateformes statiques
+            level.platforms.push({ x: currentX + 100, y: groundY - 80, w: 100, h: 15, type: 'poke_gym_platform' });
+            level.coins.push({ x: currentX + 140, y: groundY - 110, w: 22, h: 22, badge: true, value: 3 });
+
+            level.platforms.push({ x: currentX + 300, y: groundY - 80, w: 100, h: 15, type: 'poke_gym_platform' });
+            level.coins.push({ x: currentX + 340, y: groundY - 110, w: 22, h: 22, badge: true, value: 3 });
+
+            // Plateformes mouvantes horizontales
+            level.platforms.push({ x: currentX + 500, y: groundY - 120, w: 80, h: 15, type: 'moving', vx: 2 * state.difficulty, minX: currentX + 450, maxX: currentX + 650 });
+            level.coins.push({ x: currentX + 530, y: groundY - 155, w: 22, h: 22, badge: true, value: 5 });
+
+            // Plateformes mouvantes verticales
+            level.platforms.push({ x: currentX + 700, y: groundY - 150, w: 80, h: 15, type: 'moving', vy: -1.5 * state.difficulty, vx: 0, minY: groundY - 250, maxY: groundY - 100 });
+            level.coins.push({ x: currentX + 730, y: groundY - 280, w: 22, h: 22, badge: true, value: 5 });
+
+            // Niveau supérieur - plateformes rapides
+            level.platforms.push({ x: currentX + 850, y: groundY - 200, w: 100, h: 15, type: 'poke_gym_platform' });
+            level.coins.push({ x: currentX + 890, y: groundY - 230, w: 22, h: 22, badge: true, value: 5 });
+
+            level.platforms.push({ x: currentX + 1000, y: groundY - 250, w: 80, h: 15, type: 'moving', vx: 3 * state.difficulty, minX: currentX + 950, maxX: currentX + 1100 });
+
+            // Badge champion en haut (le plus précieux)
+            level.platforms.push({ x: currentX + 550, y: groundY - 300, w: 120, h: 15, type: 'poke_gym_platform' });
+            level.coins.push({ x: currentX + 600, y: groundY - 335, w: 28, h: 28, badge: true, value: 10 });
+
+            // Power-up bonbon rare (invincibilité)
+            level.powerups.push({ x: currentX + 1050, y: groundY - 50, w: 35, h: 35, type: 'star', rareCandy: true });
+
+            currentX += 1200;
+
+            // ==========================================
+            // ZONE C : CHASSE AUX CRÉATURES
+            // ==========================================
+            const chaseStart = currentX;
+
+            // Route vers la zone de chasse
+            level.platforms.push({ x: currentX, y: groundY, w: 200, h: unit * 2, type: 'poke_path' });
+            level.decorations.push({ type: 'poke_sign', x: currentX + 50, y: groundY - 40, text: 'SAFARI' });
+            currentX += 200;
+
+            // Grande zone ouverte
+            level.platforms.push({ x: currentX, y: groundY, w: 1800, h: unit * 2, type: 'poke_safari' });
+
+            // Plateformes en hauteur pour la chasse
+            level.platforms.push({ x: currentX + 100, y: groundY - 100, w: 120, h: 15, type: 'poke_platform' });
+            level.platforms.push({ x: currentX + 350, y: groundY - 150, w: 120, h: 15, type: 'poke_platform' });
+            level.platforms.push({ x: currentX + 600, y: groundY - 100, w: 120, h: 15, type: 'poke_platform' });
+            level.platforms.push({ x: currentX + 900, y: groundY - 180, w: 120, h: 15, type: 'poke_platform' });
+            level.platforms.push({ x: currentX + 1150, y: groundY - 120, w: 120, h: 15, type: 'poke_platform' });
+            level.platforms.push({ x: currentX + 1400, y: groundY - 160, w: 120, h: 15, type: 'poke_platform' });
+
+            // Créatures sauvages à capturer (récompense forte)
+            level.enemies.push({
+                x: currentX + 150, y: groundY - 35, w: 35, h: 30,
+                type: 'wild_creature', creatureType: 'slime',
+                capturable: true, captureValue: 8,
+                patrolStart: currentX + 80, patrolEnd: currentX + 280,
+                dir: 1, speed: 1.5 * state.difficulty
+            });
+            level.enemies.push({
+                x: currentX + 400, y: groundY - 185, w: 30, h: 28,
+                type: 'wild_creature', creatureType: 'bird',
+                capturable: true, captureValue: 12,
+                patrolStart: currentX + 350, patrolEnd: currentX + 470,
+                dir: -1, speed: 2 * state.difficulty
+            });
+            level.enemies.push({
+                x: currentX + 700, y: groundY - 35, w: 35, h: 30,
+                type: 'wild_creature', creatureType: 'caterpillar',
+                capturable: true, captureValue: 8,
+                patrolStart: currentX + 600, patrolEnd: currentX + 850,
+                dir: 1, speed: 1.2 * state.difficulty
+            });
+            level.enemies.push({
+                x: currentX + 1000, y: groundY - 35, w: 30, h: 30,
+                type: 'wild_creature', creatureType: 'rat',
+                capturable: true, captureValue: 10,
+                patrolStart: currentX + 900, patrolEnd: currentX + 1100,
+                dir: -1, speed: 2 * state.difficulty
+            });
+            level.enemies.push({
+                x: currentX + 1200, y: groundY - 155, w: 35, h: 30,
+                type: 'wild_creature', creatureType: 'butterfly',
+                capturable: true, captureValue: 15,
+                patrolStart: currentX + 1150, patrolEnd: currentX + 1270,
+                dir: 1, speed: 1.8 * state.difficulty
+            });
+            level.enemies.push({
+                x: currentX + 1500, y: groundY - 35, w: 40, h: 35,
+                type: 'wild_creature', creatureType: 'slime',
+                capturable: true, captureValue: 12,
+                patrolStart: currentX + 1400, patrolEnd: currentX + 1650,
+                dir: -1, speed: 1.5 * state.difficulty
+            });
+
+            // Méchants en ballon (apparaissent en haut, lâchent des obstacles)
+            level.enemies.push({
+                x: currentX + 300, y: groundY - 350, w: 50, h: 60,
+                type: 'balloon_villain', uncapturable: true,
+                patrolStart: currentX + 200, patrolEnd: currentX + 500,
+                dir: 1, speed: 1.5, dropTimer: 0
+            });
+            level.enemies.push({
+                x: currentX + 900, y: groundY - 320, w: 50, h: 60,
+                type: 'balloon_villain', uncapturable: true,
+                patrolStart: currentX + 700, patrolEnd: currentX + 1100,
+                dir: -1, speed: 1.8, dropTimer: 0
+            });
+            level.enemies.push({
+                x: currentX + 1400, y: groundY - 380, w: 50, h: 60,
+                type: 'balloon_villain', uncapturable: true,
+                patrolStart: currentX + 1250, patrolEnd: currentX + 1650,
+                dir: 1, speed: 1.3, dropTimer: 0
+            });
+
+            // Sphères de capture (pièces bonus)
+            for (let i = 0; i < 8; i++) {
+                level.coins.push({
+                    x: currentX + 120 + i * 200,
+                    y: groundY - 50 - (i % 3) * 40,
+                    w: 20, h: 20, pokeBall: true
+                });
+            }
+
+            // Power-up super saut
+            level.powerups.push({ x: currentX + 850, y: groundY - 50, w: 35, h: 35, type: 'super_jump' });
+
+            currentX += 1800;
+
+            // Zone d'arrivée
+            level.platforms.push({ x: currentX, y: groundY, w: 300, h: unit * 2, type: 'poke_path' });
+
+            // But : Centre Pokémon
+            level.goal = { x: currentX + 150, y: groundY - 80, w: 70, h: 80, type: 'poke_center' };
+
+            // Void en dessous
+            level.hazards.push({ x: -1000, y: h + 100, w: 10000, h: 100, type: 'void' });
+
+            return level;
+        }
     }
 };
 
