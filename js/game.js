@@ -649,7 +649,7 @@ function startGame(difficulty) {
 
     // Difficultés nettement différenciées (ajout du mode TRÈS FACILE !)
     if (difficulty === 'very_easy') {
-        state.difficulty = 0.4;  // Très facile : ennemis très très lents
+        state.difficulty = 0.3;  // Très facile : ennemis ultra lents
         state.lives = 10;        // 10 vies !
         state.companion.enabled = true;
     } else if (difficulty === 'easy') {
@@ -1877,6 +1877,8 @@ function checkCollisions() {
     // Dangers
     if (state.invincibilityTimer === 0) {
         // Barres de feu
+        const isVeryEasy = state.difficulty <= 0.5;
+
         for (const fb of currentLevelData.fireBars) {
             const endX = fb.cx + Math.cos(fb.angle) * fb.length;
             const endY = fb.cy + Math.sin(fb.angle) * fb.length;
@@ -1887,7 +1889,9 @@ function checkCollisions() {
                 
                 if (px > player.x && px < player.x + player.w &&
                     py > player.y && py < player.y + player.h) {
-                    takeDamage("Brûlé !");
+                    if (!isVeryEasy) {
+                        takeDamage("Brûlé !");
+                    }
                     break;
                 }
             }
@@ -1896,7 +1900,9 @@ function checkCollisions() {
         // Projectiles
         for (let i = currentLevelData.projectiles.length - 1; i >= 0; i--) {
             if (checkCollision(player, currentLevelData.projectiles[i])) {
-                takeDamage("Touché !");
+                if (!isVeryEasy) {
+                    takeDamage("Touché !");
+                }
                 currentLevelData.projectiles.splice(i, 1);
             }
         }
@@ -1916,7 +1922,9 @@ function checkCollisions() {
                     }
                     return; // Important : sortir après respawn
                 } else {
-                    takeDamage("Aïe !");
+                    if (!isVeryEasy) {
+                        takeDamage("Aïe !");
+                    }
                 }
             }
         }
@@ -1927,6 +1935,9 @@ function checkCollisions() {
             // Snorlax : bloque le passage sans faire de dégâts (il dort !)
             if (e.type === 'snorlax' && !e.awakened) {
                 if (checkCollision(player, e, 0)) {
+                    if (isVeryEasy) {
+                        continue;
+                    }
                     // Repousser le joueur
                     if (player.x + player.w / 2 < e.x + e.w / 2) {
                         player.x = e.x - player.w - 2;
@@ -1946,12 +1957,18 @@ function checkCollisions() {
             if (e.type === 'wild_creature' && e.capturable) {
                 // Les créatures capturables ne font que repousser légèrement
                 if (checkCollision(player, e, tolerance)) {
+                    if (isVeryEasy) {
+                        continue;
+                    }
                     player.vx = player.x < e.x ? -5 : 5;
                     player.vy = -3;
                 }
                 continue;
             }
             if (checkCollision(player, e, tolerance)) {
+                if (isVeryEasy) {
+                    continue;
+                }
                 takeDamage("Monstre !");
             }
         }
