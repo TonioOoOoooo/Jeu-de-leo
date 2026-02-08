@@ -386,17 +386,48 @@
             <!-- Bouton SAUT géant (droite) -->
             <div id="jump-zone">
                 <div class="btn" id="btn-jump">🦘</div>
+                <div class="btn" id="btn-poke-shoot" style="display:none; position:absolute; top:-70px; right:10px; width:50px; height:50px; font-size:24px; background:rgba(231,76,60,0.7); border-radius:50%; line-height:50px; text-align:center;">💥</div>
             </div>
         </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
+    <!-- Companion Selection Screen (Niveau 13 - Pokémon) -->
+    <div id="pokemon-companion-select" class="screen" style="display: none; background: linear-gradient(135deg, #2d3436 0%, #000000 100%);">
+        <h2 style="font-size: 36px; color: #f1c40f; margin: 0;">Choisis ton compagnon !</h2>
+        <p style="color: rgba(255,255,255,0.7); font-size: 16px; margin: 5px 0 15px;">Chaque compagnon a un pouvoir différent</p>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 700px;">
+            <button class="poke-companion-btn" data-poke-type="electric" style="background: linear-gradient(135deg, #f1c40f, #f39c12); border: 3px solid #d4ac0d; border-radius: 15px; padding: 15px 20px; min-width: 140px; cursor: pointer; color: #333; font-family: inherit; font-size: 14px;">
+                <div style="font-size: 36px;">⚡</div>
+                <div style="font-weight: bold; font-size: 18px;">Éclair</div>
+                <div style="font-size: 12px; margin-top: 5px;">Tir rapide en ligne droite</div>
+            </button>
+            <button class="poke-companion-btn" data-poke-type="fire" style="background: linear-gradient(135deg, #e74c3c, #c0392b); border: 3px solid #a93226; border-radius: 15px; padding: 15px 20px; min-width: 140px; cursor: pointer; color: white; font-family: inherit; font-size: 14px;">
+                <div style="font-size: 36px;">🔥</div>
+                <div style="font-weight: bold; font-size: 18px;">Flamme</div>
+                <div style="font-size: 12px; margin-top: 5px;">Portée courte, détruit le bois</div>
+            </button>
+            <button class="poke-companion-btn" data-poke-type="water" style="background: linear-gradient(135deg, #3498db, #2980b9); border: 3px solid #2471a3; border-radius: 15px; padding: 15px 20px; min-width: 140px; cursor: pointer; color: white; font-family: inherit; font-size: 14px;">
+                <div style="font-size: 36px;">💧</div>
+                <div style="font-weight: bold; font-size: 18px;">Bulle</div>
+                <div style="font-size: 12px; margin-top: 5px;">Repousse les ennemis</div>
+            </button>
+            <button class="poke-companion-btn" data-poke-type="plant" style="background: linear-gradient(135deg, #2ecc71, #27ae60); border: 3px solid #1e8449; border-radius: 15px; padding: 15px 20px; min-width: 140px; cursor: pointer; color: white; font-family: inherit; font-size: 14px;">
+                <div style="font-size: 36px;">🌿</div>
+                <div style="font-weight: bold; font-size: 18px;">Feuille</div>
+                <div style="font-size: 12px; margin-top: 5px;">Attire les collectibles</div>
+            </button>
+        </div>
+        <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 15px;">Touche E ou X pour tirer pendant le niveau</p>
+    </div>
+
     <!-- Scripts dans l'ordre de dépendance -->
     <script src="js/config.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/particles.js"></script>
     <script src="js/hero-sprites.js"></script>
+    <script src="js/pokemon-companion.js"></script>
     <script src="js/player.js"></script>
     <script src="js/fruity-frank.js"></script>
     <script src="js/levels.js"></script>

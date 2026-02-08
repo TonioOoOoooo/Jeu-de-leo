@@ -449,6 +449,21 @@ function setupJumpButton() {
     jumpBtn.addEventListener('mousedown', handleJumpStart);
     jumpBtn.addEventListener('mouseup', handleJumpEnd);
     jumpBtn.addEventListener('mouseleave', handleJumpEnd);
+
+    // Bouton tir Pokémon (mobile)
+    const pokeShootBtn = document.getElementById('btn-poke-shoot');
+    if (pokeShootBtn) {
+        function handlePokeShoot(e) {
+            e.preventDefault();
+            if (state.level === 13 && state.current === GameState.PLAYING) {
+                if (typeof fireCompanionProjectile === 'function' && typeof CompanionState !== 'undefined' && CompanionState.config) {
+                    fireCompanionProjectile(player.x + player.w / 2, player.y + player.h / 2, player.facingRight);
+                }
+            }
+        }
+        pokeShootBtn.addEventListener('touchstart', handlePokeShoot, { passive: false });
+        pokeShootBtn.addEventListener('mousedown', handlePokeShoot);
+    }
 }
 
 // ===== FEEDBACK HAPTIQUE =====
@@ -490,6 +505,13 @@ function handleKey(e, pressed) {
     if (k === 'z' || k === 'arrowright' || k === 'd') keys.right = pressed;
     if (k === 'arrowup' || k === 'w') keys.up = pressed;
     if (k === 'arrowdown' || k === 's') keys.down = pressed;
+
+    // Niveau 13 : Tir du compagnon Pokémon (touche E ou X)
+    if (pressed && (k === 'e' || k === 'x') && state.level === 13 && state.current === GameState.PLAYING) {
+        if (typeof fireCompanionProjectile === 'function' && typeof CompanionState !== 'undefined' && CompanionState.config) {
+            fireCompanionProjectile(player.x + player.w / 2, player.y + player.h / 2, player.facingRight);
+        }
+    }
     
     // Saut avec ESPACE ou FLÈCHE HAUT
     if (pressed && (k === ' ' || code === 'Space' || k === 'arrowup')) {
@@ -548,8 +570,8 @@ function handleKey(e, pressed) {
 }
 
 function jumpToLevel(targetLevel) {
-    // Permettre le niveau bonus (12 Fruity Frank)
-    const maxLevel = LEVELS[12] ? 12 : CONFIG.TOTAL_LEVELS;
+    // Permettre tous les niveaux définis (jusqu'au 13 Pokémon)
+    const maxLevel = LEVELS[13] ? 13 : LEVELS[12] ? 12 : CONFIG.TOTAL_LEVELS;
     const nextLevel = Math.max(1, Math.min(maxLevel, targetLevel));
     state.level = nextLevel;
     if (state.current === GameState.MENU) {
@@ -805,12 +827,39 @@ function initLevel(levelNum) {
         state.powerups.superJump = 99999; // Vol permanent pour ce niveau !
     }
 
+    // Niveau 13 (Pokémon) : Afficher sélection compagnon si pas encore choisi
+    if (levelNum === 13 && levelDef.pokemonLevel) {
+        state.hasFlute = false; // Reset flûte
+        if (typeof CompanionState !== 'undefined' && !CompanionState.config) {
+            // Afficher l'écran de sélection
+            if (typeof showPokemonCompanionSelection === 'function') {
+                showPokemonCompanionSelection();
+            } else {
+                // Fallback : sélectionner électrique par défaut
+                if (typeof selectCompanion === 'function') selectCompanion('electric');
+            }
+        }
+        // Réinitialiser la position du compagnon
+        if (typeof CompanionState !== 'undefined') {
+            CompanionState.projectiles = [];
+            CompanionState.cooldown = 0;
+            CompanionState.companionX = player.x - 30;
+            CompanionState.companionY = player.y - 10;
+        }
+    }
+
     ParticleSystem.clear();
-    
+
     // UI
     document.getElementById('key-display').style.display = 'none';
     document.getElementById('level-display').textContent = `NIVEAU ${levelNum}`;
     document.body.style.backgroundColor = levelDef.bgColor;
+
+    // Bouton tir Pokémon mobile (visible uniquement niveau 13)
+    const pokeShootBtn = document.getElementById('btn-poke-shoot');
+    if (pokeShootBtn) {
+        pokeShootBtn.style.display = (levelNum === 13) ? 'block' : 'none';
+    }
     
     updateCoinsDisplay();
     updateHud();
@@ -927,7 +976,31 @@ function update() {
     updatePlayer();
     updateCheckpoint(); // Sauvegarder automatiquement la position du joueur
     checkCollisions();
-    
+
+    // Niveau 13 : Mise à jour du compagnon Pokémon
+    if (state.level === 13 && typeof CompanionState !== 'undefined' && CompanionState.config) {
+        if (typeof updateCompanionPosition === 'function') {
+            updateCompanionPosition(player.x, player.y, player.facingRight);
+        }
+        if (typeof updateCompanionProjectiles === 'function') {
+            updateCompanionProjectiles();
+        }
+        if (typeof checkCompanionProjectileCollisions === 'function' && currentLevelData) {
+            checkCompanionProjectileCollisions(currentLevelData.enemies, currentLevelData.coins);
+        }
+        // Snorlax : décrémenter le timer d'éveil et retirer s'il a disparu
+        for (let i = currentLevelData.enemies.length - 1; i >= 0; i--) {
+            const e = currentLevelData.enemies[i];
+            if (e.type === 'snorlax' && e.awakened) {
+                if (e.awakeTimer > 0) {
+                    e.awakeTimer--;
+                } else {
+                    currentLevelData.enemies.splice(i, 1);
+                }
+            }
+        }
+    }
+
     ParticleSystem.update();
     updateJumpIndicator();
 }
@@ -1546,6 +1619,24 @@ function checkCollisions() {
         }
 
         if (checkCollision(player, c)) {
+            // Flûte Pokémon (niveau 13) : active le Snorlax
+            if (c.isFlute && state.level === 13) {
+                currentLevelData.coins.splice(i, 1);
+                state.hasFlute = true;
+                AudioSystem.play('poke_flute');
+                ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'sparkle', 20);
+                showMessage('FLÛTE TROUVÉE !', 'Approche-toi de la créature endormie !', 2500);
+                // Réveiller le Snorlax automatiquement
+                if (currentLevelData.enemies) {
+                    for (const e of currentLevelData.enemies) {
+                        if (e.type === 'snorlax' && !e.awakened) {
+                            if (typeof activateFlute === 'function') activateFlute(e);
+                        }
+                    }
+                }
+                continue;
+            }
+
             currentLevelData.coins.splice(i, 1);
             const coinValue = c.value || 1; // Pièces secrètes peuvent valoir plus !
             state.coins += coinValue;
@@ -1558,6 +1649,13 @@ function checkCollisions() {
                 ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 20);
                 showMessage('💎 SECRET !', `+${coinValue} pièces !`, 1500);
                 hapticFeedback('success');
+            } else if (c.badge) {
+                AudioSystem.play('powerup');
+                ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'sparkle', 15);
+                showMessage('BADGE !', `+${coinValue} points !`, 1200);
+            } else if (c.pokeBall) {
+                AudioSystem.play('poke_capture');
+                ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'sparkle', 10);
             } else {
                 AudioSystem.play('coin');
                 ParticleSystem.emit(c.x + c.w/2, c.y + c.h/2, 'coin', 8);
@@ -1629,7 +1727,13 @@ function checkCollisions() {
         const p = currentLevelData.powerups[i];
         if (checkCollision(player, p)) {
             currentLevelData.powerups.splice(i, 1);
-            collectPowerup(p.type);
+            // Bonbon rare Pokémon = invincibilité étoile
+            if (p.rareCandy) {
+                collectPowerup('star');
+                showMessage('BONBON RARE !', 'Invincibilité temporaire !', 2000);
+            } else {
+                collectPowerup(p.type);
+            }
         }
     }
     
@@ -1820,6 +1924,33 @@ function checkCollisions() {
         // Ennemis (hitbox plus tolérante en mode facile)
         const tolerance = state.difficulty <= 0.7 ? 15 : state.difficulty <= 1.2 ? 5 : 0;
         for (const e of currentLevelData.enemies) {
+            // Snorlax : bloque le passage sans faire de dégâts (il dort !)
+            if (e.type === 'snorlax' && !e.awakened) {
+                if (checkCollision(player, e, 0)) {
+                    // Repousser le joueur
+                    if (player.x + player.w / 2 < e.x + e.w / 2) {
+                        player.x = e.x - player.w - 2;
+                    } else {
+                        player.x = e.x + e.w + 2;
+                    }
+                    player.vx = 0;
+                    if (state.frameTick % 120 === 0) {
+                        showMessage('ZZZ...', 'Cette créature dort ! Trouve la flûte !', 2000);
+                    }
+                }
+                continue;
+            }
+            // Créatures capturées ou Snorlax éveillé : pas de collision
+            if (e.captured || (e.type === 'snorlax' && e.awakened)) continue;
+            // Créatures sauvages : dégâts seulement si non capturables (ou si contact direct)
+            if (e.type === 'wild_creature' && e.capturable) {
+                // Les créatures capturables ne font que repousser légèrement
+                if (checkCollision(player, e, tolerance)) {
+                    player.vx = player.x < e.x ? -5 : 5;
+                    player.vy = -3;
+                }
+                continue;
+            }
             if (checkCollision(player, e, tolerance)) {
                 takeDamage("Monstre !");
             }

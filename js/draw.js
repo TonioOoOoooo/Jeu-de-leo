@@ -55,8 +55,8 @@ function draw() {
         return;
     }
     
-    // Arrière-plan amélioré pour tous les niveaux 1-12
-    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    // Arrière-plan amélioré pour tous les niveaux 1-13
+    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     const { camX, camY } = getCameraOffset();
     if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
@@ -137,8 +137,16 @@ function draw() {
     // Joueur
     player.draw(ctx);
 
+    // Compagnon Pokémon (niveau 13)
+    if (state.level === 13 && typeof drawCompanion === 'function' && typeof CompanionState !== 'undefined' && CompanionState.config) {
+        drawCompanion(ctx);
+        if (typeof drawCompanionProjectiles === 'function') {
+            drawCompanionProjectiles(ctx);
+        }
+    }
+
     // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable, pétales sakura) pour tous les niveaux
-    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(state.level) && typeof drawEnhancedLevelForeground === 'function' && state.level !== 6) {
+    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(state.level) && typeof drawEnhancedLevelForeground === 'function' && state.level !== 6) {
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
 
@@ -237,20 +245,103 @@ function drawDecorations() {
             ctx.beginPath();
             ctx.arc(d.x + d.size/2, d.y + d.size/2, d.size/2, 0, Math.PI * 2);
             ctx.stroke();
-            
+
             // Damier intérieur
             ctx.strokeStyle = '#1a5276';
             ctx.lineWidth = 10;
             ctx.beginPath();
             ctx.arc(d.x + d.size/2, d.y + d.size/2, d.size/2, 0, Math.PI * 2);
             ctx.stroke();
-            
+
             // Reflets
             ctx.strokeStyle = 'rgba(255,255,255,0.3)';
             ctx.lineWidth = 5;
             ctx.beginPath();
             ctx.arc(d.x + d.size/2, d.y + d.size/2, d.size/2 - 10, Math.PI * 1.2, Math.PI * 1.8);
             ctx.stroke();
+        } else if (d.type === 'poke_fence') {
+            // Barrière de route Pokémon
+            ctx.fillStyle = '#8d6e63';
+            // Poteaux
+            ctx.fillRect(d.x, d.y, 6, 30);
+            ctx.fillRect(d.x + 54, d.y, 6, 30);
+            // Barres horizontales
+            ctx.fillStyle = '#a1887f';
+            ctx.fillRect(d.x, d.y + 5, 60, 5);
+            ctx.fillRect(d.x, d.y + 18, 60, 5);
+        } else if (d.type === 'poke_tree') {
+            // Arbre de route Pokémon
+            // Tronc
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(d.x + 15, d.y + 40, 20, 40);
+            // Feuillage (3 cercles)
+            ctx.fillStyle = '#2e7d32';
+            ctx.beginPath();
+            ctx.arc(d.x + 25, d.y + 20, 25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#388e3c';
+            ctx.beginPath();
+            ctx.arc(d.x + 12, d.y + 30, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(d.x + 38, d.y + 30, 18, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (d.type === 'poke_sign') {
+            // Panneau indicateur
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(d.x + 12, d.y + 20, 6, 20);
+            ctx.fillStyle = '#efebe9';
+            ctx.fillRect(d.x, d.y, 30, 22);
+            ctx.strokeStyle = '#795548';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(d.x, d.y, 30, 22);
+            if (d.text) {
+                ctx.fillStyle = '#333';
+                ctx.font = '8px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(d.text, d.x + 15, d.y + 14);
+                ctx.textAlign = 'left';
+            }
+        } else if (d.type === 'poke_gym_entrance') {
+            // Entrée du gymnase
+            ctx.fillStyle = '#b71c1c';
+            ctx.fillRect(d.x, d.y, 80, 100);
+            // Toit
+            ctx.fillStyle = '#d32f2f';
+            ctx.beginPath();
+            ctx.moveTo(d.x - 10, d.y);
+            ctx.lineTo(d.x + 40, d.y - 30);
+            ctx.lineTo(d.x + 90, d.y);
+            ctx.fill();
+            // Porte
+            ctx.fillStyle = '#1565c0';
+            ctx.fillRect(d.x + 25, d.y + 50, 30, 50);
+            // Symbole pokeball
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(d.x + 40, d.y + 30, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#d32f2f';
+            ctx.beginPath();
+            ctx.arc(d.x + 40, d.y + 30, 15, Math.PI, 0);
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(d.x + 25, d.y + 30);
+            ctx.lineTo(d.x + 55, d.y + 30);
+            ctx.stroke();
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(d.x + 40, d.y + 30, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            // Texte GYM
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('GYM', d.x + 40, d.y - 10);
+            ctx.textAlign = 'left';
         }
     }
 }
@@ -1121,6 +1212,109 @@ function drawPlatforms() {
                 ctx.shadowBlur = 0;
                 break;
 
+            // === POKÉMON NIVEAU 13 ===
+            case 'poke_path':
+                // Route de terre
+                ctx.fillStyle = '#d4a373';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#c8956e';
+                ctx.fillRect(p.x, p.y, p.w, 6);
+                // Bordure herbe
+                ctx.fillStyle = '#66bb6a';
+                ctx.fillRect(p.x, p.y - 3, p.w, 3);
+                // Texture terre
+                ctx.fillStyle = 'rgba(0,0,0,0.05)';
+                for (let tx = p.x; tx < p.x + p.w; tx += 30) {
+                    ctx.fillRect(tx + 5, p.y + 10, 8, 3);
+                    ctx.fillRect(tx + 15, p.y + 20, 6, 2);
+                }
+                break;
+
+            case 'poke_grass':
+                // Zone herbes hautes
+                ctx.fillStyle = '#4caf50';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#388e3c';
+                ctx.fillRect(p.x, p.y, p.w, 4);
+                // Herbes hautes animées
+                ctx.fillStyle = '#66bb6a';
+                for (let gx = p.x; gx < p.x + p.w; gx += 12) {
+                    const sway = Math.sin(state.frameTick * 0.05 + gx * 0.1) * 3;
+                    ctx.fillRect(gx + sway, p.y - 15, 3, 18);
+                    ctx.fillRect(gx + 6 - sway, p.y - 12, 3, 15);
+                }
+                // Exclamation marks aléatoires dans les herbes
+                if (Math.random() > 0.998) {
+                    ctx.fillStyle = '#f44336';
+                    ctx.font = 'bold 16px sans-serif';
+                    ctx.fillText('!', p.x + Math.random() * p.w, p.y - 20);
+                }
+                break;
+
+            case 'poke_platform':
+                // Plateforme roche
+                ctx.fillStyle = '#90a4ae';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#78909c';
+                ctx.fillRect(p.x, p.y, p.w, 4);
+                ctx.fillStyle = '#b0bec5';
+                ctx.fillRect(p.x + 2, p.y + 2, p.w - 4, 2);
+                break;
+
+            case 'poke_gym_floor':
+                // Sol de gymnase brillant
+                ctx.fillStyle = '#f5f5dc';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Lignes du parquet
+                ctx.strokeStyle = '#deb887';
+                ctx.lineWidth = 1;
+                for (let lx = p.x; lx < p.x + p.w; lx += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(lx, p.y);
+                    ctx.lineTo(lx, p.y + p.h);
+                    ctx.stroke();
+                }
+                // Bordure rouge
+                ctx.fillStyle = '#e53935';
+                ctx.fillRect(p.x, p.y, p.w, 5);
+                // Cercle central du gymnase
+                const gymCx = p.x + p.w / 2;
+                const gymCy = p.y + 30;
+                ctx.strokeStyle = 'rgba(229, 57, 53, 0.3)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(gymCx, gymCy, 80, 0, Math.PI * 2);
+                ctx.stroke();
+                // Pokeball au centre
+                ctx.beginPath();
+                ctx.arc(gymCx, gymCy, 20, 0, Math.PI * 2);
+                ctx.stroke();
+                break;
+
+            case 'poke_gym_platform':
+                // Plateforme de gym
+                ctx.fillStyle = '#e53935';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#ffcdd2';
+                ctx.fillRect(p.x + 2, p.y + 1, p.w - 4, 3);
+                ctx.fillStyle = '#b71c1c';
+                ctx.fillRect(p.x, p.y + p.h - 3, p.w, 3);
+                break;
+
+            case 'poke_safari':
+                // Zone safari - herbe courte verte
+                ctx.fillStyle = '#81c784';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.fillStyle = '#66bb6a';
+                ctx.fillRect(p.x, p.y, p.w, 5);
+                // Motif herbe courte
+                ctx.fillStyle = '#a5d6a7';
+                for (let sx = p.x; sx < p.x + p.w; sx += 20) {
+                    ctx.fillRect(sx, p.y - 5, 2, 8);
+                    ctx.fillRect(sx + 10, p.y - 3, 2, 6);
+                }
+                break;
+
             default:
                 // Plateformes améliorées pour niveaux 1-2
                 if (state.level <= 2 && typeof drawEnhancedGrassPlatform === 'function') {
@@ -1245,6 +1439,35 @@ function drawCoins() {
                 ctx.arc(c.x + c.w/2 + Math.cos(angle) * dist, c.y + c.h/2 + wobble + Math.sin(angle) * dist, 1, 0, Math.PI * 2);
                 ctx.fill();
             }
+        } else if (c.badge && typeof drawBadge === 'function') {
+            // Badge Pokémon (Niveau 13 - Zone B)
+            drawBadge(ctx, c, state.frameTick);
+        } else if (c.pokeBall && typeof drawCaptureSphere === 'function') {
+            // Sphère de capture (Niveau 13)
+            drawCaptureSphere(ctx, c, state.frameTick);
+        } else if (c.isFlute) {
+            // Flûte cachée (Niveau 13 - Zone A)
+            const glow = Math.sin(state.frameTick * 0.1) * 0.3 + 0.7;
+            ctx.save();
+            ctx.globalAlpha = glow;
+            ctx.fillStyle = '#8d6e63';
+            ctx.fillRect(c.x + 2, c.y + wobble + 3, c.w - 4, 8);
+            ctx.fillStyle = '#a1887f';
+            ctx.fillRect(c.x + 2, c.y + wobble + 3, c.w - 4, 3);
+            // Trous
+            ctx.fillStyle = '#5d4037';
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.arc(c.x + 6 + i * 5, c.y + wobble + 8, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            // Halo
+            ctx.strokeStyle = `rgba(255, 215, 0, ${glow * 0.5})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(c.x + c.w / 2, c.y + c.h / 2 + wobble, 16, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
         } else if (c.secret) {
             // Pièce secrète spéciale !
             const pulse = Math.sin(state.frameTick * 0.15) * 0.2 + 1;
@@ -2046,6 +2269,28 @@ function drawEnemies() {
                     ctx.fill();
                 }
                 break;
+
+            // ============================================================
+            // CRÉATURES POKÉMON - NIVEAU 13
+            // ============================================================
+
+            case 'wild_creature':
+                if (typeof drawWildCreature === 'function') {
+                    drawWildCreature(ctx, e, state.frameTick);
+                }
+                break;
+
+            case 'snorlax':
+                if (typeof drawSnorlax === 'function') {
+                    drawSnorlax(ctx, e, state.frameTick);
+                }
+                break;
+
+            case 'balloon_villain':
+                if (typeof drawBalloonVillain === 'function') {
+                    drawBalloonVillain(ctx, e, state.frameTick);
+                }
+                break;
         }
     }
 }
@@ -2312,6 +2557,39 @@ function drawGoal() {
             ctx.textAlign = 'left';
             break;
 
+        case 'poke_center':
+            // Centre Pokémon (but du niveau 13)
+            const pcPulse = Math.sin(state.frameTick * 0.08) * 0.15 + 1;
+            // Bâtiment
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(g.x, g.y, g.w, g.h);
+            // Toit rouge
+            ctx.fillStyle = '#e53935';
+            ctx.beginPath();
+            ctx.moveTo(g.x - 10, g.y);
+            ctx.lineTo(g.x + g.w / 2, g.y - 25);
+            ctx.lineTo(g.x + g.w + 10, g.y);
+            ctx.fill();
+            // Porte
+            ctx.fillStyle = '#1565c0';
+            ctx.fillRect(g.x + g.w / 2 - 12, g.y + g.h - 40, 24, 40);
+            // Croix rouge (symbole)
+            ctx.fillStyle = '#e53935';
+            ctx.fillRect(g.x + g.w / 2 - 15, g.y + 15, 30, 8);
+            ctx.fillRect(g.x + g.w / 2 - 4, g.y + 4, 8, 30);
+            // Halo accueillant
+            ctx.fillStyle = `rgba(229, 57, 53, ${0.15 * pcPulse})`;
+            ctx.beginPath();
+            ctx.arc(g.x + g.w / 2, g.y + g.h / 2, 50, 0, Math.PI * 2);
+            ctx.fill();
+            // Texte
+            ctx.fillStyle = '#c62828';
+            ctx.font = 'bold 8px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('P', g.x + g.w / 2, g.y + 12);
+            ctx.textAlign = 'left';
+            break;
+
         default:
             // Porte standard
             ctx.fillStyle = "#f1c40f";
@@ -2350,6 +2628,12 @@ function drawGoal() {
 
 function drawPowerups() {
     for (const p of currentLevelData.powerups) {
+        // Bonbon rare Pokémon (Niveau 13)
+        if (p.rareCandy && typeof drawRareCandy === 'function') {
+            drawRareCandy(ctx, p, state.frameTick);
+            continue;
+        }
+
         const float = Math.sin(state.frameTick * 0.1 + p.x) * 5;
         const glow = 0.3 + Math.sin(state.frameTick * 0.15) * 0.2;
 

@@ -161,7 +161,7 @@ function levelWin() {
     document.getElementById('msg-title').style.color = isFinalLevel ? "gold" : "#27ae60";
 
     document.getElementById('msg-text').textContent =
-        isFinalLevel ? "Tu as vaincu le boss et terminé le jeu !" : starMessages[stars];
+        isFinalLevel ? "Tu as terminé toute l'aventure ! Bravo !" : starMessages[stars];
 
     const starsDisplay = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
     const perfectMessage = perfectCoinsBonus ? '\n💚 100% DES PIÈCES ! +1 VIE !' : '';
@@ -798,6 +798,41 @@ function closeSummaryAndShowHallOfFame() {
     showHallOfFame();
 }
 
+// ===== SÉLECTION COMPAGNON POKÉMON (Niveau 13) =====
+function showPokemonCompanionSelection() {
+    const screen = document.getElementById('pokemon-companion-select');
+    if (!screen) {
+        // Fallback si pas d'écran HTML
+        if (typeof selectCompanion === 'function') selectCompanion('electric');
+        return;
+    }
+
+    // Pause le jeu pendant la sélection
+    state.current = GameState.PAUSED;
+    screen.style.display = 'flex';
+    screen.style.opacity = '1';
+
+    // Attacher les listeners sur les boutons
+    const buttons = screen.querySelectorAll('.poke-companion-btn');
+    buttons.forEach(btn => {
+        // Retirer les anciens listeners en clonant
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+
+        newBtn.addEventListener('click', () => {
+            const type = newBtn.dataset.pokeType;
+            if (typeof selectCompanion === 'function') {
+                selectCompanion(type);
+            }
+            screen.style.display = 'none';
+            state.current = GameState.PLAYING;
+            state.lastTime = 0;
+            AudioSystem.play('powerup');
+            showMessage('COMPAGNON CHOISI !', `${COMPANION_TYPES[type].icon} ${COMPANION_TYPES[type].name} est avec toi !`, 2000);
+        });
+    });
+}
+
 // ===== EXPORTS GLOBAUX =====
 window.startGame = startGame;
 window.continueSavedGame = continueSavedGame;
@@ -815,3 +850,4 @@ window.closeSettings = closeSettings;
 window.submitHallOfFame = submitHallOfFame;
 window.returnToMenu = returnToMenu;
 window.closeSummaryAndShowHallOfFame = closeSummaryAndShowHallOfFame;
+window.showPokemonCompanionSelection = showPokemonCompanionSelection;

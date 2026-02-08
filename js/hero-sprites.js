@@ -1406,6 +1406,93 @@ function drawHeroMiyazakiGirl(ctx, p) {
     }
 }
 
+// ===== NIVEAU 13 : DRESSEUR POKÉMON =====
+function drawHeroPokemonTrainer(ctx, p) {
+    const cx = p.x + p.w / 2;
+    const armSwing = Math.sin(p.animFrame * 0.3) * (Math.abs(p.vx) > 0.5 ? 15 : 3);
+    const legSwing = Math.sin(p.animFrame * 0.3) * (Math.abs(p.vx) > 0.5 ? 10 : 0);
+
+    // Jambes (pantalon bleu)
+    ctx.fillStyle = '#2980b9';
+    ctx.fillRect(p.x + 6, p.y + p.h - 18 + legSwing, 7, 14);
+    ctx.fillRect(p.x + p.w - 13, p.y + p.h - 18 - legSwing, 7, 14);
+
+    // Chaussures rouges
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillRect(p.x + 4, p.y + p.h - 6, 10, 6);
+    ctx.fillRect(p.x + p.w - 14, p.y + p.h - 6, 10, 6);
+
+    // Corps (veste rouge/noire)
+    ctx.fillStyle = '#c0392b';
+    ctx.fillRect(p.x + 5, p.y + 16, p.w - 10, 18);
+    // Bande noire veste
+    ctx.fillStyle = '#2d3436';
+    ctx.fillRect(p.x + p.w / 2 - 2, p.y + 16, 4, 18);
+
+    // Bras
+    ctx.fillStyle = '#c0392b';
+    ctx.save();
+    ctx.translate(p.x + 4, p.y + 18);
+    ctx.rotate((-15 + armSwing) * Math.PI / 180);
+    ctx.fillRect(-3, 0, 6, 14);
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(p.x + p.w - 4, p.y + 18);
+    ctx.rotate((15 - armSwing) * Math.PI / 180);
+    ctx.fillRect(-3, 0, 6, 14);
+    ctx.restore();
+
+    // Tête (peau)
+    ctx.fillStyle = '#fad7a0';
+    ctx.beginPath();
+    ctx.arc(cx, p.y + 12, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cheveux noirs
+    ctx.fillStyle = '#2d3436';
+    ctx.beginPath();
+    ctx.arc(cx, p.y + 9, 10, Math.PI, 0);
+    ctx.fill();
+
+    // Casquette rouge
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.ellipse(cx, p.y + 6, 12, 5, 0, Math.PI, 0);
+    ctx.fill();
+    // Visière
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath();
+    ctx.ellipse(cx + (p.facingRight ? 6 : -6), p.y + 6, 10, 3, p.facingRight ? 0.2 : -0.2, 0, Math.PI);
+    ctx.fill();
+    // Logo casquette
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 6px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('P', cx, p.y + 5);
+
+    // Yeux
+    ctx.fillStyle = '#2d3436';
+    ctx.beginPath();
+    ctx.arc(cx - 4, p.y + 12, 1.8, 0, Math.PI * 2);
+    ctx.arc(cx + 4, p.y + 12, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bouche
+    ctx.strokeStyle = '#e17055';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, p.y + 16, 3, 0, Math.PI);
+    ctx.stroke();
+
+    // Sac à dos
+    ctx.fillStyle = '#f39c12';
+    ctx.fillRect(p.facingRight ? p.x : p.x + p.w - 8, p.y + 18, 8, 12);
+    ctx.strokeStyle = '#e67e22';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(p.facingRight ? p.x : p.x + p.w - 8, p.y + 18, 8, 12);
+}
+
 // ===== DISPATCHER : Choisir le héros selon le niveau =====
 function drawHeroForLevel(ctx, p, level) {
     switch(level) {
@@ -1442,6 +1529,11 @@ function drawHeroForLevel(ctx, p, level) {
             break;
         case 12:
             // Fruity Frank (bonus) : utilise Léo par défaut
+            drawHeroLeo(ctx, p);
+            break;
+        case 13:
+            drawHeroPokemonTrainer(ctx, p);
+            break;
         default:
             // Par défaut : Léo (petit garçon)
             drawHeroLeo(ctx, p);
