@@ -860,6 +860,12 @@ function initLevel(levelNum) {
         }
     }
 
+    // Geometry Dash : invincibilité de départ (2 secondes)
+    if (levelDef.geometryDashLevel) {
+        state.invincibilityTimer = 120; // 2s à 60fps
+        player.gdRotation = 0;
+    }
+
     ParticleSystem.clear();
 
     // UI
@@ -1239,13 +1245,20 @@ function updateGeometryDashPlayer() {
                 }
             }
 
-            // Obstacle GD : collision latérale = mort
+            // Obstacle GD : collision latérale = mort (sauf si invincible)
             if (p.type === 'gd_obstacle') {
                 const playerRight = player.x + player.w;
                 const playerBottom = player.y + player.h;
                 // Collision par le côté (le joueur fonce dedans)
                 if (playerRight > p.x && player.x < p.x + 10 &&
                     playerBottom > p.y + 5 && player.y < p.y + p.h - 5) {
+                    // Protégé par invincibilité ou power-up ?
+                    if (state.invincibilityTimer > 0 || state.powerups.star > 0 || state.powerups.shield > 0) {
+                        // Passer par-dessus l'obstacle
+                        player.vy = -14;
+                        player.y = p.y - player.h - 5;
+                        continue;
+                    }
                     // Mort ! Le joueur s'écrase contre le bloc
                     state.lives--;
                     updateHud();
@@ -2069,7 +2082,10 @@ function checkCollisions() {
                     }
                     return; // Important : sortir après respawn
                 } else if (h.type === 'gd_spike') {
-                    // Geometry Dash spike = mort instantanée + respawn
+                    // Geometry Dash spike : respecter l'invincibilité !
+                    if (state.invincibilityTimer > 0 || state.powerups.star > 0 || state.powerups.shield > 0) {
+                        continue; // Protégé !
+                    }
                     state.lives--;
                     updateHud();
                     AudioSystem.play('hurt');
@@ -2201,16 +2217,42 @@ function respawnPlayer() {
     // Utiliser le checkpoint si disponible ET sécurisé, sinon position de départ
     let spawnPos;
     const levelStart = LEVELS[state.level].playerStart;
+    const isGD = LEVELS[state.level] && LEVELS[state.level].geometryDashLevel;
 
     // Vérifier si le checkpoint est valide et sécurisé
     if (state.lastCheckpoint && isPositionSafe(state.lastCheckpoint.x, state.lastCheckpoint.y)) {
-        spawnPos = state.lastCheckpoint;
-        showMessage('🔄 CHECKPOINT', 'Tu reprends près d\'ici !', 1500);
+        spawnPos = { x: state.lastCheckpoint.x, y: state.lastCheckpoint.y };
+
+        // GD : reculer le spawn de 80px pour éviter les obstacles juste devant
+        if (isGD) {
+            spawnPos.x = Math.max(levelStart.x, spawnPos.x - 80);
+            // Vérifier que la position reculée est sur une plateforme
+            let onPlatform = false;
+            for (const p of currentLevelData.platforms) {
+                if (p.type === 'gd_jump_pad') continue;
+                if (spawnPos.x + player.w > p.x && spawnPos.x < p.x + p.w &&
+                    Math.abs((spawnPos.y + player.h) - p.y) < 20) {
+                    spawnPos.y = p.y - player.h;
+                    onPlatform = true;
+                    break;
+                }
+            }
+            if (!onPlatform) {
+                spawnPos = { x: levelStart.x, y: levelStart.y };
+            }
+            showGDToast('CHECKPOINT');
+        } else {
+            showMessage('🔄 CHECKPOINT', 'Tu reprends près d\'ici !', 1500);
+        }
     } else {
         // Checkpoint invalide ou dangereux, retour au début du niveau
-        spawnPos = levelStart;
+        spawnPos = { x: levelStart.x, y: levelStart.y };
         state.lastCheckpoint = { x: levelStart.x, y: levelStart.y }; // Reset le checkpoint
-        showMessage('🔄 DÉBUT', 'On recommence au début !', 1500);
+        if (isGD) {
+            showGDToast('DÉBUT');
+        } else {
+            showMessage('🔄 DÉBUT', 'On recommence au début !', 1500);
+        }
     }
 
     // Reset complet du joueur
@@ -2222,12 +2264,17 @@ function respawnPlayer() {
     player.climbing = false;
     player.jumpCount = 0;
     player.currentPlatform = null;
+    player.gdRotation = 0;
 
     // Reset les touches pour éviter les mouvements bloqués
     resetKeys();
 
-    // Invincibilité plus longue pour laisser le temps de se remettre
-    state.invincibilityTimer = state.difficulty <= 0.5 ? 180 : state.difficulty <= 0.7 ? 150 : 120;
+    // Invincibilité : 2 secondes pour GD (120 frames), sinon selon difficulté
+    if (isGD) {
+        state.invincibilityTimer = 120; // 2 secondes à 60fps
+    } else {
+        state.invincibilityTimer = state.difficulty <= 0.5 ? 180 : state.difficulty <= 0.7 ? 150 : 120;
+    }
 
     // Particules au respawn
     ParticleSystem.emit(player.x + player.w/2, player.y + player.h/2, 'sparkle', 20);
@@ -2291,6 +2338,41 @@ function showMessage(title, text, duration) {
         notif.style.opacity = '0';
         setTimeout(() => notif.remove(), 500);
     }, duration);
+}
+
+// ===== TOAST NOTIFICATION GD (discret) =====
+function showGDToast(text) {
+    // Supprimer les anciens toasts GD
+    document.querySelectorAll('.gd-toast').forEach(t => t.remove());
+
+    const toast = document.createElement('div');
+    toast.className = 'gd-toast';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 200, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 6px 20px;
+        border-radius: 15px;
+        border: 1px solid rgba(0, 200, 255, 0.4);
+        font-family: 'Patrick Hand', cursive;
+        font-size: 14px;
+        z-index: 40;
+        pointer-events: none;
+        backdrop-filter: blur(4px);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    `;
+    toast.textContent = text;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+    }, 1500);
 }
 
 // ===== SYSTÈME DE COMPAGNON VIRTUEL =====

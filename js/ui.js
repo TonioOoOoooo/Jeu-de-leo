@@ -94,6 +94,10 @@ function levelWin() {
     state.current = GameState.TRANSITIONING;
     AudioSystem.play('victory');
 
+    // Supprimer les notifications flottantes
+    document.querySelectorAll('.gd-toast').forEach(t => t.remove());
+    document.querySelectorAll('[style*="pointer-events: none"][style*="z-index: 50"]').forEach(n => n.remove());
+
     // 🎁 BONUS VIE SI 100% DES PIÈCES COLLECTÉES !
     let perfectCoinsBonus = false;
     if (state.maxCoinsInLevel > 0 && state.coins === state.maxCoinsInLevel) {
@@ -213,6 +217,10 @@ function gameOver(reason) {
     state.screenShake = 0;
     AudioSystem.play('death');
 
+    // Supprimer toutes les notifications flottantes pour éviter la superposition
+    document.querySelectorAll('.gd-toast').forEach(t => t.remove());
+    document.querySelectorAll('[style*="pointer-events: none"][style*="z-index: 50"]').forEach(n => n.remove());
+
     document.getElementById('msg-title').textContent = "💀 GAME OVER";
     document.getElementById('msg-title').style.color = "#e74c3c";
     document.getElementById('msg-text').textContent = reason || "Plus de vies...";
@@ -304,6 +312,9 @@ function showHallOfFame() {
     const screen = document.getElementById('hall-of-fame');
     const messageBox = document.getElementById('message-box');
     if (messageBox) messageBox.style.display = 'none';
+    // Supprimer toutes les notifications flottantes
+    document.querySelectorAll('.gd-toast').forEach(t => t.remove());
+    document.querySelectorAll('[style*="pointer-events: none"][style*="z-index: 50"]').forEach(n => n.remove());
     if (!screen) return;
 
     const score = calculateFinalScore();
