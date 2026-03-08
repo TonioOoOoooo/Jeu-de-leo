@@ -2631,6 +2631,323 @@ const LEVELS = {
             return level;
         }
     }
+    ,
+    // ============================================================
+    // NIVEAU 14 : GEOMETRY DASH - Auto-Runner
+    // ============================================================
+    14: {
+        name: "Geometry Dash",
+        bgColor: "#0a0a2e",
+        playerStart: { x: 120, y: 300 },
+        needsKey: false,
+        geometryDashLevel: true,
+        setup: (w, h) => {
+            const level = createEmptyLevel();
+            const groundY = h - 80;
+            const unit = 50; // Taille d'un bloc GD
+
+            // ===== CONFIGURATION AUTO-RUNNER =====
+            level.gdSpeed = 7; // Vitesse de défilement
+            level.gdGroundY = groundY;
+
+            // ===== SOL DE BASE (très long) =====
+            // On va construire le niveau segment par segment
+            let x = 0;
+
+            // --- SECTION 1 : INTRO (apprendre à sauter) ---
+            // Sol de départ
+            level.platforms.push({ x: x, y: groundY, w: 600, h: 200, type: 'gd_block' });
+
+            // Pièces d'intro (en arc)
+            for (let i = 0; i < 5; i++) {
+                const arcH = Math.sin((i / 4) * Math.PI) * 40;
+                level.coins.push({ x: x + 200 + i * 50, y: groundY - 60 - arcH, w: 20, h: 20 });
+            }
+
+            // Premier spike simple
+            level.hazards.push({ x: x + 500, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+
+            x += 600;
+            // Petit gap
+            x += 80;
+
+            // --- SECTION 2 : PREMIERS SAUTS ---
+            level.platforms.push({ x: x, y: groundY, w: 400, h: 200, type: 'gd_block' });
+            // Double spike
+            level.hazards.push({ x: x + 50, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+            level.hazards.push({ x: x + 80, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+            // Pièces
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: x + 50 + i * 35, y: groundY - 80, w: 20, h: 20 });
+            }
+
+            // Plateforme surélevée avec pièces
+            level.platforms.push({ x: x + 200, y: groundY - 100, w: 100, h: 20, type: 'gd_block' });
+            for (let i = 0; i < 2; i++) {
+                level.coins.push({ x: x + 220 + i * 40, y: groundY - 140, w: 20, h: 20 });
+            }
+
+            // Spike après plateforme
+            level.hazards.push({ x: x + 330, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+
+            x += 400;
+            x += 100; // Gap
+
+            // --- SECTION 3 : RYTHME RAPIDE ---
+            level.platforms.push({ x: x, y: groundY, w: 800, h: 200, type: 'gd_block' });
+
+            // Série de spikes avec pièces entre
+            const spikePattern1 = [0, 120, 240, 360, 480];
+            for (let i = 0; i < spikePattern1.length; i++) {
+                level.hazards.push({ x: x + 60 + spikePattern1[i], y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+                if (i < spikePattern1.length - 1) {
+                    level.coins.push({ x: x + 60 + spikePattern1[i] + 55, y: groundY - 50, w: 20, h: 20 });
+                }
+            }
+
+            // Pièces en haut (secret)
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: x + 250 + i * 60, y: groundY - 180, w: 25, h: 25, value: 3, secret: true });
+            }
+
+            x += 800;
+            x += 60; // Petit gap
+
+            // --- SECTION 4 : PLATFORMES VOLANTES ---
+            // Pas de sol ! Que des plateformes
+            level.platforms.push({ x: x, y: groundY - 30, w: 100, h: 50, type: 'gd_block' });
+            level.coins.push({ x: x + 40, y: groundY - 70, w: 20, h: 20 });
+
+            level.platforms.push({ x: x + 160, y: groundY - 80, w: 100, h: 50, type: 'gd_block' });
+            level.coins.push({ x: x + 200, y: groundY - 120, w: 20, h: 20 });
+
+            level.platforms.push({ x: x + 320, y: groundY - 50, w: 100, h: 50, type: 'gd_block' });
+            level.coins.push({ x: x + 360, y: groundY - 90, w: 20, h: 20 });
+
+            level.platforms.push({ x: x + 480, y: groundY - 100, w: 120, h: 50, type: 'gd_block' });
+            for (let i = 0; i < 2; i++) {
+                level.coins.push({ x: x + 500 + i * 40, y: groundY - 140, w: 20, h: 20 });
+            }
+
+            level.platforms.push({ x: x + 660, y: groundY - 40, w: 100, h: 60, type: 'gd_block' });
+
+            x += 760;
+            // Power-up
+            level.powerups.push({ x: x - 60, y: groundY - 100, w: 35, h: 35, type: 'shield' });
+
+            x += 60;
+
+            // --- SECTION 5 : TRIPLE SPIKES + BLOCS ---
+            level.platforms.push({ x: x, y: groundY, w: 1000, h: 200, type: 'gd_block' });
+
+            // Triple spike
+            for (let i = 0; i < 3; i++) {
+                level.hazards.push({ x: x + 80 + i * 30, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+            }
+            level.coins.push({ x: x + 110, y: groundY - 90, w: 20, h: 20 });
+
+            // Bloc obstacle (il faut sauter par-dessus)
+            level.platforms.push({ x: x + 230, y: groundY - 50, w: 50, h: 50, type: 'gd_obstacle' });
+            level.hazards.push({ x: x + 243, y: groundY - 75, w: 25, h: 25, type: 'gd_spike' });
+
+            // Double bloc + spike
+            level.platforms.push({ x: x + 380, y: groundY - 50, w: 50, h: 50, type: 'gd_obstacle' });
+            level.platforms.push({ x: x + 380, y: groundY - 100, w: 50, h: 50, type: 'gd_obstacle' });
+
+            // Pièces entre obstacles
+            for (let i = 0; i < 4; i++) {
+                level.coins.push({ x: x + 480 + i * 40, y: groundY - 50, w: 20, h: 20 });
+            }
+
+            // Spike + bloc combo
+            level.hazards.push({ x: x + 650, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+            level.platforms.push({ x: x + 700, y: groundY - 50, w: 50, h: 50, type: 'gd_obstacle' });
+            level.hazards.push({ x: x + 713, y: groundY - 75, w: 25, h: 25, type: 'gd_spike' });
+
+            // Série rapide de spikes
+            for (let i = 0; i < 4; i++) {
+                level.hazards.push({ x: x + 820 + i * 40, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+            }
+
+            x += 1000;
+            x += 120; // Gap moyen
+
+            // --- SECTION 6 : ESCALIER MONTANT ---
+            level.platforms.push({ x: x, y: groundY, w: 150, h: 200, type: 'gd_block' });
+            for (let step = 0; step < 5; step++) {
+                level.platforms.push({ x: x + 150 + step * 80, y: groundY - (step + 1) * 50, w: 80, h: (step + 1) * 50 + 200, type: 'gd_block' });
+                level.coins.push({ x: x + 175 + step * 80, y: groundY - (step + 1) * 50 - 40, w: 20, h: 20 });
+            }
+            // Spike en haut de l'escalier
+            level.hazards.push({ x: x + 150 + 4 * 80 + 25, y: groundY - 5 * 50 - 25, w: 25, h: 25, type: 'gd_spike' });
+
+            // Descente : gap puis sol
+            x += 150 + 5 * 80;
+            x += 150; // Grand gap pour descendre
+
+            // --- SECTION 7 : ZONE DE LAVE ---
+            level.platforms.push({ x: x, y: groundY, w: 1200, h: 200, type: 'gd_block' });
+
+            // Alternance spike/pièce rapide
+            for (let i = 0; i < 8; i++) {
+                if (i % 2 === 0) {
+                    level.hazards.push({ x: x + 80 + i * 70, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+                } else {
+                    level.coins.push({ x: x + 80 + i * 70, y: groundY - 50, w: 20, h: 20 });
+                }
+            }
+
+            // Jump pad !
+            level.platforms.push({ x: x + 700, y: groundY, w: 50, h: 10, type: 'gd_jump_pad' });
+            // Pièces en l'air après jump pad
+            for (let i = 0; i < 5; i++) {
+                const arcH2 = Math.sin((i / 4) * Math.PI) * 100;
+                level.coins.push({ x: x + 770 + i * 50, y: groundY - 80 - arcH2, w: 20, h: 20 });
+            }
+
+            // Deuxième jump pad
+            level.platforms.push({ x: x + 1000, y: groundY, w: 50, h: 10, type: 'gd_jump_pad' });
+
+            // Pièces secrètes très haut
+            for (let i = 0; i < 2; i++) {
+                level.coins.push({ x: x + 1010 + i * 30, y: groundY - 250, w: 25, h: 25, value: 5, secret: true });
+            }
+
+            x += 1200;
+            x += 80;
+
+            // --- SECTION 8 : ZIGZAG INFERNAL ---
+            level.platforms.push({ x: x, y: groundY, w: 200, h: 200, type: 'gd_block' });
+
+            // Plateformes en zigzag montant
+            for (let i = 0; i < 6; i++) {
+                const zigY = i % 2 === 0 ? groundY - 80 : groundY - 160;
+                level.platforms.push({ x: x + 200 + i * 120, y: zigY, w: 100, h: 20, type: 'gd_block' });
+                level.coins.push({ x: x + 230 + i * 120, y: zigY - 40, w: 20, h: 20 });
+                // Spike sur certaines plateformes
+                if (i % 3 === 1) {
+                    level.hazards.push({ x: x + 240 + i * 120, y: zigY - 25, w: 25, h: 25, type: 'gd_spike' });
+                }
+            }
+
+            x += 200 + 6 * 120;
+            // Sol de récupération
+            level.platforms.push({ x: x, y: groundY, w: 200, h: 200, type: 'gd_block' });
+            level.powerups.push({ x: x + 80, y: groundY - 60, w: 35, h: 35, type: 'star' });
+
+            x += 200;
+            x += 80;
+
+            // --- SECTION 9 : BOSS RUSH (obstacles intenses) ---
+            level.platforms.push({ x: x, y: groundY, w: 1500, h: 200, type: 'gd_block' });
+
+            // Pattern complexe : spike-bloc-spike-gap-spike
+            const bossPatterns = [
+                { type: 'spike', offset: 50 },
+                { type: 'spike', offset: 80 },
+                { type: 'bloc', offset: 150, h: 50 },
+                { type: 'spike_top', offset: 163, h: 50 },
+                { type: 'spike', offset: 260 },
+                { type: 'spike', offset: 290 },
+                { type: 'spike', offset: 320 },
+                { type: 'bloc', offset: 420, h: 100 },
+                { type: 'spike', offset: 550 },
+                { type: 'bloc', offset: 600, h: 50 },
+                { type: 'bloc_double', offset: 700, h: 100 },
+                { type: 'spike', offset: 850 },
+                { type: 'spike', offset: 880 },
+                { type: 'spike', offset: 910 },
+                { type: 'spike', offset: 940 },
+                { type: 'bloc', offset: 1050, h: 50 },
+                { type: 'spike_top', offset: 1063, h: 50 },
+                { type: 'spike', offset: 1150 },
+                { type: 'spike', offset: 1180 },
+                { type: 'bloc', offset: 1250, h: 80 },
+                { type: 'spike_top', offset: 1263, h: 80 },
+            ];
+
+            for (const pat of bossPatterns) {
+                if (pat.type === 'spike') {
+                    level.hazards.push({ x: x + pat.offset, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+                } else if (pat.type === 'spike_top') {
+                    level.hazards.push({ x: x + pat.offset, y: groundY - pat.h - 25, w: 25, h: 25, type: 'gd_spike' });
+                } else if (pat.type === 'bloc') {
+                    level.platforms.push({ x: x + pat.offset, y: groundY - pat.h, w: 50, h: pat.h, type: 'gd_obstacle' });
+                } else if (pat.type === 'bloc_double') {
+                    level.platforms.push({ x: x + pat.offset, y: groundY - pat.h, w: 50, h: pat.h, type: 'gd_obstacle' });
+                    level.hazards.push({ x: x + pat.offset + 13, y: groundY - pat.h - 25, w: 25, h: 25, type: 'gd_spike' });
+                }
+            }
+
+            // Pièces dispersées dans la zone boss
+            for (let i = 0; i < 10; i++) {
+                level.coins.push({ x: x + 100 + i * 130, y: groundY - 120 - Math.sin(i) * 40, w: 20, h: 20 });
+            }
+
+            x += 1500;
+            x += 100;
+
+            // --- SECTION 10 : FINALE ÉPIQUE ---
+            level.platforms.push({ x: x, y: groundY, w: 800, h: 200, type: 'gd_block' });
+
+            // Escalier montant rapide
+            for (let step = 0; step < 4; step++) {
+                level.platforms.push({ x: x + 50 + step * 60, y: groundY - (step + 1) * 40, w: 60, h: (step + 1) * 40, type: 'gd_block' });
+            }
+
+            // Jump pad final
+            level.platforms.push({ x: x + 300, y: groundY, w: 50, h: 10, type: 'gd_jump_pad' });
+
+            // Arc de pièces final (gros arc)
+            for (let i = 0; i < 8; i++) {
+                const arcH3 = Math.sin((i / 7) * Math.PI) * 120;
+                level.coins.push({ x: x + 380 + i * 40, y: groundY - 60 - arcH3, w: 20, h: 20 });
+            }
+
+            // Derniers spikes avant l'arrivée
+            level.hazards.push({ x: x + 650, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+            level.hazards.push({ x: x + 680, y: groundY - 25, w: 25, h: 25, type: 'gd_spike' });
+
+            // Pièces secrètes finales
+            for (let i = 0; i < 3; i++) {
+                level.coins.push({ x: x + 500 + i * 50, y: groundY - 220, w: 25, h: 25, value: 5, secret: true });
+            }
+
+            x += 800;
+
+            // Zone d'arrivée
+            level.platforms.push({ x: x, y: groundY, w: 400, h: 200, type: 'gd_block' });
+
+            // But final
+            level.goal = { x: x + 200, y: groundY - 80, w: 70, h: 80, type: 'gd_portal' };
+
+            // Void en dessous
+            level.hazards.push({ x: -1000, y: h + 50, w: 20000, h: 100, type: 'void' });
+
+            // Décorations : colonnes de lumière
+            for (let i = 0; i < 30; i++) {
+                level.decorations.push({
+                    x: i * 350,
+                    y: 0,
+                    w: 4,
+                    h: groundY,
+                    type: 'gd_light_beam'
+                });
+            }
+
+            // Décorations : étoiles de fond
+            for (let i = 0; i < 60; i++) {
+                level.stars.push({
+                    x: Math.random() * 12000,
+                    y: Math.random() * (groundY - 50),
+                    size: 1 + Math.random() * 2,
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+
+            return level;
+        }
+    }
 };
 
 function createEmptyLevel() {

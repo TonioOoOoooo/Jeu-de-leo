@@ -5624,6 +5624,8 @@ function drawEnhancedLevelBackground(ctx, w, h, camX) {
         drawLevel11Background(ctx, w, h, camX);  // Fruity Frank (anciennement niveau 11)
     } else if (state.level === 13) {
         drawLevel13Background(ctx, w, h, camX);
+    } else if (state.level === 14) {
+        drawLevel14Background(ctx, w, h, camX);
     }
 }
 
@@ -5654,6 +5656,8 @@ function drawEnhancedLevelForeground(ctx, w, h, camX) {
         drawLevel11Foreground(ctx, w, h, camX);  // Fruity Frank
     } else if (state.level === 13) {
         drawLevel13Foreground(ctx, w, h, camX);
+    } else if (state.level === 14) {
+        drawLevel14Foreground(ctx, w, h, camX);
     }
 }
 
@@ -8095,3 +8099,153 @@ function drawLevel13Foreground(ctx, w, h, camX) {
     }
     ctx.globalAlpha = 1;
 }
+
+// ===== NIVEAU 14 : GEOMETRY DASH - BACKGROUND & FOREGROUND =====
+function drawLevel14Background(ctx, w, h, camX) {
+    const t = state.frameTick;
+
+    // Fond dégradé sombre (bleu nuit → noir)
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+    bgGrad.addColorStop(0, '#050520');
+    bgGrad.addColorStop(0.5, '#0a0a3a');
+    bgGrad.addColorStop(1, '#0f0f2a');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Grille de fond qui défile (perspective effect)
+    ctx.strokeStyle = 'rgba(0, 150, 255, 0.06)';
+    ctx.lineWidth = 1;
+    const gridSize = 80;
+    const gridOffset = (camX * 0.3) % gridSize;
+    for (let gx = -gridSize + gridOffset; gx < w + gridSize; gx += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(gx, 0);
+        ctx.lineTo(gx, h);
+        ctx.stroke();
+    }
+    for (let gy = 0; gy < h; gy += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, gy);
+        ctx.lineTo(w, gy);
+        ctx.stroke();
+    }
+
+    // Montagnes néon en arrière-plan (parallaxe lente)
+    ctx.globalAlpha = 0.3;
+    const mountainColors = ['#1a0040', '#2a0060', '#0a0030'];
+    for (let layer = 0; layer < 3; layer++) {
+        ctx.fillStyle = mountainColors[layer];
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        const speed = 0.05 + layer * 0.03;
+        const baseY = h * 0.4 + layer * 40;
+        for (let mx = 0; mx <= w; mx += 5) {
+            const worldX = mx + camX * speed;
+            const my = baseY + Math.sin(worldX * 0.003) * 60 + Math.sin(worldX * 0.007 + layer) * 30;
+            ctx.lineTo(mx, my);
+        }
+        ctx.lineTo(w, h);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Étoiles qui scintillent
+    for (let i = 0; i < 40; i++) {
+        const sx = ((i * 137 + 50 - camX * 0.1) % (w + 100)) - 50;
+        const sy = (i * 73 + 20) % (h * 0.6);
+        const twinkle = Math.sin(t * 0.05 + i * 1.7) * 0.5 + 0.5;
+        const size = 1 + (i % 3);
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.2 + twinkle * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Lignes de vitesse horizontales (feeling de rapidité)
+    ctx.globalAlpha = 0.15;
+    for (let i = 0; i < 8; i++) {
+        const ly = (i * 97 + t * 0.5) % h;
+        const lx = ((i * 200 + camX * 2) % (w + 200)) - 200;
+        const lineLen = 50 + (i % 4) * 30;
+        ctx.strokeStyle = i % 2 === 0 ? '#00ccff' : '#ff00aa';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(lx + lineLen, ly);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Colonnes de lumière pulsantes
+    for (let i = 0; i < 12; i++) {
+        const colX = ((i * 350 - camX * 0.2 + 5000) % 5000) - 200;
+        const pulse = Math.sin(t * 0.03 + i * 1.2) * 0.15 + 0.1;
+        const colGrad = ctx.createLinearGradient(colX, 0, colX, h * 0.8);
+        const hue = (i * 30 + t * 0.5) % 360;
+        colGrad.addColorStop(0, `hsla(${hue}, 100%, 60%, ${pulse})`);
+        colGrad.addColorStop(1, `hsla(${hue}, 100%, 60%, 0)`);
+        ctx.fillStyle = colGrad;
+        ctx.fillRect(colX - 2, 0, 4, h * 0.8);
+    }
+
+    // Barre de progression en haut (comme GD)
+    if (currentLevelData && currentLevelData.goal) {
+        const totalDist = currentLevelData.goal.x + currentLevelData.goal.w;
+        const progress = Math.min(1, Math.max(0, player.x / totalDist));
+        // Fond de la barre
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fillRect(w * 0.1, 15, w * 0.8, 6);
+        // Progression
+        const barGrad = ctx.createLinearGradient(w * 0.1, 0, w * 0.1 + w * 0.8 * progress, 0);
+        barGrad.addColorStop(0, '#00ff88');
+        barGrad.addColorStop(1, '#00ccff');
+        ctx.fillStyle = barGrad;
+        ctx.fillRect(w * 0.1, 15, w * 0.8 * progress, 6);
+        // Bordure
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(w * 0.1, 15, w * 0.8, 6);
+        // Pourcentage
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.floor(progress * 100) + '%', w * 0.9 + 30, 23);
+        ctx.textAlign = 'left';
+    }
+}
+
+function drawLevel14Foreground(ctx, w, h, camX) {
+    const t = state.frameTick;
+
+    // Particules néon flottantes
+    ctx.globalAlpha = 0.4;
+    for (let i = 0; i < 15; i++) {
+        const px = ((i * 300 + t * 0.8 - camX * 0.3 + 5000) % 5000) - 200;
+        const py = h * 0.2 + Math.sin(t * 0.02 + i * 1.5) * (h * 0.3);
+        const size = 2 + Math.sin(t * 0.05 + i) * 1.5;
+        const hue = (i * 60 + t * 0.5) % 360;
+        ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.6)`;
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Flash néon au sol (ligne lumineuse)
+    const groundY = h - 80;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 200, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#00ccff';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(0, groundY + 1);
+    ctx.lineTo(w, groundY + 1);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+}
+
+window.drawLevel14Background = drawLevel14Background;
+window.drawLevel14Foreground = drawLevel14Foreground;

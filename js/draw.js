@@ -56,7 +56,7 @@ function draw() {
     }
     
     // Arrière-plan amélioré pour tous les niveaux 1-13
-    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    const enhancedLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
     const { camX, camY } = getCameraOffset();
     if (enhancedLevels.includes(state.level) && typeof drawEnhancedLevelBackground === 'function') {
         drawEnhancedLevelBackground(ctx, canvas.width, canvas.height, -camX);
@@ -146,7 +146,7 @@ function draw() {
     }
 
     // Éléments de premier plan (papillons, oiseaux, chauves-souris, bulles, sable, pétales sakura) pour tous les niveaux
-    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(state.level) && typeof drawEnhancedLevelForeground === 'function' && state.level !== 6) {
+    if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(state.level) && typeof drawEnhancedLevelForeground === 'function' && state.level !== 6) {
         drawEnhancedLevelForeground(ctx, canvas.width, canvas.height, -camX);
     }
 
@@ -1315,6 +1315,100 @@ function drawPlatforms() {
                 }
                 break;
 
+            // === GEOMETRY DASH NIVEAU 14 ===
+            case 'gd_block':
+                ctx.save();
+                // Bloc principal (dégradé sombre)
+                const gdGrad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+                gdGrad.addColorStop(0, '#1a1a3e');
+                gdGrad.addColorStop(1, '#0a0a1e');
+                ctx.fillStyle = gdGrad;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Grille néon sur la surface
+                ctx.strokeStyle = 'rgba(0, 200, 255, 0.15)';
+                ctx.lineWidth = 1;
+                for (let gx = p.x; gx < p.x + p.w; gx += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(gx, p.y);
+                    ctx.lineTo(gx, p.y + Math.min(p.h, 200));
+                    ctx.stroke();
+                }
+                for (let gy = p.y; gy < p.y + Math.min(p.h, 200); gy += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, gy);
+                    ctx.lineTo(p.x + p.w, gy);
+                    ctx.stroke();
+                }
+                // Bordure supérieure lumineuse
+                ctx.strokeStyle = '#00ccff';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#00ccff';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x + p.w, p.y);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.restore();
+                break;
+
+            case 'gd_obstacle':
+                ctx.save();
+                // Bloc obstacle (plus lumineux, dangereux)
+                const gdObsGrad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+                gdObsGrad.addColorStop(0, '#2a1a3e');
+                gdObsGrad.addColorStop(1, '#1a0a2e');
+                ctx.fillStyle = gdObsGrad;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Bordure néon violette
+                ctx.strokeStyle = '#cc00ff';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#cc00ff';
+                ctx.shadowBlur = 10;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                // Croix intérieure
+                ctx.strokeStyle = 'rgba(200, 0, 255, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x + p.w, p.y + p.h);
+                ctx.moveTo(p.x + p.w, p.y);
+                ctx.lineTo(p.x, p.y + p.h);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.restore();
+                break;
+
+            case 'gd_jump_pad':
+                ctx.save();
+                // Pad de saut (jaune néon)
+                ctx.fillStyle = '#ffdd00';
+                ctx.shadowColor = '#ffdd00';
+                ctx.shadowBlur = 15;
+                // Triangle pointant vers le haut
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y + p.h);
+                ctx.lineTo(p.x + p.w / 2, p.y - 5);
+                ctx.lineTo(p.x + p.w, p.y + p.h);
+                ctx.closePath();
+                ctx.fill();
+                // Bordure
+                ctx.strokeStyle = '#ffaa00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                // Flèches animées au-dessus
+                const arrowY = Math.sin(state.frameTick * 0.15) * 5;
+                ctx.fillStyle = 'rgba(255, 221, 0, 0.5)';
+                ctx.beginPath();
+                ctx.moveTo(p.x + p.w / 2 - 8, p.y - 15 + arrowY);
+                ctx.lineTo(p.x + p.w / 2, p.y - 25 + arrowY);
+                ctx.lineTo(p.x + p.w / 2 + 8, p.y - 15 + arrowY);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+                break;
+
             default:
                 // Plateformes améliorées pour niveaux 1-2
                 if (state.level <= 2 && typeof drawEnhancedGrassPlatform === 'function') {
@@ -1788,6 +1882,41 @@ function drawHazards() {
                     ctx.ellipse(knightCenterX, h.y + 82, 20, 6, 0, 0, Math.PI * 2);
                     ctx.fill();
                 }
+                break;
+
+            case 'gd_spike':
+                // Spike Geometry Dash (triangle néon)
+                ctx.save();
+                // Glow
+                ctx.shadowColor = '#ff0055';
+                ctx.shadowBlur = 10;
+                // Triangle principal
+                ctx.fillStyle = '#ff0055';
+                ctx.beginPath();
+                ctx.moveTo(h.x, h.y + h.h);
+                ctx.lineTo(h.x + h.w / 2, h.y);
+                ctx.lineTo(h.x + h.w, h.y + h.h);
+                ctx.closePath();
+                ctx.fill();
+                // Reflet intérieur
+                ctx.fillStyle = 'rgba(255, 100, 150, 0.6)';
+                ctx.beginPath();
+                ctx.moveTo(h.x + h.w * 0.25, h.y + h.h);
+                ctx.lineTo(h.x + h.w / 2, h.y + h.h * 0.35);
+                ctx.lineTo(h.x + h.w * 0.75, h.y + h.h);
+                ctx.closePath();
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                // Bordure
+                ctx.strokeStyle = '#ff3377';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(h.x, h.y + h.h);
+                ctx.lineTo(h.x + h.w / 2, h.y);
+                ctx.lineTo(h.x + h.w, h.y + h.h);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
                 break;
         }
     }
@@ -2555,6 +2684,55 @@ function drawGoal() {
             }
 
             ctx.textAlign = 'left';
+            break;
+
+        case 'gd_portal':
+            // Portail de fin Geometry Dash
+            ctx.save();
+            const gdPortalPulse = Math.sin(state.frameTick * 0.1) * 0.3 + 0.7;
+            // Halo extérieur
+            ctx.fillStyle = `rgba(0, 255, 200, ${0.15 * gdPortalPulse})`;
+            ctx.beginPath();
+            ctx.arc(g.x + g.w / 2, g.y + g.h / 2, 60, 0, Math.PI * 2);
+            ctx.fill();
+            // Anneau principal
+            ctx.strokeStyle = '#00ffc8';
+            ctx.lineWidth = 4;
+            ctx.shadowColor = '#00ffc8';
+            ctx.shadowBlur = 20;
+            ctx.beginPath();
+            ctx.arc(g.x + g.w / 2, g.y + g.h / 2, 35, 0, Math.PI * 2);
+            ctx.stroke();
+            // Anneau intérieur tournant
+            ctx.strokeStyle = '#00aaff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const portalAngle = state.frameTick * 0.05;
+            ctx.arc(g.x + g.w / 2, g.y + g.h / 2, 25, portalAngle, portalAngle + Math.PI * 1.5);
+            ctx.stroke();
+            // Centre brillant
+            ctx.fillStyle = `rgba(0, 255, 200, ${0.5 + gdPortalPulse * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(g.x + g.w / 2, g.y + g.h / 2, 15, 0, Math.PI * 2);
+            ctx.fill();
+            // Étoile au centre
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            for (let si = 0; si < 5; si++) {
+                const sa = (si / 5) * Math.PI * 2 - Math.PI / 2 + portalAngle;
+                const sx = g.x + g.w / 2 + Math.cos(sa) * 8;
+                const sy = g.y + g.h / 2 + Math.sin(sa) * 8;
+                if (si === 0) ctx.moveTo(sx, sy);
+                else ctx.lineTo(sx, sy);
+                const ia = ((si + 0.5) / 5) * Math.PI * 2 - Math.PI / 2 + portalAngle;
+                const ix = g.x + g.w / 2 + Math.cos(ia) * 4;
+                const iy = g.y + g.h / 2 + Math.sin(ia) * 4;
+                ctx.lineTo(ix, iy);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.restore();
             break;
 
         case 'poke_center':
