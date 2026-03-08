@@ -424,7 +424,11 @@ function setupJumpButton() {
             jc.touchId = e.changedTouches[0].identifier;
         }
         keys.jump = true;
-        doJump();
+        if (LEVELS[state.level] && LEVELS[state.level].geometryDashLevel) {
+            doGDJump();
+        } else {
+            doJump();
+        }
         hapticFeedback('medium');
     }
 
@@ -529,7 +533,12 @@ function handleKey(e, pressed) {
                 return;
             }
             e.preventDefault();
-            doJump();
+            // Geometry Dash : utiliser doGDJump
+            if (LEVELS[state.level] && LEVELS[state.level].geometryDashLevel) {
+                doGDJump();
+            } else {
+                doJump();
+            }
         }
     }
     
@@ -570,8 +579,8 @@ function handleKey(e, pressed) {
 }
 
 function jumpToLevel(targetLevel) {
-    // Permettre tous les niveaux définis (jusqu'au 13 Pokémon)
-    const maxLevel = LEVELS[13] ? 13 : LEVELS[12] ? 12 : CONFIG.TOTAL_LEVELS;
+    // Permettre tous les niveaux définis (jusqu'au 14 Geometry Dash)
+    const maxLevel = LEVELS[14] ? 14 : LEVELS[13] ? 13 : CONFIG.TOTAL_LEVELS;
     const nextLevel = Math.max(1, Math.min(maxLevel, targetLevel));
     state.level = nextLevel;
     if (state.current === GameState.MENU) {
@@ -822,6 +831,9 @@ function initLevel(levelNum) {
     state.bombJackNextExpected = 1;
     state.bombJackPerfect = true;
 
+    // Reset Geometry Dash (niveau 14)
+    player.gdRotation = 0;
+
     // Niveau 9 : Pouvoir de vol permanent ! (comme dans BombJack original)
     if (levelNum === 9 && levelDef.bombJackLevel) {
         state.powerups.superJump = 99999; // Vol permanent pour ce niveau !
@@ -973,7 +985,13 @@ function update() {
     updatePortals();
     updateFireBars();
     updateHints();
-    updatePlayer();
+
+    // Geometry Dash : auto-runner mode
+    if (LEVELS[state.level] && LEVELS[state.level].geometryDashLevel) {
+        updateGeometryDashPlayer();
+    } else {
+        updatePlayer();
+    }
     updateCheckpoint(); // Sauvegarder automatiquement la position du joueur
     checkCollisions();
 
@@ -1166,6 +1184,135 @@ function updatePlayer() {
     if (player.x < 0) {
         player.x = 0;
         player.vx = 0;
+    }
+}
+
+// ===== GEOMETRY DASH AUTO-RUNNER =====
+function updateGeometryDashPlayer() {
+    const prevY = player.y;
+    const gdSpeed = currentLevelData.gdSpeed || 7;
+
+    // Mouvement automatique vers la droite
+    player.vx = gdSpeed;
+    player.facingRight = true;
+    player.x += player.vx;
+
+    // Gravité (plus forte que la normale pour un feeling GD)
+    const gravity = 1.2;
+    player.vy += gravity;
+    player.vy = Math.min(player.vy, 18);
+    player.y += player.vy;
+
+    // Rotation du cube GD en l'air
+    if (!player.grounded) {
+        player.gdRotation = (player.gdRotation || 0) + 5;
+    } else {
+        // Snap rotation à 90 degrés
+        player.gdRotation = Math.round((player.gdRotation || 0) / 90) * 90;
+    }
+
+    // Sauvegarder l'état grounded avant détection
+    player.wasGrounded = player.grounded;
+
+    // Décrémenter les timers
+    if (player.coyoteTime > 0) player.coyoteTime--;
+    if (player.jumpBuffer > 0) player.jumpBuffer--;
+
+    // Collisions plateformes
+    player.grounded = false;
+    let onPlatform = false;
+
+    for (const p of currentLevelData.platforms) {
+        if (p.type === 'gd_light_beam') continue;
+
+        if (player.x + player.w > p.x + 5 && player.x < p.x + p.w - 5) {
+            const feetNow = player.y + player.h;
+            const feetBefore = prevY + player.h;
+
+            // Jump pad GD : super saut !
+            if (p.type === 'gd_jump_pad') {
+                if (player.vy >= 0 && feetBefore <= p.y + 20 && feetNow >= p.y) {
+                    player.vy = -22;
+                    AudioSystem.play('jump');
+                    ParticleSystem.emit(player.x + player.w / 2, player.y + player.h, 'sparkle', 15);
+                    continue;
+                }
+            }
+
+            // Obstacle GD : collision latérale = mort
+            if (p.type === 'gd_obstacle') {
+                const playerRight = player.x + player.w;
+                const playerBottom = player.y + player.h;
+                // Collision par le côté (le joueur fonce dedans)
+                if (playerRight > p.x && player.x < p.x + 10 &&
+                    playerBottom > p.y + 5 && player.y < p.y + p.h - 5) {
+                    // Mort ! Le joueur s'écrase contre le bloc
+                    state.lives--;
+                    updateHud();
+                    AudioSystem.play('hurt');
+                    state.screenShake = 15;
+                    ParticleSystem.emit(player.x + player.w / 2, player.y + player.h / 2, 'dust', 20);
+                    if (state.lives <= 0) {
+                        gameOver("Crash !");
+                    } else {
+                        respawnPlayer();
+                    }
+                    return;
+                }
+                // Landing sur le dessus
+                if (player.vy >= 0 && feetBefore <= p.y + 15 && feetNow >= p.y) {
+                    player.y = p.y - player.h;
+                    player.vy = 0;
+                    player.grounded = true;
+                    player.jumpCount = 0;
+                    onPlatform = true;
+                }
+                continue;
+            }
+
+            // Plateforme normale : landing
+            if (player.vy >= 0 && feetBefore <= p.y + 15 && feetNow >= p.y) {
+                player.y = p.y - player.h;
+                player.vy = 0;
+                player.grounded = true;
+                player.jumpCount = 0;
+                player.currentPlatform = p;
+                onPlatform = true;
+            }
+        }
+    }
+
+    if (!onPlatform) player.currentPlatform = null;
+
+    // Coyote time
+    if (player.wasGrounded && !player.grounded && player.vy >= 0) {
+        player.coyoteTime = 6; // Un peu moins que la normale pour le challenge GD
+    }
+
+    // Jump buffer
+    if (player.grounded && player.jumpBuffer > 0) {
+        player.jumpBuffer = 0;
+        doGDJump();
+    }
+
+    // Pas de limite gauche en mode GD (le joueur avance toujours)
+}
+
+function doGDJump() {
+    const canCoyoteJump = player.coyoteTime > 0 && player.jumpCount === 0;
+
+    if (player.grounded || canCoyoteJump) {
+        player.vy = -16; // Force de saut GD
+        player.grounded = false;
+        player.jumpCount = 1;
+        player.coyoteTime = 0;
+        player.jumpBuffer = 0;
+        AudioSystem.play('jump');
+        ParticleSystem.emit(player.x + player.w / 2, player.y + player.h, 'dust', 5);
+        state.stats.totalJumps++;
+    } else {
+        // Jump buffer
+        player.jumpBuffer = player.jumpBufferMax;
     }
 }
 
@@ -1914,13 +2061,26 @@ function checkCollisions() {
                     state.lives--;
                     updateHud();
                     AudioSystem.play('hurt');
-                    
+
                     if (state.lives <= 0) {
                         gameOver("Tombé !");
                     } else {
                         respawnPlayer();
                     }
                     return; // Important : sortir après respawn
+                } else if (h.type === 'gd_spike') {
+                    // Geometry Dash spike = mort instantanée + respawn
+                    state.lives--;
+                    updateHud();
+                    AudioSystem.play('hurt');
+                    state.screenShake = 12;
+                    ParticleSystem.emit(player.x + player.w / 2, player.y + player.h / 2, 'dust', 15);
+                    if (state.lives <= 0) {
+                        gameOver("Crash !");
+                    } else {
+                        respawnPlayer();
+                    }
+                    return;
                 } else {
                     if (!isVeryEasy) {
                         takeDamage("Aïe !");

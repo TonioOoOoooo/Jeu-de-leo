@@ -1493,6 +1493,95 @@ function drawHeroPokemonTrainer(ctx, p) {
     ctx.strokeRect(p.facingRight ? p.x : p.x + p.w - 8, p.y + 18, 8, 12);
 }
 
+// ===== NIVEAU 14 : CUBE GEOMETRY DASH =====
+function drawHeroGDCube(ctx, p) {
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h / 2;
+    const size = Math.min(p.w, p.h) - 4;
+    const halfSize = size / 2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // Rotation en l'air (style GD)
+    const rotation = (p.gdRotation || 0) * Math.PI / 180;
+    ctx.rotate(rotation);
+
+    // Ombre du cube
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(-halfSize + 3, -halfSize + 3, size, size);
+
+    // Corps du cube - couleur néon avec dégradé
+    const gradient = ctx.createLinearGradient(-halfSize, -halfSize, halfSize, halfSize);
+    const baseColor = state.playerColor || '#00ff88';
+    gradient.addColorStop(0, baseColor);
+    gradient.addColorStop(1, shiftColor(baseColor, -40));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(-halfSize, -halfSize, size, size);
+
+    // Bordure brillante
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-halfSize, -halfSize, size, size);
+
+    // Bordure intérieure (style GD)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-halfSize + 4, -halfSize + 4, size - 8, size - 8);
+
+    // Oeil du cube (style GD iconique)
+    // Fond blanc de l'oeil
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(halfSize * 0.2, -halfSize * 0.1, halfSize * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pupille
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(halfSize * 0.3, -halfSize * 0.15, halfSize * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflet dans l'oeil
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(halfSize * 0.35, -halfSize * 0.25, halfSize * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ligne décorative (style GD)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-halfSize + 3, halfSize * 0.3);
+    ctx.lineTo(halfSize - 3, halfSize * 0.3);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Trail derrière le cube (traînée de particules)
+    if (Math.abs(p.vx) > 1) {
+        for (let i = 0; i < 3; i++) {
+            const trailX = p.x - 5 - i * 8;
+            const trailY = cy + (Math.random() - 0.5) * 10;
+            const alpha = 0.5 - i * 0.15;
+            const trailSize = 4 - i;
+            ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+            ctx.beginPath();
+            ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+}
+
+// Utilitaire : décaler une couleur hex
+function shiftColor(hex, amount) {
+    hex = hex.replace('#', '');
+    const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
+    const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
+    const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
 // ===== DISPATCHER : Choisir le héros selon le niveau =====
 function drawHeroForLevel(ctx, p, level) {
     switch(level) {
@@ -1533,6 +1622,9 @@ function drawHeroForLevel(ctx, p, level) {
             break;
         case 13:
             drawHeroPokemonTrainer(ctx, p);
+            break;
+        case 14:
+            drawHeroGDCube(ctx, p);
             break;
         default:
             // Par défaut : Léo (petit garçon)
