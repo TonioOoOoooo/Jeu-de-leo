@@ -1323,6 +1323,14 @@ function doGDJump() {
         AudioSystem.play('jump');
         ParticleSystem.emit(player.x + player.w / 2, player.y + player.h, 'dust', 5);
         state.stats.totalJumps++;
+    } else if (player.jumpCount === 1) {
+        // Double saut GD !
+        player.vy = -14; // Un peu moins fort que le premier
+        player.jumpCount = 2;
+        player.jumpBuffer = 0;
+        AudioSystem.play('jump');
+        ParticleSystem.emit(player.x + player.w / 2, player.y + player.h, 'sparkle', 8);
+        state.stats.totalJumps++;
     } else {
         // Jump buffer
         player.jumpBuffer = player.jumpBufferMax;
